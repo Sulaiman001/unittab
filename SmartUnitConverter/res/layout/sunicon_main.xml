@@ -1,0 +1,63 @@
+
+    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" 
+        android:stretchColumns="0,1"
+        android:shrinkColumns="2">
+
+        <TextView
+	        android:id="@+id/categoryLabel"
+	        android:gravity="right"
+	        android:textSize="12sp"
+	        android:textColor="#258AAF"
+	        android:text="Length / Distance"  />
+        <TableRow
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+
+            <EditText
+                android:id="@+id/valueEditor"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" 
+                android:inputType="numberDecimal"/>
+
+            <dh.sunicon.UnitAutoCompleteView
+                android:id="@+id/baseUnitEditor"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" />
+            
+            <Button 
+                android:id="@+id/clearBaseUnitButton" 
+                android:layout_width="30dip"
+                android:layout_height="30dip"
+                android:text="x"
+                android:textSize="10dip"
+                android:onClick="clearBaseUnitButton_Click"
+                />
+        </TableRow>
+ 		<TableRow
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Convert to"
+                android:gravity="right" />
+
+            <EditText
+                android:id="@+id/targetUnitFilterEditor"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content" 
+                android:enabled="false" />
+            
+            <Button 
+                android:id="@+id/clearTargetUnitFilterButton" 
+                android:layout_width="30dip"
+                android:layout_height="30dip"
+                android:text="x"
+                android:textSize="10dip"
+               />
+        </TableRow>
+
+    </TableLayout>
