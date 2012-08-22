@@ -56,9 +56,10 @@ public class MainActivity extends Activity {
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event)
 			{
-				if (keyCode != KeyEvent.KEYCODE_DPAD_CENTER && keyCode == KeyEvent.KEYCODE_DPAD_UP && 
-						keyCode == KeyEvent.KEYCODE_DPAD_DOWN && keyCode == KeyEvent.KEYCODE_DPAD_LEFT && 
-						keyCode == KeyEvent.KEYCODE_DPAD_RIGHT)
+				if (keyCode != KeyEvent.KEYCODE_DPAD_CENTER && keyCode != KeyEvent.KEYCODE_DPAD_UP && 
+						keyCode != KeyEvent.KEYCODE_DPAD_DOWN && keyCode != KeyEvent.KEYCODE_DPAD_LEFT && 
+						keyCode != KeyEvent.KEYCODE_DPAD_RIGHT && keyCode != KeyEvent.KEYCODE_ENTER &&
+						keyCode != KeyEvent.KEYCODE_TAB)
 				{
 					clearBaseUnit(true);
 				}
