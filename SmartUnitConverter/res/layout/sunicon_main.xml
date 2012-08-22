@@ -1,63 +1,67 @@
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:shrinkColumns="2"
+    android:stretchColumns="0,1" >
 
-    <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <TextView
+        android:id="@+id/categoryLabel"
+        android:gravity="right"
+        android:text="Length / Distance"
+        android:textColor="#258AAF"
+        android:textSize="12sp" />
+
+    <TableRow
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" 
-        android:stretchColumns="0,1"
-        android:shrinkColumns="2">
+        android:layout_height="wrap_content" >
+
+        <EditText
+            android:id="@+id/valueEditor"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal" />
+
+        <dh.sunicon.UnitAutoCompleteView
+            android:id="@+id/baseUnitEditor"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textNoSuggestions"
+            android:singleLine="true"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/clearBaseUnitButton"
+            android:layout_width="30dip"
+            android:layout_height="30dip"
+            android:onClick="clearBaseUnitButton_Click"
+            android:text="x"
+            android:textSize="10dip" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
 
         <TextView
-	        android:id="@+id/categoryLabel"
-	        android:gravity="right"
-	        android:textSize="12sp"
-	        android:textColor="#258AAF"
-	        android:text="Length / Distance"  />
-        <TableRow
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="right"
+            android:text="Convert to" />
+
+        <EditText
+            android:id="@+id/targetUnitFilterEditor"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:inputType="textNoSuggestions|textFilter"
+            android:singleLine="true" />
 
-            <EditText
-                android:id="@+id/valueEditor"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content" 
-                android:inputType="numberDecimal"/>
+        <Button
+            android:id="@+id/clearTargetUnitFilterButton"
+            android:layout_width="30dip"
+            android:layout_height="30dip"
+            android:text="x"
+            android:textSize="10dip" />
+    </TableRow>
 
-            <dh.sunicon.UnitAutoCompleteView
-                android:id="@+id/baseUnitEditor"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content" />
-            
-            <Button 
-                android:id="@+id/clearBaseUnitButton" 
-                android:layout_width="30dip"
-                android:layout_height="30dip"
-                android:text="x"
-                android:textSize="10dip"
-                android:onClick="clearBaseUnitButton_Click"
-                />
-        </TableRow>
- 		<TableRow
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Convert to"
-                android:gravity="right" />
-
-            <EditText
-                android:id="@+id/targetUnitFilterEditor"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content" 
-                android:enabled="false" />
-            
-            <Button 
-                android:id="@+id/clearTargetUnitFilterButton" 
-                android:layout_width="30dip"
-                android:layout_height="30dip"
-                android:text="x"
-                android:textSize="10dip"
-               />
-        </TableRow>
-
-    </TableLayout>
+</TableLayout>
