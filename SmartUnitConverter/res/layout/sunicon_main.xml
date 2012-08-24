@@ -64,4 +64,6 @@
             android:textSize="10dip" />
     </TableRow>
 
+    <ListView android:id="@android:id/list" />
+
 </TableLayout>

@@ -1,8 +1,12 @@
 package dh.sunicon;
 
-import android.app.Activity;
+import java.util.Random;
+
+import android.app.ListActivity;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.method.DateTimeKeyListener;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.View;
@@ -11,37 +15,41 @@ import android.widget.EditText;
 import android.widget.TextView;
 import dh.sunicon.datamodel.DatabaseHelper;
 
-public class MainActivity extends Activity {
+public class MainActivity extends ListActivity {
 
-	private DatabaseHelper dbHelper;
-	private UnitsCursorAdapter unitsCursorAdapter;
-	private TextView categoryLabel;
-	private UnitAutoCompleteView baseUnitEditor;
-	private EditText targetUnitFilterEditor;
-	private long baseUnitId = -1;
-	private long categoryId = -1;
-	//dh.sunicon.UnitAutoCompleteView:onReplaceTextListener = "base_"
+	private DatabaseHelper dbHelper_;
+	private UnitsCursorAdapter unitsCursorAdapter_;
+	private TextView categoryLabel_;
+	private UnitAutoCompleteView baseUnitEditor_;
+	private EditText targetUnitFilterEditor_;
+	private ResultListAdapter resultListAdapter_;
+	
+	private long baseUnitId_ = -1;
+	private long categoryId_ = -1;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
-		this.dbHelper = new DatabaseHelper(this);
-		final String initialQuery = UnitsCursorAdapter.queryPartSelect + UnitsCursorAdapter.queryPartLimit;
-		final Cursor initialCursor = dbHelper.getReadableDatabase().rawQuery(initialQuery, null);
-		this.unitsCursorAdapter = new UnitsCursorAdapter(this, initialCursor, true);
+		dbHelper_ = new DatabaseHelper(this);
+		final String initialQuery = UnitsCursorAdapter.SELECT_QUERY_PART + UnitsCursorAdapter.LIMIT_ORDER_QUERY_PART;
+		final Cursor initialCursor = dbHelper_.getReadableDatabase().rawQuery(initialQuery, null);
+		unitsCursorAdapter_ = new UnitsCursorAdapter(this, initialCursor, true);
+		resultListAdapter_ = new ResultListAdapter(this);
 		
 		setContentView(R.layout.sunicon_main);
 		
-		this.categoryLabel = (TextView)findViewById(R.id.categoryLabel);
-		this.baseUnitEditor = (UnitAutoCompleteView)findViewById(R.id.baseUnitEditor);
-		this.targetUnitFilterEditor = (EditText)findViewById(R.id.targetUnitFilterEditor);
+		categoryLabel_ = (TextView)findViewById(R.id.categoryLabel);
+		baseUnitEditor_ = (UnitAutoCompleteView)findViewById(R.id.baseUnitEditor);
+		targetUnitFilterEditor_ = (EditText)findViewById(R.id.targetUnitFilterEditor);
+		
+        baseUnitEditor_.setAdapter(unitsCursorAdapter_);
+        baseUnitEditor_.setThreshold(1);
         
-        this.baseUnitEditor.setAdapter(unitsCursorAdapter);
-        this.baseUnitEditor.setThreshold(1);
+        setListAdapter(resultListAdapter_);
         
         clearBaseUnit(false);
-        this.baseUnitEditor.setOnReplaceTextListener(new UnitAutoCompleteView.ReplaceTextListener()
+        baseUnitEditor_.setOnReplaceTextListener(new UnitAutoCompleteView.ReplaceTextListener()
 		{
 			@Override
 			public void onReplaceText(UnitAutoCompleteView sender, String categoryName,
@@ -50,8 +58,7 @@ public class MainActivity extends Activity {
 				onSelectBaseUnit(sender, categoryName, unitName, categoryId, unitId);
 			}
 		});
-        
-        this.baseUnitEditor.setOnKeyListener(new OnKeyListener()
+        baseUnitEditor_.setOnKeyListener(new OnKeyListener()
 		{
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event)
@@ -71,22 +78,23 @@ public class MainActivity extends Activity {
 	public void onSelectBaseUnit(UnitAutoCompleteView sender, String categoryName,
 			String unitName, long categoryId, long unitId)
 	{
-		this.categoryLabel.setVisibility(View.VISIBLE);
-		this.categoryLabel.setText(categoryName);
-		this.categoryId = categoryId;
-		this.baseUnitId = unitId;
-		this.targetUnitFilterEditor.setEnabled(true);
+		categoryLabel_.setVisibility(View.VISIBLE);
+		categoryLabel_.setText(categoryName);
+		categoryId_ = categoryId;
+		baseUnitId_ = unitId;
+		targetUnitFilterEditor_.setEnabled(true);
+		resultListAdapter_.populateData(categoryId_, baseUnitId_);
 	}
 	
 	private void clearBaseUnit(boolean keepTextOnBaseUnitEditor)
 	{
-		this.categoryLabel.setVisibility(View.GONE);
-		this.categoryId = -1;
-		this.baseUnitId = -1;
-		this.targetUnitFilterEditor.setEnabled(false);
+		categoryLabel_.setVisibility(View.GONE);
+		categoryId_ = -1;
+		baseUnitId_ = -1;
+		targetUnitFilterEditor_.setEnabled(false);
 		if (!keepTextOnBaseUnitEditor)
 		{
-			this.baseUnitEditor.setText(null);
+			baseUnitEditor_.setText(null);
 		}
 	}
 	
@@ -102,12 +110,32 @@ public class MainActivity extends Activity {
 	}
 	
 	public DatabaseHelper getDatabaseHelper(){
-		return this.dbHelper;
+		return dbHelper_;
 	}
 	
 	public UnitsCursorAdapter getUnitsCursorAdapter()
 	{
-		return this.unitsCursorAdapter;
+		return unitsCursorAdapter_;
+	}
+	
+	/**
+	 * Simulate a thread of long operation
+	 * @param minSecond
+	 * @param maxSecond
+	 */
+	public static void simulateLongOperation(int minSecond, int maxSecond)
+	{
+		Random rand = new Random(System.currentTimeMillis());
+		long timeToSleep = (rand.nextInt(maxSecond-minSecond)+minSecond)*1000;
+		
+		try
+		{
+			Thread.sleep(timeToSleep);
+		}
+		catch (InterruptedException e)
+		{
+			Log.wtf("SimulationQuery", e);
+		}
 	}
 	
 }

@@ -10,7 +10,8 @@ public class Unit extends BaseEntity
 	private long categoryId;
 	private String name;
 	private String shortName; // optional
-
+	private HashMap<Long, Conversion> conversions;
+	
 	public Unit(DatabaseHelper dbHelper, long categoryId, long id, String name,
 			String shortName)
 	{
@@ -72,7 +73,12 @@ public class Unit extends BaseEntity
 	 */
 	public HashMap<Long, Conversion> getConversions()
 	{
-		HashMap<Long, Conversion> resu = new HashMap<Long, Conversion>();
+		if (this.conversions != null)
+		{
+			return this.conversions;
+		}
+		
+		this.conversions = new HashMap<Long, Conversion>();
 
 		SQLiteDatabase db = this.getDbHelper().getReadableDatabase();
 		String unitIdStr = Long.toString(this.getId());
@@ -82,12 +88,12 @@ public class Unit extends BaseEntity
 		while (cur.moveToNext())
 		{
 			Conversion u = Conversion.parseCursor(this.getDbHelper(), cur);
-			resu.put(u.getId(), u);
+			this.conversions.put(u.getId(), u);
 		}
 
 		cur.close();
 
-		return resu;
+		return this.conversions;
 	}
 
 	public Conversion getConversion(long otherUnitId)

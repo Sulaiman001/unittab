@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal" >
+
+    <TextView
+        android:id="@+id/valueLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="50"
+        android:gravity="right"
+        android:text="1234567890123456789" />
+
+    <TextView
+        android:id="@+id/unitLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="50"
+        android:paddingLeft="10dip"
+        android:text="Miles Per inches United nanometer"
+        android:textColor="#258AAF" />
+
+</LinearLayout>
