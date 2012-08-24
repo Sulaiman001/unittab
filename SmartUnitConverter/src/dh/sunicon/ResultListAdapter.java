@@ -14,7 +14,6 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
 import dh.sunicon.datamodel.DatabaseHelper;
-import dh.sunicon.datamodel.Unit;
 
 public class ResultListAdapter extends BaseAdapter implements Filterable
 {	
@@ -24,6 +23,12 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	private Context context_;
 	private long categoryId_;
 	private long baseUnitId_;
+	private UnitFilter filter_;
+	
+	/**
+	 * write lock on data_. any write operation on data_ must be synch on this lock_ 
+	 */
+	private final Object lock_ = new Object();
 	private ArrayList<ConversionResult> data_;
 	
 	public ResultListAdapter(Context context)
@@ -107,8 +112,11 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	@Override
 	public Filter getFilter()
 	{
-		// TODO Auto-generated method stub
-		return null;
+		if (filter_ == null)
+		{
+			filter_ = new UnitFilter();
+		}
+		return filter_;
 	}
 	
 	private class DataFillerAsyncTask extends AsyncTask<Long, Void, ArrayList<ConversionResult>>
@@ -152,7 +160,10 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		@Override
 		protected void onPostExecute(ArrayList<ConversionResult> result)
 		{
-			data_ = result;
+			synchronized (lock_)
+			{
+				data_ = result;
+			}
 			if (result == null || result.size() == 0)
 			{
 				notifyDataSetInvalidated();
@@ -164,7 +175,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		}
 	};
 	
-	class ConversionResult
+	public class ConversionResult
 	{
 		long unitId;
 		String unitName;
@@ -201,21 +212,88 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		}
 	}
 	
-	private class UnitFilter extends Filter {
+	private class UnitFilter extends Filter 
+	{
 
+		/**
+		 * copy of the original data_, then the data_ will contains only item matching the filter
+		 */
+		private ArrayList<ResultListAdapter.ConversionResult> fullData_;
+		
 		@Override
 		protected FilterResults performFiltering(CharSequence constraint)
 		{
-			// TODO Auto-generated method stub
-			return null;
+			FilterResults resu = new FilterResults();
+			
+			if (fullData_ == null)
+			{
+				synchronized (lock_) 
+				{
+					fullData_ = new ArrayList<ResultListAdapter.ConversionResult>(data_);
+				}
+			}
+			
+			ArrayList<ConversionResult> l;
+			if (TextUtils.isEmpty(constraint))
+			{
+				synchronized (lock_) 
+				{
+					l = new ArrayList<ResultListAdapter.ConversionResult>(fullData_);
+				}
+			}
+			else
+			{
+				final String filterText = constraint.toString().toLowerCase();
+				final int count = fullData_.size();
+				l = new ArrayList<ResultListAdapter.ConversionResult>();
+				for (int i = 0; i<count; i++)
+				{
+					final ResultListAdapter.ConversionResult cr = fullData_
+							.get(i);
+					final String valueText = cr.getUnitName().toLowerCase();
+					if (valueText.contains(filterText))
+					{
+						l.add(cr);
+					}
+					else
+					{
+						final String[] words = filterText.split(" ");
+						final int wordCount = words.length;
+						boolean allWordMatched = true;
+						for (int k = 0; k < wordCount; k++)
+						{
+							if (!valueText.contains(words[k]))
+							{
+								allWordMatched = false;
+							}
+						}
+						
+						if (allWordMatched)
+						{
+							l.add(cr);
+						}
+					}
+				}
+			}
+			
+			resu.values = l;
+			resu.count = l.size();
+			return resu;
 		}
 
 		@Override
 		protected void publishResults(CharSequence constraint,
 				FilterResults results)
 		{
-			// TODO Auto-generated method stub
-			
+			data_ = (ArrayList<ResultListAdapter.ConversionResult>) (results.values);
+			if (results.count > 0)
+			{
+				notifyDataSetChanged();
+			}
+			else
+			{
+				notifyDataSetInvalidated();
+			}
 		}
 		
 	}

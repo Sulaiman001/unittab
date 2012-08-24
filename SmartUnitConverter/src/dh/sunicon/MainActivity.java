@@ -5,6 +5,8 @@ import java.util.Random;
 import android.app.ListActivity;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.text.method.DateTimeKeyListener;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -71,6 +73,29 @@ public class MainActivity extends ListActivity {
 					clearBaseUnit(true);
 				}
 				return false;
+			}
+		});
+        targetUnitFilterEditor_.addTextChangedListener(new TextWatcher()
+		{
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count)
+			{
+				resultListAdapter_.getFilter().filter(s);
+			}
+			
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+			
+			@Override
+			public void afterTextChanged(Editable s)
+			{
+				// TODO Auto-generated method stub
+				
 			}
 		});
 	}
