@@ -60,9 +60,15 @@
             android:id="@+id/clearTargetUnitFilterButton"
             android:layout_width="30dip"
             android:layout_height="30dip"
+            android:onClick="clearTargetUnitFilterButton_Click"
             android:text="x"
             android:textSize="10dip" />
     </TableRow>
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Result:" />
 
     <ListView android:id="@android:id/list" />
 

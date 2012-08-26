@@ -156,6 +156,10 @@ public class MainActivity extends ListActivity
 		}
 	}
 	
+	public void clearTargetUnitFilterButton_Click(View v)
+	{
+		targetUnitFilterEditor_.setText(null);
+	}
 	private void clearBaseUnit(boolean keepTextOnBaseUnitEditor)
 	{
 		categoryLabel_.setVisibility(View.GONE);
@@ -172,6 +176,7 @@ public class MainActivity extends ListActivity
 	{
 		clearBaseUnit(false);
 	}
+	
 	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
@@ -204,7 +209,7 @@ public class MainActivity extends ListActivity
 		}
 		catch (InterruptedException e)
 		{
-			Log.wtf("SimulationQuery", e);
+			Log.w("SimulationQuery", e);
 		}
 	}
 	

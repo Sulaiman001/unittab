@@ -417,7 +417,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			{
 				if (!readConversionsTask_.isFinished())
 				{
-					readConversionsTask_.waitToFinish(10, TimeUnit.SECONDS);
+					readConversionsTask_.waitToFinish(5, TimeUnit.SECONDS);
 				}
 				
 				/* copy the current baseValue_ to original Value */
