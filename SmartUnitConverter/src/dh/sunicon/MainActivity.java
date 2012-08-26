@@ -6,8 +6,8 @@ import android.app.ListActivity;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.text.method.DateTimeKeyListener;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -17,11 +17,13 @@ import android.widget.EditText;
 import android.widget.TextView;
 import dh.sunicon.datamodel.DatabaseHelper;
 
-public class MainActivity extends ListActivity {
-
+public class MainActivity extends ListActivity 
+{
+	static final String TAG = MainActivity.class.getName();
 	private DatabaseHelper dbHelper_;
 	private UnitsCursorAdapter unitsCursorAdapter_;
 	private TextView categoryLabel_;
+	private EditText baseValueEditor_;
 	private UnitAutoCompleteView baseUnitEditor_;
 	private EditText targetUnitFilterEditor_;
 	private ResultListAdapter resultListAdapter_;
@@ -44,6 +46,7 @@ public class MainActivity extends ListActivity {
 		categoryLabel_ = (TextView)findViewById(R.id.categoryLabel);
 		baseUnitEditor_ = (UnitAutoCompleteView)findViewById(R.id.baseUnitEditor);
 		targetUnitFilterEditor_ = (EditText)findViewById(R.id.targetUnitFilterEditor);
+		baseValueEditor_= (EditText)findViewById(R.id.valueEditor);
 		
         baseUnitEditor_.setAdapter(unitsCursorAdapter_);
         baseUnitEditor_.setThreshold(1);
@@ -51,7 +54,12 @@ public class MainActivity extends ListActivity {
         setListAdapter(resultListAdapter_);
         
         clearBaseUnit(false);
-        baseUnitEditor_.setOnReplaceTextListener(new UnitAutoCompleteView.ReplaceTextListener()
+        initEvents();
+	}
+
+	private void initEvents()
+	{
+		baseUnitEditor_.setOnReplaceTextListener(new UnitAutoCompleteView.ReplaceTextListener()
 		{
 			@Override
 			public void onReplaceText(UnitAutoCompleteView sender, String categoryName,
@@ -87,15 +95,45 @@ public class MainActivity extends ListActivity {
 			public void beforeTextChanged(CharSequence s, int start, int count,
 					int after)
 			{
-				// TODO Auto-generated method stub
-				
 			}
 			
 			@Override
 			public void afterTextChanged(Editable s)
 			{
-				// TODO Auto-generated method stub
-				
+			}
+		});
+        baseValueEditor_.addTextChangedListener(new TextWatcher()
+		{
+			@Override
+			public void onTextChanged(CharSequence s, int start, int before, int count)
+			{
+				try
+				{
+					if (TextUtils.isEmpty(s))
+					{
+						resultListAdapter_.setBaseValue(Double.NaN);
+					}
+					else
+					{
+						double baseValue = Double.parseDouble(s.toString());
+						resultListAdapter_.setBaseValue(baseValue);
+					}
+				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex.toString());
+				}
+			}
+			
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after)
+			{
+			}
+			
+			@Override
+			public void afterTextChanged(Editable s)
+			{
 			}
 		});
 	}
@@ -108,7 +146,14 @@ public class MainActivity extends ListActivity {
 		categoryId_ = categoryId;
 		baseUnitId_ = unitId;
 		targetUnitFilterEditor_.setEnabled(true);
-		resultListAdapter_.populateData(categoryId_, baseUnitId_);
+		try
+		{
+			resultListAdapter_.populateData(categoryId_, baseUnitId_);
+		}
+		catch (IllegalAccessException e)
+		{
+			Log.w(TAG, e);
+		}
 	}
 	
 	private void clearBaseUnit(boolean keepTextOnBaseUnitEditor)
