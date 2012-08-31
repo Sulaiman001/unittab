@@ -135,6 +135,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	{
 		if (onGuiThread())
 		{
+			Log.i(TAG, String.format("Populate category = %d baseUnit = %d", categoryId, baseUnitId));
+			
 			categoryId_ = categoryId;
 			baseUnitId_ = baseUnitId;
 			
@@ -168,6 +170,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	{
 		if (onGuiThread())
 		{
+			Log.i(TAG, String.format("setBaseValue = %f", baseValue));
+			
 			baseValue_ = baseValue;
 			
 			/* set all the value to "-" */
@@ -367,12 +371,20 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			{
 				data_ = result;
 			}
+			
+			//reset filter
+			if (filter_ != null)
+			{
+				filter_.resetFilterData();
+			}
+			
 			if (result == null || result.size() == 0)
 			{
 				notifyDataSetInvalidated();
 			}
 			else
 			{
+				Log.i(TAG, String.format("Finished fill data for category %d, found %d units", categoryId_, result.size()));
 				notifyDataSetChanged();
 			}
 		}
@@ -461,6 +473,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				FilterResults results)
 		{
 			data_ = (ArrayList<RowData>) (results.values);
+			
 			if (results.count > 0)
 			{
 				notifyDataSetChanged();
@@ -482,6 +495,14 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			{
 				fullData_.get(i).clearTargetValue();
 			}
+		}
+		
+		/**
+		 * Must be called each time the result list (data_) is re-populate
+		 */
+		public void resetFilterData()
+		{
+			fullData_ = null;
 		}
 		
 	}

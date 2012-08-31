@@ -1,7 +1,5 @@
 package dh.sunicon.datamodel;
 
-import de.congrace.exp4j.Calculable;
-import de.congrace.exp4j.ExpressionBuilder;
 import android.database.Cursor;
 import android.text.TextUtils;
 import android.util.Log;
@@ -125,19 +123,17 @@ public class Conversion extends BaseEntity
 
 	public double evalFormula(String formula, double value)
 	{
-		Calculable calc;
 		try
 		{
-			calc = new ExpressionBuilder(formula).withVariableNames("x")
-					.build();
+			MathEval math = new MathEval();
+			math.setVariable("x", value);
+			return math.evaluate(formula);
 		}
 		catch (Exception e)
 		{
-			Log.e(TAG, "Failed to evaluate expression", e);
+			Log.e(TAG, "Failed to evaluate expression "+formula, e);
 			return Double.NaN;
 		}
-		calc.setVariable("x", value);
-		return calc.calculate();
 	}
 	
 	public static Conversion parseCursor(DatabaseHelper dbHelper, Cursor cur)

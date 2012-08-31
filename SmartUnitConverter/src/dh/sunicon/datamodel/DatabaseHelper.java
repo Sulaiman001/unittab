@@ -1,25 +1,21 @@
 package dh.sunicon.datamodel;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.readystatesoftware.sqliteasset.SQLiteAssetHelper;
-
-import de.congrace.exp4j.Calculable;
-import de.congrace.exp4j.ExpressionBuilder;
 
 public class DatabaseHelper extends SQLiteAssetHelper
 {
 
 	private static final String DATABASE_NAME = "SmartUnitConverter.db";
-	private static final int DATABASE_VERSION = 2;
+	private static final int DATABASE_VERSION = 5;
 
 	// private LruCache<Long, BaseEntity> entityCache;
 
 	public DatabaseHelper(Context context)
 	{
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
-		setForcedUpgradeVersion(2);
+		setForcedUpgradeVersion(5);
 
 		// Get memory class of this device, exceeding this amount will throw an
 		// OutOfMemory exception.
@@ -36,7 +32,7 @@ public class DatabaseHelper extends SQLiteAssetHelper
 	// {
 	// return entityCache;
 	// }
-
+/*
 	public double evalExpression(String expression, double x)
 	{
 		Calculable calc;
@@ -53,5 +49,5 @@ public class DatabaseHelper extends SQLiteAssetHelper
 		calc.setVariable("x", x);
 		return calc.calculate();
 	}
-
+*/
 }
