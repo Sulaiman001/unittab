@@ -5,7 +5,6 @@ import java.util.Random;
 import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.DialogInterface;
-import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.text.Editable;
@@ -73,7 +72,6 @@ public class MainActivity extends ListActivity
         baseUnitEditor_.setThreshold(1);
         
         setListAdapter(resultListAdapter_);
-        
         clearBaseUnit(false);
         initEvents();
 	}
@@ -111,7 +109,7 @@ public class MainActivity extends ListActivity
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count)
 			{
-				resultListAdapter_.getFilter().filter(s);
+				getResultListAdapter().getFilter().filter(s);
 			}
 			
 			@Override
@@ -135,12 +133,12 @@ public class MainActivity extends ListActivity
 				{
 					if (TextUtils.isEmpty(s))
 					{
-						resultListAdapter_.setBaseValue(Double.NaN);
+						getResultListAdapter().setBaseValue(Double.NaN);
 					}
 					else
 					{
 						double baseValue = Double.parseDouble(s.toString());
-						resultListAdapter_.setBaseValue(baseValue);
+						getResultListAdapter().setBaseValue(baseValue);
 					}
 				}
 				catch (Exception ex)
@@ -167,7 +165,7 @@ public class MainActivity extends ListActivity
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id)
 			{
-				ResultListAdapter.RowData row = (ResultListAdapter.RowData) (getListAdapter()
+				RowData row = (RowData) (getListAdapter()
 						.getItem(position));
 
 				actionPopupDlg_.show();
@@ -190,7 +188,7 @@ public class MainActivity extends ListActivity
 		targetUnitFilterEditor_.setEnabled(true);
 		try
 		{
-			resultListAdapter_.populateData(categoryId_, baseUnitId_);
+			getResultListAdapter().setBaseUnitId(categoryId_, baseUnitId_);
 		}
 		catch (IllegalAccessException e)
 		{
@@ -202,6 +200,7 @@ public class MainActivity extends ListActivity
 	{
 		targetUnitFilterEditor_.setText(null);
 	}
+
 	private void clearBaseUnit(boolean keepTextOnBaseUnitEditor)
 	{
 		categoryLabel_.setVisibility(View.GONE);
@@ -254,5 +253,12 @@ public class MainActivity extends ListActivity
 //			Log.w("SimulationQuery", e);
 //		}
 	}
+
+	
+	ResultListAdapter getResultListAdapter()
+	{
+		return resultListAdapter_;
+	}
+
 	
 }

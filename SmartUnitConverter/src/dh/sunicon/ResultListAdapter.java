@@ -1,8 +1,6 @@
 package dh.sunicon;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -33,12 +31,14 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	/**
 	 * Thread Pool to calculate the converted value
 	 */
-	private final ExecutorService computeExecutor_ = Executors.newFixedThreadPool(5);
+	private final ExecutorService calculationPoolThread_ = Executors.newFixedThreadPool(5);
+
 	/**
 	 * Thread to read all Conversion from DB
 	 */
-	private final ExecutorService readConversionExecutor_ = Executors.newSingleThreadExecutor();
-	private ReadConversionsTask readConversionsTask_ = null; 
+	private final ExecutorService conversionsLoadingThread_ = Executors
+			.newSingleThreadExecutor();
+	private ConversionsLoadingRunner conversionsLoadingRunner_ = null;
 	private Context context_;
 	private long categoryId_;
 	private long baseUnitId_;
@@ -118,10 +118,20 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		return v;
 	}
 	
+	@Override
+	public Filter getFilter()
+	{
+		if (filter_ == null)
+		{
+			filter_ = new TargetUnitFilter();
+		}
+		return filter_;
+	}
+	
 	/**
 	 * Fill data_ list with all units in the category except the baseUnit + read the Conversion graph 
 	 */
-	public void populateData(long categoryId, long baseUnitId) throws IllegalAccessException
+	public void setBaseUnitId(long categoryId, long baseUnitId) throws IllegalAccessException
 	{
 		if (onGuiThread())
 		{
@@ -129,12 +139,12 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			baseUnitId_ = baseUnitId;
 			
 			//read all conversion of the category
-			if (readConversionsTask_ != null)
+			if (conversionsLoadingRunner_ != null)
 			{
-				readConversionsTask_.cancel();
+				conversionsLoadingRunner_.cancel();
 			}
-			readConversionsTask_ = new ReadConversionsTask();
-			readConversionExecutor_.execute(readConversionsTask_);
+			conversionsLoadingRunner_ = new ConversionsLoadingRunner();
+			conversionsLoadingThread_.execute(conversionsLoadingRunner_);
 			
 			//fill the list with related target unit (of the same category)
 			if (fillDataTask_ != null)
@@ -146,7 +156,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		}
 		else
 		{
-			throw new IllegalAccessException("populateData() must be called from UI Thread.");
+			throw new IllegalAccessException("this methode must be called from UI Thread.");
 		}
 	}
 	
@@ -191,14 +201,32 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		}
 	}
 
-	@Override
-	public Filter getFilter()
+	public Context getContext()
 	{
-		if (filter_ == null)
+		return context_;
+	}
+
+	public double getBaseValue()
+	{
+		return baseValue_;
+	}
+	
+	public ExecutorService getCalculationPoolThread()
+	{
+		return calculationPoolThread_;
+	}
+	
+	public ArrayList<Conversion> getConversions() throws IllegalAccessException, InterruptedException
+	{
+		if (conversionsLoadingRunner_==null)
 		{
-			filter_ = new TargetUnitFilter();
+			throw new IllegalAccessException("The conversion loading has not been started. Base Unit was not set");
 		}
-		return filter_;
+		if (!conversionsLoadingRunner_.isFinished())
+		{
+			conversionsLoadingRunner_.waitToFinish(5, TimeUnit.SECONDS);
+		}
+		return conversionsLoadingRunner_.getConversions();
 	}
 	
 	public boolean onGuiThread()
@@ -206,11 +234,12 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		return Looper.getMainLooper().getThread() == Thread.currentThread();
 	}
 	
+	
 	/*
 	 * **** Inner classes ****
 	 */
 	
-	private final class ReadConversionsTask implements Runnable
+	final class ConversionsLoadingRunner implements Runnable
 	{
 		private boolean cancelled_;
 		private boolean finished_ = false;
@@ -218,6 +247,11 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		
 		private ArrayList<Conversion> conversions_;
 		
+		public ArrayList<Conversion> getConversions()
+		{
+			return conversions_;
+		}
+
 		public void cancel()
 		{
 			cancelled_ = true;
@@ -278,19 +312,22 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			}
 			finally
 			{
+				finished_ = true;
 				//notify other thread that this ones is finished
 				countDownLatch_.countDown();
-				finished_ = true;
 			}
 		}
 	}
 
+	/**
+	 * this AsynTask populates the DataRow list of the owner
+	 */
 	private final class FillDataTask extends AsyncTask<Long, Void, ArrayList<RowData>>
 	{
 		@Override
 		protected ArrayList<RowData> doInBackground(Long... params)
 		{
-			ArrayList<RowData> resu = new ArrayList<ResultListAdapter.RowData>();
+			ArrayList<RowData> resu = new ArrayList<RowData>();
 
 			long categoryId = params[0];
 			long baseUnitId = params[1];
@@ -308,7 +345,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			while (cur.moveToNext() && !isCancelled()) 
 			{
 				RowData co = new RowData(
-							baseUnitId,
+							ResultListAdapter.this, baseUnitId,
 							cur.getLong(idColumnIndex),
 							cur.getString(nameColumnIndex),
 							cur.getString(shortNameColumnIndex)
@@ -341,249 +378,12 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		}
 	};
 	
-	/**
-	 * data of a Row
-	 * call setBaseValue() will invoke calculation on the computeExecutor_ pool thread
-	 */
-	public final class RowData implements Runnable
-	{
-		/*change of baseValue_ and value_ must be synchronized*/
-		private Double baseValue_ = Double.NaN;
-		private long baseUnitId_;
-		private long targetUnitId_;
-		private String targetUnitName_;
-		private String targetUnitShortName_;
-		private double value_ = Double.NaN;
-		
-		public RowData(long baseUnitId, long targetUnitId, String targetUnitName,
-				String targetUnitShortName)
-		{
-			super();
-			baseUnitId_ = baseUnitId;
-			targetUnitId_ = targetUnitId;
-			targetUnitName_ = targetUnitName;
-			targetUnitShortName_ = targetUnitShortName;
-			this.setBaseValue(ResultListAdapter.this.baseValue_);
-		}
-		public long getUnitId()
-		{
-			return targetUnitId_;
-		}
-		public String getUnitName()
-		{
-			if (TextUtils.isEmpty(targetUnitShortName_))
-			{
-				return targetUnitName_;
-			}
-			return String.format("%1$s - %2$s", targetUnitShortName_, targetUnitName_);
-		}
-		public String getValue()
-		{
-			if (Double.isNaN(value_))
-			{
-				return "-";
-			}
-			return Double.toString(value_);
-		}
-
-		/**
-		 * Compute the target value in the thread pool (computeExecutor) then refresh the UI
-		 * @param baseValue
-		 */
-		private void setBaseValue(double baseValue)
-		{
-			if (baseValue_.equals(baseValue) && !Double.isNaN(value_))
-			{
-				//no need to calculate, the old value_ is just right 
-				return;
-			}
-			
-			//change the baseValue and convert it
-			synchronized (baseValue_)
-			{
-				baseValue_ = baseValue;
-			}
-			
-			computeExecutor_.execute(this);
-		}
-		
-		private boolean clearTargetValue()
-		{
-			boolean isValueChanged = !Double.isNaN(baseValue_);
-			value_ = Double.NaN;
-			return isValueChanged;
-		}
-		
-		/**
-		 * Compute the value
-		 */
-		@Override
-		public void run()
-		{
-			try
-			{
-				if (!readConversionsTask_.isFinished())
-				{
-					readConversionsTask_.waitToFinish(5, TimeUnit.SECONDS);
-				}
-				
-				/* copy the current baseValue_ to original Value */
-				double originalValue;
-				synchronized (baseValue_)
-				{
-					originalValue = baseValue_;
-				}
-				
-				double resu;
-				
-				/* compute */
-				
-				if (baseUnitId_ == targetUnitId_)
-				{
-					resu = originalValue;
-				}
-				else if (Double.isNaN(originalValue))
-				{
-					resu = Double.NaN;
-				}
-				else
-				{
-					// TODO: convert the original value
-					
-					resu = computeTargetValue(originalValue, baseUnitId_, targetUnitId_);
-					MainActivity.simulateLongOperation(1, 4);
-				}
-				
-				synchronized (baseValue_)
-				{
-					if (baseValue_.equals(originalValue))
-					{
-						value_ = resu;
-						invokeRefreshGui();
-					}
-					//else, a newer setBaseValue() was called, we must ignore the resu 
-				}
-			}
-			catch (Exception ex)
-			{
-				Log.w(TAG, ex);
-			}
-		}
-		
-		private void invokeRefreshGui()
-		{
-			((MainActivity)context_).runOnUiThread(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					try
-					{
-						notifyDataSetChanged();
-					}
-					catch (Exception ex)
-					{
-						Log.w(TAG, ex);
-					}
-				}
-			}); 
-		}
-		
-		/**
-		 * Convert the base value using the conversion table.
-		 * Algo breadth-first search (BFS) find the shortest path from baseUnitId to targetUnitId 
-		 * on the 'conversions' graph
-		 * Input data
-		 * - the baseUnitId,
-		 * - targetUnitId 
-		 * - ResultListAdapter.data_ contains all unitId of the category except the baseUnitId
-		 * - readConversionsTask_.conversions_ is the conversion graph (link between unit_unit)
-		 * 
-		 * Output: the converted value
-		 */
-		private double computeTargetValue(double baseValue, long baseUnitId, long targetUnitId)
-		{
-			Log.d(TAG, String.format("Start convert %f from baseUnitId=%d to targetUnitId=%d", baseValue, baseUnitId, targetUnitId));
-			
-			/* use BFS to find the shortest path from the baseUnitId to the targetUnitId on the Converions graph */
-			
-			ArrayList<Conversion> conversions = readConversionsTask_.conversions_;
-			LinkedList<Long> visitedUnitQueue = new LinkedList<Long>();
-			HashMap<Long, Conversion> previous = new HashMap<Long, Conversion>();
-			boolean pathFound = false; //turn to true if we can build a path from baseUnitId to targetUnitId
-			
-			//add source to baseUnitId
-			visitedUnitQueue.offer(baseUnitId);
-			previous.put(baseUnitId, null);
-			
-			while (!visitedUnitQueue.isEmpty())
-			{
-				long visitingUnit = visitedUnitQueue.poll();
-				
-				if (visitingUnit == targetUnitId)
-				{
-					pathFound = true;
-					break; //gotcha!
-				}
-				
-				//find all neighbors which are not visited
-				int n = conversions.size();
-				for (int i=0; i<n; i++)
-				{
-					Conversion conv = conversions.get(i);
-					
-					if (conv.isIncidentEdgeOf(visitingUnit))
-					{
-						long neighborUnit = conv.getOtherUnitId(visitingUnit);
-						//check if it is not visited yet
-						if (!visitedUnitQueue.contains(neighborUnit))
-						{
-							//neighborUnit is not visited => add it to the queue
-							visitedUnitQueue.offer(neighborUnit);
-							previous.put(neighborUnit, conv);
-						}
-					}
-				}
-			}
-			
-			/* play back (using previous list) to build the path and compute the value */
-			
-			if (!pathFound)
-			{
-				return Double.NaN;
-			}
-			
-			LinkedList<Conversion> path = new LinkedList<Conversion>();
-			long uid = targetUnitId;
-			Conversion conv;
-			
-			do {
-				conv = previous.get(uid); 
-				path.addFirst(conv);
-			}
-			while (conv.getOtherUnitId(uid) != baseUnitId);
-			
-			/* use the path to convert the value */
-			
-			double returned = baseValue;
-			uid = baseUnitId;
-			while (!path.isEmpty())
-			{
-				conv = path.poll();
-				returned = conv.convert(returned, uid);
-			}
-				
-			return Double.NaN;
-		}
-		
-	}
-	
 	private class TargetUnitFilter extends Filter 
 	{
 		/**
 		 * copy of the original data_, then the data_ will contains only item matching the filter
 		 */
-		private ArrayList<ResultListAdapter.RowData> fullData_;
+		private ArrayList<RowData> fullData_;
 		
 		@Override
 		protected FilterResults performFiltering(CharSequence constraint)
@@ -594,7 +394,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			{
 				synchronized (lock_) 
 				{
-					fullData_ = new ArrayList<ResultListAdapter.RowData>(data_);
+					fullData_ = new ArrayList<RowData>(data_);
 				}
 			}
 			
@@ -603,7 +403,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			{
 				synchronized (lock_) 
 				{
-					l = new ArrayList<ResultListAdapter.RowData>(fullData_);
+					l = new ArrayList<RowData>(fullData_);
 					final int count = l.size();
 					for (int i = 0; i<count; i++)
 					{
@@ -615,10 +415,10 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			{
 				final String filterText = constraint.toString().toLowerCase();
 				final int count = fullData_.size();
-				l = new ArrayList<ResultListAdapter.RowData>();
+				l = new ArrayList<RowData>();
 				for (int i = 0; i<count; i++)
 				{
-					final ResultListAdapter.RowData row = fullData_.get(i);
+					final RowData row = fullData_.get(i);
 					
 					boolean matched = false;
 					final String valueText = row.getUnitName().toLowerCase();
@@ -660,7 +460,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		protected void publishResults(CharSequence constraint,
 				FilterResults results)
 		{
-			data_ = (ArrayList<ResultListAdapter.RowData>) (results.values);
+			data_ = (ArrayList<RowData>) (results.values);
 			if (results.count > 0)
 			{
 				notifyDataSetChanged();
