@@ -2,7 +2,10 @@ package dh.sunicon;
 
 import java.util.Random;
 
+import android.app.AlertDialog;
 import android.app.ListActivity;
+import android.content.DialogInterface;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.text.Editable;
@@ -13,8 +16,11 @@ import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.View;
 import android.view.View.OnKeyListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 import dh.sunicon.datamodel.DatabaseHelper;
 
 public class MainActivity extends ListActivity 
@@ -27,6 +33,7 @@ public class MainActivity extends ListActivity
 	private UnitAutoCompleteView baseUnitEditor_;
 	private EditText targetUnitFilterEditor_;
 	private ResultListAdapter resultListAdapter_;
+	private AlertDialog actionPopupDlg_;
 	
 	private long baseUnitId_ = -1;
 	private long categoryId_ = -1;
@@ -40,6 +47,20 @@ public class MainActivity extends ListActivity
 		final Cursor initialCursor = dbHelper_.getReadableDatabase().rawQuery(initialQuery, null);
 		unitsCursorAdapter_ = new UnitsCursorAdapter(this, initialCursor, true);
 		resultListAdapter_ = new ResultListAdapter(this);
+		
+		final String[] popupItems = getResources().getStringArray(
+				R.array.result_popup_menu);
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+		//builder.setTitle("Pick a color");
+		builder.setItems(popupItems, new DialogInterface.OnClickListener()
+		{
+			public void onClick(DialogInterface dialog, int item)
+			{
+				Toast.makeText(getApplicationContext(), popupItems[item],
+						Toast.LENGTH_SHORT).show();
+			}
+		});
+		actionPopupDlg_ = builder.create();
 		
 		setContentView(R.layout.sunicon_main);
 		
@@ -68,6 +89,7 @@ public class MainActivity extends ListActivity
 				onSelectBaseUnit(sender, categoryName, unitName, categoryId, unitId);
 			}
 		});
+		
         baseUnitEditor_.setOnKeyListener(new OnKeyListener()
 		{
 			@Override
@@ -83,6 +105,7 @@ public class MainActivity extends ListActivity
 				return false;
 			}
 		});
+        
         targetUnitFilterEditor_.addTextChangedListener(new TextWatcher()
 		{
 			@Override
@@ -102,6 +125,7 @@ public class MainActivity extends ListActivity
 			{
 			}
 		});
+        
         baseValueEditor_.addTextChangedListener(new TextWatcher()
 		{
 			@Override
@@ -134,6 +158,24 @@ public class MainActivity extends ListActivity
 			@Override
 			public void afterTextChanged(Editable s)
 			{
+			}
+		});
+        
+        getListView().setOnItemClickListener(new OnItemClickListener()
+		{
+			@Override
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id)
+			{
+				ResultListAdapter.RowData row = (ResultListAdapter.RowData) (getListAdapter()
+						.getItem(position));
+
+				actionPopupDlg_.show();
+				/*
+				Toast.makeText(MainActivity.this,
+						row.getValue() + " " + row.getUnitName(),
+						android.widget.Toast.LENGTH_LONG).show();
+				*/
 			}
 		});
 	}
@@ -203,14 +245,14 @@ public class MainActivity extends ListActivity
 		Random rand = new Random(System.currentTimeMillis());
 		long timeToSleep = (rand.nextInt(maxSecond-minSecond)+minSecond)*1000;
 		
-		try
-		{
-			Thread.sleep(timeToSleep);
-		}
-		catch (InterruptedException e)
-		{
-			Log.w("SimulationQuery", e);
-		}
+//		try
+//		{
+//			Thread.sleep(timeToSleep);
+//		}
+//		catch (InterruptedException e)
+//		{
+//			Log.w("SimulationQuery", e);
+//		}
 	}
 	
 }

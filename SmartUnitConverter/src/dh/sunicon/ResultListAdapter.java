@@ -2,6 +2,8 @@ package dh.sunicon;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -117,7 +119,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	}
 	
 	/**
-	 * Fill the list with all units in the category except the baseUnit
+	 * Fill data_ list with all units in the category except the baseUnit + read the Conversion graph 
 	 */
 	public void populateData(long categoryId, long baseUnitId) throws IllegalAccessException
 	{
@@ -214,7 +216,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		private boolean finished_ = false;
 		private CountDownLatch countDownLatch_ = new CountDownLatch(1);
 		
-		private HashMap<Long, Conversion> conversions_ = new HashMap<Long, Conversion>();
+		private ArrayList<Conversion> conversions_;
 		
 		public void cancel()
 		{
@@ -236,6 +238,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		{
 			try
 			{	
+				/* read all */
+				
 				Cursor cur = dbHelper_.getReadableDatabase().rawQuery(
 								"SELECT conversion.* FROM conversion JOIN unit ON conversion.base = unit.id WHERE unit.categoryId = ?",
 								new String[] { Long.toString(categoryId_) });
@@ -247,6 +251,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				final int formulaCi = cur.getColumnIndex("formula");
 				final int reversedFormulaCi = cur.getColumnIndex("reversedFormula");
 				
+				conversions_ = new ArrayList<Conversion>();
+				
 				while (cur.moveToNext() && !cancelled_)
 				{
 					Conversion c = new Conversion(dbHelper_, 
@@ -256,7 +262,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 							cur.getDouble(fxCi), 
 							cur.getString(formulaCi), 
 							cur.getString(reversedFormulaCi));
-					conversions_.put(c.getId(), c);
+					conversions_.add(c);
 				}
 				
 				cur.close();
@@ -337,8 +343,9 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	
 	/**
 	 * data of a Row
+	 * call setBaseValue() will invoke calculation on the computeExecutor_ pool thread
 	 */
-	private final class RowData implements Runnable
+	public final class RowData implements Runnable
 	{
 		/*change of baseValue_ and value_ must be synchronized*/
 		private Double baseValue_ = Double.NaN;
@@ -383,7 +390,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		 * Compute the target value in the thread pool (computeExecutor) then refresh the UI
 		 * @param baseValue
 		 */
-		public void setBaseValue(double baseValue)
+		private void setBaseValue(double baseValue)
 		{
 			if (baseValue_.equals(baseValue) && !Double.isNaN(value_))
 			{
@@ -400,7 +407,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			computeExecutor_.execute(this);
 		}
 		
-		public boolean clearTargetValue()
+		private boolean clearTargetValue()
 		{
 			boolean isValueChanged = !Double.isNaN(baseValue_);
 			value_ = Double.NaN;
@@ -443,7 +450,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				{
 					// TODO: convert the original value
 					
-					resu = originalValue + 1;
+					resu = computeTargetValue(originalValue, baseUnitId_, targetUnitId_);
 					MainActivity.simulateLongOperation(1, 4);
 				}
 				
@@ -481,6 +488,94 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				}
 			}); 
 		}
+		
+		/**
+		 * Convert the base value using the conversion table.
+		 * Algo breadth-first search (BFS) find the shortest path from baseUnitId to targetUnitId 
+		 * on the 'conversions' graph
+		 * Input data
+		 * - the baseUnitId,
+		 * - targetUnitId 
+		 * - ResultListAdapter.data_ contains all unitId of the category except the baseUnitId
+		 * - readConversionsTask_.conversions_ is the conversion graph (link between unit_unit)
+		 * 
+		 * Output: the converted value
+		 */
+		private double computeTargetValue(double baseValue, long baseUnitId, long targetUnitId)
+		{
+			Log.d(TAG, String.format("Start convert %f from baseUnitId=%d to targetUnitId=%d", baseValue, baseUnitId, targetUnitId));
+			
+			/* use BFS to find the shortest path from the baseUnitId to the targetUnitId on the Converions graph */
+			
+			ArrayList<Conversion> conversions = readConversionsTask_.conversions_;
+			LinkedList<Long> visitedUnitQueue = new LinkedList<Long>();
+			HashMap<Long, Conversion> previous = new HashMap<Long, Conversion>();
+			boolean pathFound = false; //turn to true if we can build a path from baseUnitId to targetUnitId
+			
+			//add source to baseUnitId
+			visitedUnitQueue.offer(baseUnitId);
+			previous.put(baseUnitId, null);
+			
+			while (!visitedUnitQueue.isEmpty())
+			{
+				long visitingUnit = visitedUnitQueue.poll();
+				
+				if (visitingUnit == targetUnitId)
+				{
+					pathFound = true;
+					break; //gotcha!
+				}
+				
+				//find all neighbors which are not visited
+				int n = conversions.size();
+				for (int i=0; i<n; i++)
+				{
+					Conversion conv = conversions.get(i);
+					
+					if (conv.isIncidentEdgeOf(visitingUnit))
+					{
+						long neighborUnit = conv.getOtherUnitId(visitingUnit);
+						//check if it is not visited yet
+						if (!visitedUnitQueue.contains(neighborUnit))
+						{
+							//neighborUnit is not visited => add it to the queue
+							visitedUnitQueue.offer(neighborUnit);
+							previous.put(neighborUnit, conv);
+						}
+					}
+				}
+			}
+			
+			/* play back (using previous list) to build the path and compute the value */
+			
+			if (!pathFound)
+			{
+				return Double.NaN;
+			}
+			
+			LinkedList<Conversion> path = new LinkedList<Conversion>();
+			long uid = targetUnitId;
+			Conversion conv;
+			
+			do {
+				conv = previous.get(uid); 
+				path.addFirst(conv);
+			}
+			while (conv.getOtherUnitId(uid) != baseUnitId);
+			
+			/* use the path to convert the value */
+			
+			double returned = baseValue;
+			uid = baseUnitId;
+			while (!path.isEmpty())
+			{
+				conv = path.poll();
+				returned = conv.convert(returned, uid);
+			}
+				
+			return Double.NaN;
+		}
+		
 	}
 	
 	private class TargetUnitFilter extends Filter 

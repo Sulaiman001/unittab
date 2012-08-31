@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@+id/copyValueItem" android:title="Copy Value"></item>
+    <item android:id="@+id/copyUnitNameItem" android:title="Copy Unit name"></item>
+    <item android:id="@+id/copyValueAndUnitItem" android:title="Copy Value and Unit name"></item>
+    <item android:id="@+id/setValueAsBaseItem" android:title="Set Value as Base"></item>
+	<item android:id="@+id/setUnitAsBaseItem" android:title="Set Unit as Base"></item>
+	<item android:id="@+id/setUnitAndValueAsBaseItem" android:title="Set Value and Unit as Base"></item>
+</menu>

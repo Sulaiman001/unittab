@@ -12,13 +12,14 @@ public class DatabaseHelper extends SQLiteAssetHelper
 {
 
 	private static final String DATABASE_NAME = "SmartUnitConverter.db";
-	private static final int DATABASE_VERSION = 1;
+	private static final int DATABASE_VERSION = 2;
 
 	// private LruCache<Long, BaseEntity> entityCache;
 
 	public DatabaseHelper(Context context)
 	{
 		super(context, DATABASE_NAME, null, DATABASE_VERSION);
+		setForcedUpgradeVersion(2);
 
 		// Get memory class of this device, exceeding this amount will throw an
 		// OutOfMemory exception.
