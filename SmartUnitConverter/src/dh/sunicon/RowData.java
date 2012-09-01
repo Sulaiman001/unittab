@@ -20,13 +20,17 @@ public final class RowData implements Runnable
 	 * the owner
 	 */
 	private final ResultListAdapter resultListAdapter_;
-	/* change of baseValue_ and value_ must be synchronized */
+	private final long baseUnitId_;
+	private final long targetUnitId_;
+	private final String targetUnitName_;
+	private final String targetUnitShortName_;
+	private final String keyword_;
+	
+	/* change on baseValue_ and value_ must be synchronized */
 	private Double baseValue_ = Double.NaN;
-	private long baseUnitId_;
-	private long targetUnitId_;
-	private String targetUnitName_;
-	private String targetUnitShortName_;
-	private double value_ = Double.NaN;
+	private String value_ = "-";
+	
+	private volatile boolean cancelCalculation_ = false;
 	
 	public RowData(ResultListAdapter resultListAdapter, long baseUnitId, long targetUnitId, String targetUnitName,
 			String targetUnitShortName)
@@ -37,6 +41,7 @@ public final class RowData implements Runnable
 		targetUnitId_ = targetUnitId;
 		targetUnitName_ = targetUnitName;
 		targetUnitShortName_ = targetUnitShortName;
+		keyword_ = String.format("%s %s", targetUnitShortName_, targetUnitName_).toLowerCase();
 		this.setBaseValue(this.resultListAdapter_.getBaseValue());
 	}
 	public long getUnitId()
@@ -51,32 +56,38 @@ public final class RowData implements Runnable
 		}
 		if (TextUtils.isEmpty(targetUnitName_))
 		{
-			return targetUnitShortName_;
+			return "<b>" + targetUnitShortName_ + "</b>";
 		}
 		if (targetUnitShortName_.equals(targetUnitName_))
 		{
 			return targetUnitShortName_;
 		}
-		return String.format("%1$s - %2$s", targetUnitShortName_, targetUnitName_);
+		return String.format("<b>%s</b> - %s", targetUnitShortName_,
+				targetUnitName_);
 	}
 	public String getValue()
 	{
-		if (Double.isNaN(value_))
+		if (TextUtils.isEmpty(value_))
 		{
 			return "-";
 		}
-		return Double.toString(value_);
+		return value_;
 	}
 
+	public String getKeyword()
+	{
+		return keyword_;
+	}
+	
 	/**
 	 * Compute the target value_ in the thread pool then refresh the UI
 	 * @param baseValue
 	 */
 	void setBaseValue(double baseValue)
 	{
-		if (baseValue_.equals(baseValue) && !Double.isNaN(value_))
+		if (baseValue_.equals(baseValue) && !TextUtils.isEmpty(value_))
 		{
-			//no need to calculate, the old value_ is just right 
+			//no need to invoke calculation, the old value_ is just right 
 			return;
 		}
 		
@@ -84,16 +95,27 @@ public final class RowData implements Runnable
 		synchronized (baseValue_)
 		{
 			baseValue_ = baseValue;
+			value_ = null; //reset the result before entering the calculation process
 		}
 		
+		//start the calculation
 		this.resultListAdapter_.getCalculationPoolThread().execute(this);
 	}
 	
 	boolean clearTargetValue()
 	{
 		boolean isValueChanged = !Double.isNaN(baseValue_);
-		value_ = Double.NaN;
+		value_ = null;
 		return isValueChanged;
+	}
+	
+	/**
+	 * Add more security layer to make sure that the calculation will stop, it shoud be called before we dump this RowData
+	 * Once this methode is called, this object row data cannot be re-used to perform calculation
+	 */
+	void cancelCalculation()
+	{
+		cancelCalculation_ = true;
 	}
 	
 	/**
@@ -113,7 +135,7 @@ public final class RowData implements Runnable
 			
 			double resu;
 			
-			/* sstart the calculation process */
+			/* start the calculation process */
 			
 			if (baseUnitId_ == targetUnitId_)
 			{
@@ -129,11 +151,13 @@ public final class RowData implements Runnable
 				//MainActivity.simulateLongOperation(1, 4);
 			}
 			
+			String resuStr = formatDouble(resu);
+			
 			synchronized (baseValue_)
 			{
 				if (baseValue_.equals(originalValue)) //baseValue_ has not been changed during the calculation process
 				{
-					value_ = resu;
+					value_ = resuStr;
 					invokeRefreshGui();
 				}
 				//else, a newer setBaseValue() was called, we must ignore the resu 
@@ -181,6 +205,11 @@ public final class RowData implements Runnable
 	 */
 	double computeTargetValue(double baseValue, long baseUnitId, long targetUnitId) throws IllegalAccessException, InterruptedException
 	{
+		if (cancelCalculation_)
+		{
+			return Double.NaN;
+		}
+		
 		Log.d(ResultListAdapter.TAG, String.format("Start convert %f from baseUnitId=%d to targetUnitId=%d", baseValue, baseUnitId, targetUnitId));
 		
 		/* use BFS to find the shortest path from the baseUnitId to the targetUnitId on the Converions graph */
@@ -195,7 +224,7 @@ public final class RowData implements Runnable
 		visitedUnitQueue.offer(baseUnitId);
 		previous.put(baseUnitId, null);
 		
-		while (!visitedUnitQueue.isEmpty())
+		while (!visitedUnitQueue.isEmpty() && !cancelCalculation_)
 		{
 			long visitingUnit = visitedUnitQueue.poll();
 			visitedUnit.add(visitingUnit);
@@ -242,20 +271,69 @@ public final class RowData implements Runnable
 			path.addFirst(conv);
 			uid = conv.getOtherUnitId(uid); 
 		}
-		while (uid != baseUnitId);
+		while (uid != baseUnitId && !cancelCalculation_);
 		
 		/* use the path to convert the value */
 		
 		double returned = baseValue;
 		uid = baseUnitId;
-		while (!path.isEmpty())
+		while (!path.isEmpty() && !cancelCalculation_)
 		{
 			conv = path.poll();
 			returned = conv.convert(returned, uid);
 			uid = conv.getOtherUnitId(uid);
 		}
-			
+		
+		if (cancelCalculation_)
+		{
+			return Double.NaN;
+		}
+		
 		return returned;
+	}
+	
+	/**
+	 * Format 3.1416e+5 to "<b>3</b>.1416<b>e+5</b>" 
+	 * @param d
+	 * @return
+	 */
+	public static String formatDouble(double d)
+	{
+		String s = String.format("%.12g", d);
+		StringBuilder resu = new StringBuilder("<b>");
+		
+		int firstPoint = s.indexOf('.');
+		int firstComma = s.indexOf(',');
+		int p1 = Math.max(firstPoint, firstComma);
+		
+		if (p1>0)
+		{
+			resu.append(s.substring(0, p1));
+			resu.append("</b>");
+		}
+		else
+		{
+			p1 = 0;
+		}
+		
+		int p2 = s.lastIndexOf('e');
+		if (p2>0)
+		{
+			resu.append(s.substring(p1, p2));
+			resu.append("<b>");
+			resu.append(s.substring(p2, s.length()));
+			resu.append("</b>");
+		}
+		else
+		{
+			resu.append(s.substring(p1, s.length()));
+			if (p1==0)
+			{
+				resu.append("</b>");
+			}
+		}
+		
+		return resu.toString();
 	}
 	
 }

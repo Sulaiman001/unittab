@@ -10,6 +10,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Looper;
+import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -111,8 +112,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		/* bind value to view */
 
 		RowData cr = data_.get(position);
-		valueLabel.setText(cr.getValue());
-		unitLabel.setText(cr.getUnitName());
+		valueLabel.setText(Html.fromHtml(cr.getValue()));
+		unitLabel.setText(Html.fromHtml(cr.getUnitName()));
 
 		return v;
 	}
@@ -399,6 +400,11 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		@Override
 		protected FilterResults performFiltering(CharSequence constraint)
 		{
+			if (data_ == null && fullData_ == null) // data_ has not been populated (or the population is not finished yet) 
+			{
+				return null;
+			}
+			
 			FilterResults resu = new FilterResults();
 			
 			if (fullData_ == null)
@@ -432,7 +438,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 					final RowData row = fullData_.get(i);
 					
 					boolean matched = false;
-					final String valueText = row.getUnitName().toLowerCase();
+					final String valueText = row.getKeyword();
 					if (valueText.contains(filterText))
 					{
 						matched = true;
@@ -471,6 +477,11 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		protected void publishResults(CharSequence constraint,
 				FilterResults results)
 		{
+			if (results == null)
+			{
+				return;
+			}
+			
 			data_ = (ArrayList<RowData>) (results.values);
 			
 			if (results.count > 0)
@@ -501,6 +512,16 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		 */
 		public void resetFilterData()
 		{
+			if (fullData_ == null)
+			{
+				return;
+			}
+			// dump the data row in order to replace
+			int n = fullData_.size();
+			for (int i = 0; i < n; i++)
+			{
+				fullData_.get(i).cancelCalculation();
+			}
 			fullData_ = null;
 		}
 		
