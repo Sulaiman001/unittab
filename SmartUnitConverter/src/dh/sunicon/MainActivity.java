@@ -244,14 +244,14 @@ public class MainActivity extends ListActivity
 		Random rand = new Random(System.currentTimeMillis());
 		long timeToSleep = (rand.nextInt(maxSecond-minSecond)+minSecond)*1000;
 		
-//		try
-//		{
-//			Thread.sleep(timeToSleep);
-//		}
-//		catch (InterruptedException e)
-//		{
-//			Log.w("SimulationQuery", e);
-//		}
+		try
+		{
+			Thread.sleep(timeToSleep);
+		}
+		catch (InterruptedException e)
+		{
+			Log.w("SimulationQuery", e);
+		}
 	}
 
 	

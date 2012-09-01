@@ -1,9 +1,12 @@
 package dh.sunicon;
 
+import java.util.LinkedList;
+
 import android.content.Context;
 import android.database.Cursor;
 import android.support.v4.widget.CursorAdapter;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +17,8 @@ import dh.sunicon.datamodel.DatabaseHelper;
 public class UnitsCursorAdapter extends CursorAdapter implements
 		Filterable
 {
+	static final String TAG = UnitsCursorAdapter.class.getName();
+	
 	static final String SELECT_QUERY_PART = 
 			"SELECT"
 			+" unit.id as _id"
@@ -27,8 +32,7 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 			"WHERE (lower(unitName) LIKE ? OR  lower(unitShortName) LIKE ? OR lower(categoryName) LIKE ?) ";
 	
 	static final String WHERE2_QUERY_PART = 
-			"WHERE (lower(unitName) LIKE ? OR  lower(unitShortName) LIKE ? OR lower(categoryName) LIKE ?) "
-			+"AND (lower(unitName) LIKE ? OR  lower(unitShortName) LIKE ? OR lower(categoryName) LIKE ?) ";
+			"AND (lower(unitName) LIKE ? OR  lower(unitShortName) LIKE ? OR lower(categoryName) LIKE ?) ";
 	
 	/**
 	 * Cursor contains 60 rows max 
@@ -138,36 +142,51 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 		// build the query by combining queryPartSelect + queryPartWhere1 (or 2) + queryPartLimit
 		
 		String wherePart = "";
-		String[] selectionArgs = null;
+		LinkedList<String> selectionArgs = null;
 		
 		if (!TextUtils.isEmpty(constraint))
 		{
 			String filterText = constraint.toString().trim().toLowerCase();
+			selectionArgs = new LinkedList<String>();
 			
-			int firstSpacePos = filterText.indexOf(' ', 0); 
-			if (firstSpacePos < 0) //no space has been found
+			final String[] words = filterText.split(" ");
+			
+			String firstWord = words[0];
+			wherePart = WHERE1_QUERY_PART;
+			selectionArgs.addLast('%'+firstWord+'%');
+			selectionArgs.addLast('%'+firstWord+'%');
+			selectionArgs.addLast('%'+firstWord+'%');
+			
+			final int wordCount = words.length;
+			for (int k = 1; k < wordCount; k++)
 			{
-				filterText = "%"+filterText+"%";
-				selectionArgs = new String[]{filterText, filterText, filterText};
-				wherePart = WHERE1_QUERY_PART;
-			}
-			else
-			{
-				//split filterText in 2 parts use the first space as separator 
-				String filterTextPart1 = "%"+filterText.substring(0, firstSpacePos)+"%";
-				String filterTextPart2 = "%"+filterText.substring(firstSpacePos, filterText.length()).trim()+"%";
+				String word = words[k];
+				if (TextUtils.isEmpty(word))
+				{
+					continue;
+				}
 				
-				wherePart = WHERE2_QUERY_PART;
-				selectionArgs = new String[]{filterTextPart1, filterTextPart1, filterTextPart1, filterTextPart2, filterTextPart2, filterTextPart2};
+				wherePart = wherePart.concat(WHERE2_QUERY_PART);
+				selectionArgs.addLast('%'+word+'%');
+				selectionArgs.addLast('%'+word+'%');
+				selectionArgs.addLast('%'+word+'%');
 			}
 		}
 		
-		MainActivity.simulateLongOperation(1, 3);
+		//MainActivity.simulateLongOperation(1, 3);
 		
 		final String queryComplete = SELECT_QUERY_PART + wherePart + LIMIT_ORDER_QUERY_PART;
-		//Log.i("UnitsCursorAdapter", queryComplete);
-
-		return dbHelper.getReadableDatabase().rawQuery(queryComplete, selectionArgs); 
+		
+		String[] argsArray = null;
+		if (selectionArgs != null)
+		{
+			argsArray = selectionArgs.toArray(new String[selectionArgs.size()]);
+		}
+		Log.d(TAG, String.format("%s - args.count = %d", queryComplete, argsArray == null ? 0 : argsArray.length));
+		 
+		//String[] argsArray = selectionArgs == null ? null : selectionArgs.toArray(new String[]{});
+		Cursor c = dbHelper.getReadableDatabase().rawQuery(queryComplete,  argsArray);
+		return c;
 		
 	}
 

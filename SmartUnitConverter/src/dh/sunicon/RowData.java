@@ -3,7 +3,6 @@ package dh.sunicon;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.concurrent.TimeUnit;
 
 import android.text.TextUtils;
 import android.util.Log;
@@ -127,7 +126,7 @@ public final class RowData implements Runnable
 			else
 			{
 				resu = computeTargetValue(originalValue, baseUnitId_, targetUnitId_);
-				MainActivity.simulateLongOperation(1, 4);
+				//MainActivity.simulateLongOperation(1, 4);
 			}
 			
 			synchronized (baseValue_)

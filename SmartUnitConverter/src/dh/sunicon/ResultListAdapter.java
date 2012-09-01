@@ -1,7 +1,6 @@
 package dh.sunicon;
 
 import java.util.ArrayList;
-import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -359,7 +358,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 
 			cur.close();
 			
-			MainActivity.simulateLongOperation(1, 3);
+			//MainActivity.simulateLongOperation(1, 3);
 
 			return resu;
 		}
