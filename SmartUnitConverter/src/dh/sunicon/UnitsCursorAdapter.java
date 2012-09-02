@@ -105,89 +105,101 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 				+categoryId+'\n'+unitId;
 	}
 	
+	private final int DELAY_RUN_QUERY = 500;
+	private Object lockLastConstraint_ = new Object();
+	private String lastConstraint_;
+	
 	@Override
 	public Cursor runQueryOnBackgroundThread(CharSequence constraint)
 	{
-		/*
-		//Event absorber technique
-		
-		long currentInvokeTime = System.nanoTime();
-		lastInvokeTime = currentInvokeTime;
 		try
 		{
-			//wait 300ms, to be sure that there are not other query (user didn't type other letter)
-			Thread.sleep(EventsAbsorberLatency);
-		}
-		catch (InterruptedException e)
-		{
-			Log.wtf(this.toString(), e);
-		}
+			/* delayer events technique */
+			
+			if (constraint!=null)
+			{
+				synchronized (lockLastConstraint_)
+				{
+					lastConstraint_ = new String(constraint.toString());
+				}
+			}
+			
+			Thread.sleep(DELAY_RUN_QUERY);
 		
-		//in case user type other letter, lastInvokeTime will be changed
-		if (lastInvokeTime > currentInvokeTime)
+			if (lastConstraint_!=null)
+			{
+				if (!lastConstraint_.equals(constraint))
+				{
+					/*
+					 * lastConstraint_ has been changed after 500ms 
+					 * => other runQueryOnBackgroundThread has been called
+					 * => no need to execute this one
+					 */ 
+					return null; 
+				}
+			}
+			
+			/* this is how you query for suggestions */
+			
+			if (getFilterQueryProvider() != null)
+			{
+				return getFilterQueryProvider().runQuery(constraint);
+			}
+			
+			// build the query by combining queryPartSelect + queryPartWhere1 (or 2) + queryPartLimit
+			
+			String wherePart = "";
+			LinkedList<String> selectionArgs = null;
+			
+			if (!TextUtils.isEmpty(constraint))
+			{
+				String filterText = constraint.toString().trim().toLowerCase();
+				selectionArgs = new LinkedList<String>();
+				
+				final String[] words = filterText.split(" ");
+				
+				String firstWord = words[0];
+				wherePart = WHERE1_QUERY_PART;
+				selectionArgs.addLast('%'+firstWord+'%');
+				selectionArgs.addLast('%'+firstWord+'%');
+				selectionArgs.addLast('%'+firstWord+'%');
+				
+				final int wordCount = words.length;
+				for (int k = 1; k < wordCount; k++)
+				{
+					String word = words[k];
+					if (TextUtils.isEmpty(word))
+					{
+						continue;
+					}
+					
+					wherePart = wherePart.concat(WHERE2_QUERY_PART);
+					selectionArgs.addLast('%'+word+'%');
+					selectionArgs.addLast('%'+word+'%');
+					selectionArgs.addLast('%'+word+'%');
+				}
+			}
+			
+			//MainActivity.simulateLongOperation(1, 3);
+			
+			final String queryComplete = SELECT_QUERY_PART + wherePart + LIMIT_ORDER_QUERY_PART;
+			
+			String[] argsArray = null;
+			if (selectionArgs != null)
+			{
+				argsArray = selectionArgs.toArray(new String[selectionArgs.size()]);
+			}
+			//Log.d(TAG, String.format("%s - args.count = %d", queryComplete, argsArray == null ? 0 : argsArray.length));
+			 
+			//String[] argsArray = selectionArgs == null ? null : selectionArgs.toArray(new String[]{});
+			Cursor c = dbHelper.getReadableDatabase().rawQuery(queryComplete,  argsArray);
+			return c;
+		}
+		catch (Exception ex)
 		{
-			Log.d("EventAbsorber", "Ignore query");
-			//other query has already been called, so, no need for this query
+			Log.w(TAG, ex);
 			return null;
 		}
-		
-		*/
-		// this is how you query for suggestions
-		
-		if (getFilterQueryProvider() != null)
-		{
-			return getFilterQueryProvider().runQuery(constraint);
-		}
-		
-		// build the query by combining queryPartSelect + queryPartWhere1 (or 2) + queryPartLimit
-		
-		String wherePart = "";
-		LinkedList<String> selectionArgs = null;
-		
-		if (!TextUtils.isEmpty(constraint))
-		{
-			String filterText = constraint.toString().trim().toLowerCase();
-			selectionArgs = new LinkedList<String>();
-			
-			final String[] words = filterText.split(" ");
-			
-			String firstWord = words[0];
-			wherePart = WHERE1_QUERY_PART;
-			selectionArgs.addLast('%'+firstWord+'%');
-			selectionArgs.addLast('%'+firstWord+'%');
-			selectionArgs.addLast('%'+firstWord+'%');
-			
-			final int wordCount = words.length;
-			for (int k = 1; k < wordCount; k++)
-			{
-				String word = words[k];
-				if (TextUtils.isEmpty(word))
-				{
-					continue;
-				}
-				
-				wherePart = wherePart.concat(WHERE2_QUERY_PART);
-				selectionArgs.addLast('%'+word+'%');
-				selectionArgs.addLast('%'+word+'%');
-				selectionArgs.addLast('%'+word+'%');
-			}
-		}
-		
-		//MainActivity.simulateLongOperation(1, 3);
-		
-		final String queryComplete = SELECT_QUERY_PART + wherePart + LIMIT_ORDER_QUERY_PART;
-		
-		String[] argsArray = null;
-		if (selectionArgs != null)
-		{
-			argsArray = selectionArgs.toArray(new String[selectionArgs.size()]);
-		}
-		Log.d(TAG, String.format("%s - args.count = %d", queryComplete, argsArray == null ? 0 : argsArray.length));
-		 
-		//String[] argsArray = selectionArgs == null ? null : selectionArgs.toArray(new String[]{});
-		Cursor c = dbHelper.getReadableDatabase().rawQuery(queryComplete,  argsArray);
-		return c;
-		
 	}
 
 }

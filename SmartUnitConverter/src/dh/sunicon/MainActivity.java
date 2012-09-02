@@ -1,6 +1,8 @@
 package dh.sunicon;
 
 import java.util.Random;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
@@ -44,6 +46,7 @@ public class MainActivity extends ListActivity
 		dbHelper_ = new DatabaseHelper(this);
 		final String initialQuery = UnitsCursorAdapter.SELECT_QUERY_PART + UnitsCursorAdapter.LIMIT_ORDER_QUERY_PART;
 		final Cursor initialCursor = dbHelper_.getReadableDatabase().rawQuery(initialQuery, null);
+		
 		unitsCursorAdapter_ = new UnitsCursorAdapter(this, initialCursor, true);
 		resultListAdapter_ = new ResultListAdapter(this);
 		
@@ -76,6 +79,8 @@ public class MainActivity extends ListActivity
         initEvents();
 	}
 
+	private Timer baseValueEditorTimer_;
+	
 	private void initEvents()
 	{
 		baseUnitEditor_.setOnReplaceTextListener(new UnitAutoCompleteView.ReplaceTextListener()
@@ -100,6 +105,7 @@ public class MainActivity extends ListActivity
 				{
 					clearBaseUnit(true);
 				}
+				
 				return false;
 			}
 		});
@@ -107,7 +113,7 @@ public class MainActivity extends ListActivity
         targetUnitFilterEditor_.addTextChangedListener(new TextWatcher()
 		{
 			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count)
+			public void onTextChanged(final CharSequence s, int start, int before, int count)
 			{
 				getResultListAdapter().getFilter().filter(s);
 			}
@@ -127,19 +133,57 @@ public class MainActivity extends ListActivity
         baseValueEditor_.addTextChangedListener(new TextWatcher()
 		{
 			@Override
-			public void onTextChanged(CharSequence s, int start, int before, int count)
+			public void onTextChanged(final CharSequence s, int start, int before, int count)
 			{
 				try
 				{
-					if (TextUtils.isEmpty(s))
+					/* events absorber technique */
+					
+					if (baseValueEditorTimer_!=null) 
 					{
-						getResultListAdapter().setBaseValue(Double.NaN);
+						baseValueEditorTimer_.cancel(); //cancel the old onTextChange event
 					}
-					else
+
+					//the timer is dumped, we must to create a new one
+					baseValueEditorTimer_ = new Timer();
+					
+					//schedule a task which will be execute in 500ms if the timer won't canceled due 
+					//to other (possible future) onTextChanged event
+					baseValueEditorTimer_.schedule(new TimerTask()  
 					{
-						double baseValue = Double.parseDouble(s.toString());
-						getResultListAdapter().setBaseValue(baseValue);
-					}
+						@Override
+						public void run()
+						{
+							MainActivity.this.runOnUiThread(new Runnable()
+							{
+								@Override
+								public void run()
+								{
+									try
+									{
+										/*
+										 * do whatever onTextChanged event have to do. But it should be quick 
+										 * heavy process must be executed on other thread  
+										 */
+										
+										if (TextUtils.isEmpty(s))
+										{
+											getResultListAdapter().setBaseValue(Double.NaN);
+										}
+										else
+										{
+											double baseValue = Double.parseDouble(s.toString());
+											getResultListAdapter().setBaseValue(baseValue);
+										}
+									}
+									catch (Exception ex)
+									{
+										Log.w(TAG, ex.toString());
+									}
+								}
+							});
+						}
+					}, 500);
 				}
 				catch (Exception ex)
 				{

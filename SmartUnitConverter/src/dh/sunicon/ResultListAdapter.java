@@ -1,6 +1,8 @@
 package dh.sunicon;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -45,6 +47,34 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	private double baseValue_ = Double.NaN;
 	private TargetUnitFilter filter_;
 	private FillDataTask fillDataTask_;
+	
+
+	Timer notifyDataSetChangedTimer_ = null;
+	
+	@Override
+	public void notifyDataSetChanged()
+	{
+		if (notifyDataSetChangedTimer_!=null) 
+		{
+			notifyDataSetChangedTimer_.cancel(); //cancel the old onTextChange event
+		}
+		notifyDataSetChangedTimer_ = new Timer();
+		notifyDataSetChangedTimer_.schedule(new TimerTask()
+		{
+			@Override
+			public void run()
+			{
+				((MainActivity)context_).runOnUiThread(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						ResultListAdapter.super.notifyDataSetChanged();
+					}
+				});
+			}
+		}, 300);  
+	}
 	
 	/**
 	 * write lock on data_. any write operation on data_ must be synch on this lock_ 
@@ -133,8 +163,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	 */
 	public void setBaseUnitId(long categoryId, long baseUnitId) throws IllegalAccessException
 	{
-		if (onGuiThread())
-		{
+//		if (onGuiThread())
+//		{
 			Log.i(TAG, String.format("Populate category = %d baseUnit = %d", categoryId, baseUnitId));
 			
 			categoryId_ = categoryId;
@@ -155,11 +185,11 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			}
 			fillDataTask_ = new FillDataTask();
 			fillDataTask_.execute(categoryId_, baseUnitId_);
-		}
-		else
-		{
-			throw new IllegalAccessException("this methode must be called from UI Thread.");
-		}
+//		}
+//		else
+//		{
+//			throw new IllegalAccessException("this methode must be called from UI Thread.");
+//		}
 	}
 	
 	/**
@@ -168,8 +198,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	 */
 	public void setBaseValue(double baseValue) throws IllegalAccessException
 	{
-		if (onGuiThread())
-		{
+//		if (onGuiThread())
+//		{
 			Log.i(TAG, String.format("setBaseValue = %f", baseValue));
 			
 			baseValue_ = baseValue;
@@ -198,11 +228,11 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			{
 				data_.get(i).setBaseValue(baseValue_);
 			}
-		}
-		else
-		{
-			throw new IllegalAccessException("setBaseValue() must be called from UI Thread. To be sure that data_ will not be changed during the computing");
-		}
+//		}
+//		else
+//		{
+//			throw new IllegalAccessException("setBaseValue() must be called from UI Thread. To be sure that data_ will not be changed during the computing");
+//		}
 	}
 
 	public Context getContext()
@@ -308,6 +338,11 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				if (cancelled_)
 				{
 					conversions_ = null;
+					Log.d(TAG, "Canceled loading conversions for Category "+categoryId_);
+				}
+				else
+				{
+					Log.d(TAG, "Finish loading conversions for Category "+categoryId_);
 				}
 			}
 			catch (Exception ex)
@@ -397,79 +432,120 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		 */
 		private ArrayList<RowData> fullData_;
 		
+		private final int DELAY_PERFORM_FILTERING = 500;
+		private Object lockLastConstraint_ = new Object();
+		private String lastConstraint_;
+		
 		@Override
 		protected FilterResults performFiltering(CharSequence constraint)
 		{
-			if (data_ == null && fullData_ == null) // data_ has not been populated (or the population is not finished yet) 
+			try
 			{
-				return null;
-			}
-			
-			FilterResults resu = new FilterResults();
-			
-			if (fullData_ == null)
-			{
-				synchronized (lock_) 
+				if (data_ == null && fullData_ == null) // data_ has not been populated (or the population is not finished yet) 
 				{
-					fullData_ = new ArrayList<RowData>(data_);
+					return null;
 				}
-			}
 			
-			ArrayList<RowData> l;
-			if (TextUtils.isEmpty(constraint))
-			{
-				synchronized (lock_) 
+				/* delayer events technique */
+				
+				if (constraint!=null)
 				{
-					l = new ArrayList<RowData>(fullData_);
-					final int count = l.size();
-					for (int i = 0; i<count; i++)
+					synchronized (lockLastConstraint_)
 					{
-						l.get(i).setBaseValue(baseValue_);
+						lastConstraint_ = new String(constraint.toString());
 					}
 				}
-			}
-			else
-			{
-				final String filterText = constraint.toString().toLowerCase();
-				final int count = fullData_.size();
-				l = new ArrayList<RowData>();
-				for (int i = 0; i<count; i++)
+				
+				Thread.sleep(DELAY_PERFORM_FILTERING);
+			
+				if (lastConstraint_!=null)
 				{
-					final RowData row = fullData_.get(i);
-					
-					boolean matched = false;
-					final String valueText = row.getKeyword();
-					if (valueText.contains(filterText))
+					if (!lastConstraint_.equals(constraint))
 					{
-						matched = true;
+						/*
+						 * lastConstraint_ has been changed after 500ms 
+						 * => other performFiltering has been called
+						 * => no need to execute this one
+						 */ 
+						return null; 
 					}
-					else
+				}
+				
+				/* main */
+				
+				Log.d(TAG, "Perform filtering: "+constraint);
+				
+				FilterResults resu = new FilterResults();
+				
+				if (fullData_ == null)
+				{
+					synchronized (lock_) 
 					{
-						final String[] words = filterText.split(" ");
-						final int wordCount = words.length;
-						/* check if every word matches */
-						matched = true;
-						for (int k = 0; k < wordCount; k++)
+						fullData_ = new ArrayList<RowData>(data_);
+					}
+				}
+				
+				ArrayList<RowData> l;
+				if (TextUtils.isEmpty(constraint))
+				{
+					synchronized (lock_) 
+					{
+						l = new ArrayList<RowData>(fullData_);
+						final int count = l.size();
+						for (int i = 0; i<count; i++)
 						{
-							if (!valueText.contains(words[k]))
-							{
-								matched = false;
-								break;
-							}
+							l.get(i).setBaseValue(baseValue_);
 						}
 					}
-					
-					if (matched)
+				}
+				else
+				{
+					final String filterText = constraint.toString().toLowerCase();
+					final int count = fullData_.size();
+					l = new ArrayList<RowData>();
+					for (int i = 0; i<count; i++)
 					{
-						row.setBaseValue(baseValue_);
-						l.add(row);
+						final RowData row = fullData_.get(i);
+						
+						boolean matched = false;
+						final String valueText = row.getKeyword();
+						if (valueText.contains(filterText))
+						{
+							matched = true;
+						}
+						else
+						{
+							final String[] words = filterText.split(" ");
+							final int wordCount = words.length;
+							/* check if every word matches */
+							matched = true;
+							for (int k = 0; k < wordCount; k++)
+							{
+								if (!valueText.contains(words[k]))
+								{
+									matched = false;
+									break;
+								}
+							}
+						}
+						
+						if (matched)
+						{
+							row.setBaseValue(baseValue_);
+							l.add(row);
+						}
 					}
 				}
+				
+				resu.values = l;
+				resu.count = l.size();
+				return resu;
 			}
-			
-			resu.values = l;
-			resu.count = l.size();
-			return resu;
+			catch (Exception ex)
+			{
+				Log.w(TAG, ex);
+				return null;
+			}
 		}
 
 		@SuppressWarnings("unchecked")

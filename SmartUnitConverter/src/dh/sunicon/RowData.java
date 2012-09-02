@@ -208,13 +208,14 @@ public final class RowData implements Runnable
 		if (cancelCalculation_)
 		{
 			return Double.NaN;
-		}
-		
-		Log.d(ResultListAdapter.TAG, String.format("Start convert %f from baseUnitId=%d to targetUnitId=%d", baseValue, baseUnitId, targetUnitId));
+		}		
 		
 		/* use BFS to find the shortest path from the baseUnitId to the targetUnitId on the Converions graph */
 		
 		ArrayList<Conversion> conversions = this.resultListAdapter_.getConversions();
+		
+		Log.d(ResultListAdapter.TAG, String.format("Start convert %f from baseUnitId=%d to targetUnitId=%d", baseValue, baseUnitId, targetUnitId));
+		
 		LinkedList<Long> visitedUnitQueue = new LinkedList<Long>();
 		HashMap<Long, Conversion> previous = new HashMap<Long, Conversion>();
 		ArrayList<Long> visitedUnit = new ArrayList<Long>();  
