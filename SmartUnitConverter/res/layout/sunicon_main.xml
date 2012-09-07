@@ -7,7 +7,7 @@
     <TextView
         android:id="@+id/categoryLabel"
         android:gravity="right"
-        android:text="Length / Distance"
+        android:text="Length Distance"
         android:textColor="#258AAF"
         android:textSize="12sp" />
 
@@ -19,23 +19,31 @@
             android:id="@+id/valueEditor"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:inputType="numberDecimal" />
+            android:inputType="numberDecimal"
+            android:padding="5dp"
+            android:textSize="16sp" 
+            android:layout_marginRight="5dp"/>
 
         <dh.sunicon.UnitAutoCompleteView
             android:id="@+id/baseUnitEditor"
+            style="@style/autocompletetextview_blue"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:inputType="textNoSuggestions"
+            android:padding="5dp"
             android:singleLine="true"
+            android:textSize="16sp"
             android:textStyle="bold" />
 
         <Button
             android:id="@+id/clearBaseUnitButton"
-            android:layout_width="30dip"
-            android:layout_height="30dip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
             android:onClick="clearBaseUnitButton_Click"
             android:text="x"
-            android:textSize="10dip" />
+            android:textSize="16sp" />
     </TableRow>
 
     <TableRow
@@ -45,8 +53,8 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="right"
-            android:text="Convert to" />
+            android:text="Convert to" 
+            android:layout_marginRight="5dp"/>
 
         <EditText
             android:id="@+id/targetUnitFilterEditor"
@@ -54,22 +62,22 @@
             android:layout_height="wrap_content"
             android:enabled="false"
             android:inputType="textNoSuggestions|textFilter"
-            android:singleLine="true" />
+            android:padding="5dp"
+            android:singleLine="true"
+            android:textSize="16sp" />
 
         <Button
-            android:id="@+id/clearTargetUnitFilterButton"
-            android:layout_width="30dip"
-            android:layout_height="30dip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="0dp"
+            android:minWidth="0dp"
             android:onClick="clearTargetUnitFilterButton_Click"
             android:text="x"
-            android:textSize="10dip" />
+            android:textSize="16sp" />
     </TableRow>
 
-    <TextView
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="Result:" />
-
-    <ListView android:id="@android:id/list" />
+    <ListView
+        android:id="@android:id/list"
+        android:layout_marginTop="10dp" />
 
 </TableLayout>

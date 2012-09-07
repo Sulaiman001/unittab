@@ -89,7 +89,15 @@ public class MainActivity extends ListActivity
 			public void onReplaceText(UnitAutoCompleteView sender, String categoryName,
 					String unitName, long categoryId, long unitId)
 			{
-				onSelectBaseUnit(sender, categoryName, unitName, categoryId, unitId);
+				try
+				{
+					onSelectBaseUnit(sender, categoryName, unitName, categoryId, unitId);
+				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex);
+				}
+				
 			}
 		});
 		
@@ -98,14 +106,20 @@ public class MainActivity extends ListActivity
 			@Override
 			public boolean onKey(View v, int keyCode, KeyEvent event)
 			{
-				if (keyCode != KeyEvent.KEYCODE_DPAD_CENTER && keyCode != KeyEvent.KEYCODE_DPAD_UP && 
-						keyCode != KeyEvent.KEYCODE_DPAD_DOWN && keyCode != KeyEvent.KEYCODE_DPAD_LEFT && 
-						keyCode != KeyEvent.KEYCODE_DPAD_RIGHT && keyCode != KeyEvent.KEYCODE_ENTER &&
-						keyCode != KeyEvent.KEYCODE_TAB)
+				try
 				{
-					clearBaseUnit(true);
+					if (keyCode != KeyEvent.KEYCODE_DPAD_CENTER && keyCode != KeyEvent.KEYCODE_DPAD_UP && 
+							keyCode != KeyEvent.KEYCODE_DPAD_DOWN && keyCode != KeyEvent.KEYCODE_DPAD_LEFT && 
+							keyCode != KeyEvent.KEYCODE_DPAD_RIGHT && keyCode != KeyEvent.KEYCODE_ENTER &&
+							keyCode != KeyEvent.KEYCODE_TAB)
+					{
+						clearBaseUnit(true);
+					}
 				}
-				
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex);
+				}
 				return false;
 			}
 		});
@@ -115,7 +129,14 @@ public class MainActivity extends ListActivity
 			@Override
 			public void onTextChanged(final CharSequence s, int start, int before, int count)
 			{
-				getResultListAdapter().getFilter().filter(s);
+				try
+				{
+					getResultListAdapter().getFilter().filter(s);
+				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex);
+				}
 			}
 			
 			@Override
@@ -178,7 +199,7 @@ public class MainActivity extends ListActivity
 									}
 									catch (Exception ex)
 									{
-										Log.w(TAG, ex.toString());
+										Log.w(TAG, ex);
 									}
 								}
 							});
@@ -209,15 +230,22 @@ public class MainActivity extends ListActivity
 			public void onItemClick(AdapterView<?> parent, View view,
 					int position, long id)
 			{
-				RowData row = (RowData) (getListAdapter()
-						.getItem(position));
-
-				actionPopupDlg_.show();
-				/*
-				Toast.makeText(MainActivity.this,
-						row.getValue() + " " + row.getUnitName(),
-						android.widget.Toast.LENGTH_LONG).show();
-				*/
+				try
+				{
+					RowData row = (RowData) (getListAdapter()
+							.getItem(position));
+	
+					actionPopupDlg_.show();
+					/*
+					Toast.makeText(MainActivity.this,
+							row.getValue() + " " + row.getUnitName(),
+							android.widget.Toast.LENGTH_LONG).show();
+					*/
+				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex.toString());
+				}
 			}
 		});
 	}
