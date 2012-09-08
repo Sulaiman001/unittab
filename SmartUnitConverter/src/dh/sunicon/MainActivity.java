@@ -83,21 +83,21 @@ public class MainActivity extends ListActivity
 	
 	private void initEvents()
 	{
-		baseUnitEditor_.setOnReplaceTextListener(new UnitAutoCompleteView.ReplaceTextListener()
+		baseUnitEditor_.setOnItemClickListener(new OnItemClickListener()
 		{
 			@Override
-			public void onReplaceText(UnitAutoCompleteView sender, String categoryName,
-					String unitName, long categoryId, long unitId)
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id)
 			{
 				try
 				{
-					onSelectBaseUnit(sender, categoryName, unitName, categoryId, unitId);
+					UnitsCursorAdapter.SuggestionData baseUnitData = (UnitsCursorAdapter.SuggestionData)view.getTag();
+					setBaseUnit(baseUnitData.getCategoryName(), baseUnitData.getUnitName(), baseUnitData.getCategoryId(), baseUnitData.getUnitId());
 				}
 				catch (Exception ex)
 				{
 					Log.w(TAG, ex);
-				}
-				
+				}				
 			}
 		});
 		
@@ -250,8 +250,7 @@ public class MainActivity extends ListActivity
 		});
 	}
 
-	public void onSelectBaseUnit(UnitAutoCompleteView sender, String categoryName,
-			String unitName, long categoryId, long unitId)
+	public void setBaseUnit(CharSequence categoryName, CharSequence unitName, long categoryId, long unitId)
 	{
 		categoryLabel_.setVisibility(View.VISIBLE);
 		categoryLabel_.setText(categoryName);

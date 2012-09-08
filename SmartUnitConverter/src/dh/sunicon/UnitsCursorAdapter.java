@@ -39,11 +39,6 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 	 */
 	static final String LIMIT_ORDER_QUERY_PART = "ORDER BY unitName LIMIT 60";
 	
-	/*
-	static final long EventsAbsorberLatency = 1000; //milisecond
-	static long lastInvokeTime;
-	*/
-	
 	private final LayoutInflater inflater;
 	private final DatabaseHelper dbHelper;
 	
@@ -72,7 +67,7 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 		//save children views in the tag to avoid call findViewById
 		TextView categoryLabel = (TextView) unitDropDownItemView.findViewById(R.id.categoryLabel);
 		TextView unitLabel = (TextView) unitDropDownItemView.findViewById(R.id.unitLabel);
-		unitDropDownItemView.setTag(new TextView[] {categoryLabel, unitLabel});
+		unitDropDownItemView.setTag(new SuggestionData(categoryLabel, unitLabel));
 		
 		return unitDropDownItemView;
 	}
@@ -81,13 +76,15 @@ public class UnitsCursorAdapter extends CursorAdapter implements
     public void bindView(View view, Context context, Cursor cursor) 
 	{
 		//get children views from tag objects
-		TextView[] childrenViews = (TextView[])view.getTag();
-		TextView categoryLabel = childrenViews[0];
-		TextView unitLabel = childrenViews[1];
+		SuggestionData suggestionData = (SuggestionData)view.getTag();
+		TextView categoryLabel = suggestionData.getCategoryLabel();
+		TextView unitLabel = suggestionData.getUnitLabel();
 		
 		///bind data to the dropdown item view
 		categoryLabel.setText(cursor.getString(cursor.getColumnIndex("categoryName")));
 		unitLabel.setText(cursor.getString(cursor.getColumnIndex("unitName")));
+		suggestionData.setUnitId(cursor.getLong(cursor.getColumnIndex("_id")));
+		suggestionData.setCategoryId(cursor.getLong(cursor.getColumnIndex("categoryId")));
     }
 
 	@Override
@@ -97,12 +94,14 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 		// your autocomplete list
 		
 		String unitName = cursor.getString(cursor.getColumnIndex("unitName"));
-		String categoryName = cursor.getString(cursor.getColumnIndex("categoryName"));
-		long unitId = cursor.getLong(cursor.getColumnIndex("_id"));
-		long categoryId = cursor.getLong(cursor.getColumnIndex("categoryId"));
-		
-		return categoryName+'\n'+unitName+'\n'
-				+categoryId+'\n'+unitId;
+//		String categoryName = cursor.getString(cursor.getColumnIndex("categoryName"));
+//		long unitId = cursor.getLong(cursor.getColumnIndex("_id"));
+//		long categoryId = cursor.getLong(cursor.getColumnIndex("categoryId"));
+//		
+//		return categoryName+'\n'+unitName+'\n'
+//				+categoryId+'\n'+unitId;
+	
+		return unitName;
 	}
 	
 	private final int DELAY_RUN_QUERY = 500;
@@ -202,4 +201,62 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 		}
 	}
 
+	/***
+	 * The children view place holder and data of a suggestion row
+	 */
+	public class SuggestionData
+	{
+		private TextView categoryLabel_;
+		private TextView unitLabel_; 
+		private long unitId_;
+		private long categoryId_;
+		
+		public SuggestionData(TextView categoryLabel, TextView unitLabel)
+		{
+			super();
+			categoryLabel_ = categoryLabel;
+			unitLabel_ = unitLabel;
+		}
+
+		public long getUnitId()
+		{
+			return unitId_;
+		}
+
+		public void setUnitId(long unitId)
+		{
+			unitId_ = unitId;
+		}
+
+		public long getCategoryId()
+		{
+			return categoryId_;
+		}
+
+		public void setCategoryId(long categoryId)
+		{
+			categoryId_ = categoryId;
+		}
+
+		public CharSequence getCategoryName()
+		{
+			return categoryLabel_.getText();
+		}
+
+		public CharSequence getUnitName()
+		{
+			return unitLabel_.getText();
+		}
+
+		public TextView getCategoryLabel()
+		{
+			return categoryLabel_;
+		}
+
+		public TextView getUnitLabel()
+		{
+			return unitLabel_;
+		}
+		
+	}
 }
