@@ -19,10 +19,10 @@
             android:id="@+id/valueEditor"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            android:layout_marginRight="5dp"
             android:inputType="numberDecimal"
             android:padding="5dp"
-            android:textSize="16sp" 
-            android:layout_marginRight="5dp"/>
+            android:textSize="16sp" />
 
         <dh.sunicon.UnitAutoCompleteView
             android:id="@+id/baseUnitEditor"
@@ -31,9 +31,11 @@
             android:layout_height="wrap_content"
             android:inputType="textNoSuggestions"
             android:padding="5dp"
+            android:popupBackground="@drawable/edittext_default"
             android:singleLine="true"
             android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textStyle="bold" 
+            android:textColor="@android:color/primary_text_light" />
 
         <Button
             android:id="@+id/clearBaseUnitButton"
@@ -53,8 +55,8 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Convert to" 
-            android:layout_marginRight="5dp"/>
+            android:layout_marginRight="5dp"
+            android:text="Convert to" />
 
         <EditText
             android:id="@+id/targetUnitFilterEditor"
