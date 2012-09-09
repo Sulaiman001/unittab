@@ -4,20 +4,24 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import android.app.AlertDialog;
 import android.app.ListActivity;
-import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
 import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnKeyListener;
+import android.view.View.OnLongClickListener;
 import android.widget.AdapterView;
+import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -34,8 +38,8 @@ public class MainActivity extends ListActivity
 	private UnitAutoCompleteView baseUnitEditor_;
 	private EditText targetUnitFilterEditor_;
 	private ResultListAdapter resultListAdapter_;
-	private AlertDialog actionPopupDlg_;
-	
+	//private AlertDialog actionPopupDlg_;
+	private Timer baseValueEditorTimer_;
 	private long baseUnitId_ = -1;
 	private long categoryId_ = -1;
 	
@@ -50,19 +54,19 @@ public class MainActivity extends ListActivity
 		unitsCursorAdapter_ = new UnitsCursorAdapter(this, initialCursor, true);
 		resultListAdapter_ = new ResultListAdapter(this);
 		
-		final String[] popupItems = getResources().getStringArray(
-				R.array.result_popup_menu);
-		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-		//builder.setTitle("Pick a color");
-		builder.setItems(popupItems, new DialogInterface.OnClickListener()
-		{
-			public void onClick(DialogInterface dialog, int item)
-			{
-				Toast.makeText(getApplicationContext(), popupItems[item],
-						Toast.LENGTH_SHORT).show();
-			}
-		});
-		actionPopupDlg_ = builder.create();
+//		final String[] popupItems = getResources().getStringArray(
+//				R.array.result_popup_menu);
+//		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+//		//builder.setTitle("Pick a color");
+//		builder.setItems(popupItems, new DialogInterface.OnClickListener()
+//		{
+//			public void onClick(DialogInterface dialog, int item)
+//			{
+//				Toast.makeText(getApplicationContext(), popupItems[item],
+//						Toast.LENGTH_SHORT).show();
+//			}
+//		});
+//		actionPopupDlg_ = builder.create();
 		
 		setContentView(R.layout.sunicon_main);
 		
@@ -75,11 +79,13 @@ public class MainActivity extends ListActivity
         baseUnitEditor_.setThreshold(1);
         
         setListAdapter(resultListAdapter_);
+        registerForContextMenu(getListView());
+        
         clearBaseUnit(false);
         initEvents();
 	}
 
-	private Timer baseValueEditorTimer_;
+	
 	
 	private void initEvents()
 	{
@@ -224,32 +230,107 @@ public class MainActivity extends ListActivity
 			}
 		});
         
-        getListView().setOnItemClickListener(new OnItemClickListener()
+        getListView().setOnLongClickListener(new OnLongClickListener()
 		{
 			@Override
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id)
+			public boolean onLongClick(View v)
 			{
 				try
 				{
-					RowData row = (RowData) (getListAdapter()
-							.getItem(position));
-	
-					actionPopupDlg_.show();
-					/*
-					Toast.makeText(MainActivity.this,
-							row.getValue() + " " + row.getUnitName(),
-							android.widget.Toast.LENGTH_LONG).show();
-					*/
+					
 				}
 				catch (Exception ex)
 				{
 					Log.w(TAG, ex.toString());
 				}
+				return false;
 			}
 		});
+        
+//        getListView().setOnItemClickListener(new OnItemClickListener()
+//		{
+//			@Override
+//			public void onItemClick(AdapterView<?> parent, View view,
+//					int position, long id)
+//			{
+//				try
+//				{
+//					RowData row = (RowData) (getListAdapter()
+//							.getItem(position));
+//	
+//					actionPopupDlg_.show();
+//					/*
+//					Toast.makeText(MainActivity.this,
+//							row.getValue() + " " + row.getUnitName(),
+//							android.widget.Toast.LENGTH_LONG).show();
+//					*/
+//				}
+//				catch (Exception ex)
+//				{
+//					Log.w(TAG, ex.toString());
+//				}
+//			}
+//		});
 	}
 
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo)
+	{
+		try
+		{
+			if (v == getListView())
+			{
+				MenuInflater inflater = getMenuInflater();
+	            inflater.inflate(R.menu.result_list_contextmenu, menu);
+	            
+	            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
+	            RowData rowData = (RowData)getListAdapter().getItem(info.position);
+	            menu.setHeaderTitle(rowData.getUnitName());
+			}
+		}
+		catch (Exception ex)
+		{
+			Log.w(TAG, ex);
+		}	
+	}
+	
+	@Override
+	public boolean onContextItemSelected(MenuItem item)
+	{
+		try
+		{
+			AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+			RowData rowData = (RowData)getListAdapter().getItem(info.position);
+		    switch (item.getItemId()) 
+		    {
+		        case R.id.copyValueItem:
+		        	Toast.makeText(this, "copyValueItem "+rowData.getValue(), Toast.LENGTH_SHORT).show();
+		            return true;
+		        case R.id.copyUnitNameItem:
+		        	Toast.makeText(this, "copyUnitNameItem "+rowData.getUnitName(), Toast.LENGTH_SHORT).show();
+		            return true;
+		        case R.id.copyValueAndUnitItem:
+		        	Toast.makeText(this, "copyValueAndUnitItem", Toast.LENGTH_SHORT).show();
+		            return true;
+		        case R.id.setValueAsBaseItem:
+		        	Toast.makeText(this, "setValueAsBaseItem", Toast.LENGTH_SHORT).show();
+		            return true;
+		        case R.id.setUnitAsBaseItem:
+		        	Toast.makeText(this, "setUnitAsBaseItem", Toast.LENGTH_SHORT).show();
+		            return true;
+		        case R.id.setUnitAndValueAsBaseItem:
+		        	Toast.makeText(this, "setUnitAndValueAsBaseItem", Toast.LENGTH_SHORT).show();
+		            return true;
+		    }
+		}
+		catch (Exception ex)
+		{
+			Log.w(TAG, ex);
+		}
+		return super.onContextItemSelected(item);
+	}
+	
 	public void setBaseUnit(CharSequence categoryName, CharSequence unitName, long categoryId, long unitId)
 	{
 		categoryLabel_.setVisibility(View.VISIBLE);
@@ -325,6 +406,10 @@ public class MainActivity extends ListActivity
 		}
 	}
 
+	public void setResultListVisible(boolean visible)
+	{
+		getListView().setVisibility(visible ? View.VISIBLE : View.GONE);
+	}
 	
 	ResultListAdapter getResultListAdapter()
 	{

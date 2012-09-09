@@ -28,7 +28,8 @@ public final class RowData implements Runnable
 	
 	/* change on baseValue_ and value_ must be synchronized */
 	private Double baseValue_ = Double.NaN;
-	private String value_ = "-";
+	private double value_ = Double.NaN;
+	private String valueHtmlized_ = "-";
 	
 	private volatile boolean cancelCalculation_ = false;
 	
@@ -48,7 +49,7 @@ public final class RowData implements Runnable
 	{
 		return targetUnitId_;
 	}
-	public String getUnitName()
+	public String getUnitNameHtmlized()
 	{
 		if (TextUtils.isEmpty(targetUnitShortName_))
 		{
@@ -65,15 +66,38 @@ public final class RowData implements Runnable
 		return String.format("<b>%s</b> - %s", targetUnitShortName_,
 				targetUnitName_);
 	}
-	public String getValue()
+	public String getValueHtmlized()
 	{
-		if (TextUtils.isEmpty(value_))
+		if (TextUtils.isEmpty(valueHtmlized_))
 		{
 			return "-";
 		}
-		return value_;
+		return valueHtmlized_;
 	}
 
+	public String getUnitName()
+	{
+		if (TextUtils.isEmpty(targetUnitShortName_))
+		{
+			return targetUnitName_;
+		}
+		if (TextUtils.isEmpty(targetUnitName_))
+		{
+			return targetUnitShortName_;
+		}
+		return String.format("%s - %s", targetUnitShortName_, targetUnitName_);
+	}
+	
+	public double getValue()
+	{
+		return value_;
+	}
+	
+	public long getTargetUnitId()
+	{
+		return targetUnitId_;
+	}
+	
 	public String getKeyword()
 	{
 		return keyword_;
@@ -85,7 +109,7 @@ public final class RowData implements Runnable
 	 */
 	void setBaseValue(double baseValue)
 	{
-		if (baseValue_.equals(baseValue) && !TextUtils.isEmpty(value_))
+		if (baseValue_.equals(baseValue) && !TextUtils.isEmpty(valueHtmlized_))
 		{
 			//no need to invoke calculation, the old value_ is just right 
 			return;
@@ -95,17 +119,19 @@ public final class RowData implements Runnable
 		synchronized (baseValue_)
 		{
 			baseValue_ = baseValue;
-			value_ = null; //reset the result before entering the calculation process
+			valueHtmlized_ = null; //reset the result before entering the calculation process
 		}
 		
 		//start the calculation
 		this.resultListAdapter_.getCalculationPoolThread().execute(this);
 	}
 	
+	
 	boolean clearTargetValue()
 	{
 		boolean isValueChanged = !Double.isNaN(baseValue_);
-		value_ = null;
+		value_ = Double.NaN;
+		valueHtmlized_ = null;
 		return isValueChanged;
 	}
 	
@@ -157,7 +183,8 @@ public final class RowData implements Runnable
 			{
 				if (baseValue_.equals(originalValue)) //baseValue_ has not been changed during the calculation process
 				{
-					value_ = resuStr;
+					value_ = resu;
+					valueHtmlized_ = resuStr;
 					invokeRefreshGui();
 				}
 				//else, a newer setBaseValue() was called, we must ignore the resu 

@@ -1,8 +1,6 @@
 package dh.sunicon;
 
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -33,7 +31,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	/**
 	 * Thread Pool to calculate the converted value
 	 */
-	private final ExecutorService calculationPoolThread_ = Executors.newFixedThreadPool(5);
+	private final ExecutorService calculationPoolThread_ = Executors.newCachedThreadPool();
 
 	/**
 	 * Thread to read all Conversion from DB
@@ -49,32 +47,34 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	private FillDataTask fillDataTask_;
 	
 
-	Timer notifyDataSetChangedTimer_ = null;
-	
-	@Override
-	public void notifyDataSetChanged()
-	{
-		if (notifyDataSetChangedTimer_!=null) 
-		{
-			notifyDataSetChangedTimer_.cancel(); //cancel the old onTextChange event
-		}
-		notifyDataSetChangedTimer_ = new Timer();
-		notifyDataSetChangedTimer_.schedule(new TimerTask()
-		{
-			@Override
-			public void run()
-			{
-				((MainActivity)context_).runOnUiThread(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						ResultListAdapter.super.notifyDataSetChanged();
-					}
-				});
-			}
-		}, 300);  
-	}
+//	Timer notifyDataSetChangedTimer_ = null;
+//	
+//	@Override
+//	public void notifyDataSetChanged()
+//	{
+//		((MainActivity)context_).setResultListVisible(false);
+//		if (notifyDataSetChangedTimer_!=null) 
+//		{
+//			notifyDataSetChangedTimer_.cancel(); //cancel the old onTextChange event
+//		}
+//		notifyDataSetChangedTimer_ = new Timer();
+//		notifyDataSetChangedTimer_.schedule(new TimerTask()
+//		{
+//			@Override
+//			public void run()
+//			{
+//				((MainActivity)context_).runOnUiThread(new Runnable()
+//				{
+//					@Override
+//					public void run()
+//					{
+//						ResultListAdapter.super.notifyDataSetChanged();
+//						((MainActivity)context_).setResultListVisible(true);
+//					}
+//				});
+//			}
+//		}, 300);  
+//	}
 	
 	/**
 	 * write lock on data_. any write operation on data_ must be synch on this lock_ 
@@ -142,8 +142,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		/* bind value to view */
 
 		RowData cr = data_.get(position);
-		valueLabel.setText(Html.fromHtml(cr.getValue()));
-		unitLabel.setText(Html.fromHtml(cr.getUnitName()));
+		valueLabel.setText(Html.fromHtml(cr.getValueHtmlized()));
+		unitLabel.setText(Html.fromHtml(cr.getUnitNameHtmlized()));
 
 		return v;
 	}
