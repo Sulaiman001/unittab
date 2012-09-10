@@ -164,6 +164,8 @@ public class MainActivity extends ListActivity
 			{
 				try
 				{
+					setResultListVisible(false); //hide the list while waiting and perform calculation
+					
 					/* events absorber technique */
 					
 					if (baseValueEditorTimer_!=null) 

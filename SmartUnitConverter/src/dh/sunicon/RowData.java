@@ -3,6 +3,7 @@ package dh.sunicon;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.concurrent.Future;
 
 import android.text.TextUtils;
 import android.util.Log;
@@ -31,10 +32,12 @@ public final class RowData implements Runnable
 	private double value_ = Double.NaN;
 	private String valueHtmlized_ = "-";
 	
+	private Future<?> futureResult_; 
+	
 	private volatile boolean cancelCalculation_ = false;
 	
 	public RowData(ResultListAdapter resultListAdapter, long baseUnitId, long targetUnitId, String targetUnitName,
-			String targetUnitShortName)
+			String targetUnitShortName, double baseValue)
 	{
 		super();
 		this.resultListAdapter_ = resultListAdapter;
@@ -43,7 +46,8 @@ public final class RowData implements Runnable
 		targetUnitName_ = targetUnitName;
 		targetUnitShortName_ = targetUnitShortName;
 		keyword_ = String.format("%s %s", targetUnitShortName_, targetUnitName_).toLowerCase();
-		this.setBaseValue(this.resultListAdapter_.getBaseValue());
+		
+		setBaseValue(baseValue);
 	}
 	public long getUnitId()
 	{
@@ -105,6 +109,9 @@ public final class RowData implements Runnable
 	
 	/**
 	 * Compute the target value_ in the thread pool then refresh the UI
+	 * this methode comes with a latch to observer when the calculation will
+	 * be terminated (the latch will be count down).
+	 * each call of this method should use a different latch
 	 * @param baseValue
 	 */
 	void setBaseValue(double baseValue)
@@ -115,15 +122,24 @@ public final class RowData implements Runnable
 			return;
 		}
 		
-		//change the baseValue and convert it
 		synchronized (baseValue_)
 		{
 			baseValue_ = baseValue;
-			valueHtmlized_ = null; //reset the result before entering the calculation process
+			value_ = Double.NaN; //reset the result before entering the calculation process
+			valueHtmlized_ = null;
 		}
 		
-		//start the calculation
-		this.resultListAdapter_.getCalculationPoolThread().execute(this);
+		//synchronized (resultListAdapter_.calcFutureResult_)
+		{
+			if (futureResult_!=null)
+			{
+				Log.d(TAG, "Cancel old base value");
+				resultListAdapter_.calcFutureResult_.remove(futureResult_);
+			}
+			
+			futureResult_ = resultListAdapter_.getCalculationPoolThread().submit(this);
+			resultListAdapter_.calcFutureResult_.offer(futureResult_);
+		}
 	}
 	
 	
@@ -185,7 +201,7 @@ public final class RowData implements Runnable
 				{
 					value_ = resu;
 					valueHtmlized_ = resuStr;
-					invokeRefreshGui();
+					//invokeRefreshGui();
 				}
 				//else, a newer setBaseValue() was called, we must ignore the resu 
 			}
@@ -196,24 +212,24 @@ public final class RowData implements Runnable
 		}
 	}
 	
-	private void invokeRefreshGui()
-	{
-		((MainActivity)this.resultListAdapter_.getContext()).runOnUiThread(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				try
-				{
-					RowData.this.resultListAdapter_.notifyDataSetChanged();
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}
-			}
-		}); 
-	}
+//	private void invokeRefreshGui()
+//	{
+//		((MainActivity)this.resultListAdapter_.getContext()).runOnUiThread(new Runnable()
+//		{
+//			@Override
+//			public void run()
+//			{
+//				try
+//				{
+//					RowData.this.resultListAdapter_.notifyDataSetChanged();
+//				}
+//				catch (Exception ex)
+//				{
+//					Log.w(TAG, ex);
+//				}
+//			}
+//		}); 
+//	}
 	
 	/**
 	 * Convert the base value using the conversion table.

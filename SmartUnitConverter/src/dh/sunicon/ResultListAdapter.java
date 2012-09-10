@@ -1,9 +1,13 @@
 package dh.sunicon;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import android.content.Context;
@@ -32,7 +36,13 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	 * Thread Pool to calculate the converted value
 	 */
 	private final ExecutorService calculationPoolThread_ = Executors.newCachedThreadPool();
-
+	/**
+	 * the future result of calculation is stock in here
+	 */
+	volatile Queue<Future<?>> calcFutureResult_ = new LinkedList<Future<?>>();
+	
+	private final ExecutorService awaitCalculationThread_ = Executors
+			.newSingleThreadExecutor();
 	/**
 	 * Thread to read all Conversion from DB
 	 */
@@ -163,9 +173,11 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	 */
 	public void setBaseUnitId(long categoryId, long baseUnitId) throws IllegalAccessException
 	{
-//		if (onGuiThread())
-//		{
+		if (onGuiThread())
+		{
 			Log.i(TAG, String.format("Populate category = %d baseUnit = %d", categoryId, baseUnitId));
+		
+			((MainActivity)context_).setResultListVisible(false);
 			
 			categoryId_ = categoryId;
 			baseUnitId_ = baseUnitId;
@@ -185,21 +197,21 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			}
 			fillDataTask_ = new FillDataTask();
 			fillDataTask_.execute(categoryId_, baseUnitId_);
-//		}
-//		else
-//		{
-//			throw new IllegalAccessException("this methode must be called from UI Thread.");
-//		}
+		}
+		else
+		{
+			throw new IllegalAccessException("this methode must be called from UI Thread.");
+		}
 	}
 	
 	/**
 	 * set base value and compute conversion values
-	 * @throws Exception 
+	 * @throws IllegalAccessException 
 	 */
 	public void setBaseValue(double baseValue) throws IllegalAccessException
 	{
-//		if (onGuiThread())
-//		{
+		if (onGuiThread())
+		{
 			Log.i(TAG, String.format("setBaseValue = %f", baseValue));
 			
 			baseValue_ = baseValue;
@@ -228,13 +240,69 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			{
 				data_.get(i).setBaseValue(baseValue_);
 			}
-//		}
-//		else
-//		{
-//			throw new IllegalAccessException("setBaseValue() must be called from UI Thread. To be sure that data_ will not be changed during the computing");
-//		}
+			
+			/* wait the calculations finished then update the list View */
+			awaitCalculationThread_.execute(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					awaitCalculation();
+					((MainActivity)context_).runOnUiThread(new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							notifyDataSetChanged();
+							((MainActivity)context_).setResultListVisible(true);
+						}
+					});
+				}
+			});
+		}
+		else
+		{
+			throw new IllegalAccessException("setBaseValue() must be called from UI Thread. To be sure that data_ will not be changed during the computing");
+		}
 	}
 
+	/**
+	 * waiting for calculationPoolThread_ to finish all the calculation
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
+	 */
+	private void awaitCalculation()
+	{
+		try
+		{
+			long startTime = System.currentTimeMillis();
+			
+			while (!calcFutureResult_.isEmpty())
+			{
+				Future<?> futRe = calcFutureResult_.poll();
+				try
+				{
+					futRe.get();
+				}
+				catch (InterruptedException e)
+				{
+					Log.w(TAG, e);
+				}
+				catch (ExecutionException e)
+				{
+					Log.w(TAG, e);
+				}
+			}
+			
+			long endTime = System.currentTimeMillis();
+			Log.i(TAG, "await calculation "+(endTime - startTime)+"ms");
+		}
+		catch (Exception ex)
+		{
+			Log.w(TAG, ex);
+		}
+	}
+	
 	public Context getContext()
 	{
 		return context_;
@@ -262,7 +330,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		}
 		return conversionsLoadingRunner_.getConversions();
 	}
-	
+
 	public boolean onGuiThread()
 	{
 		return Looper.getMainLooper().getThread() == Thread.currentThread();
@@ -380,6 +448,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			int idColumnIndex = cur.getColumnIndex("id");
 			int nameColumnIndex = cur.getColumnIndex("name");
 			int shortNameColumnIndex = cur.getColumnIndex("shortName");
+			double baseValue = baseValue_;
 			
 			while (cur.moveToNext() && !isCancelled()) 
 			{
@@ -387,7 +456,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 							ResultListAdapter.this, baseUnitId,
 							cur.getLong(idColumnIndex),
 							cur.getString(nameColumnIndex),
-							cur.getString(shortNameColumnIndex)
+							cur.getString(shortNameColumnIndex),
+							baseValue
 						);
 				resu.add(co);
 			}
@@ -396,6 +466,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			
 			//MainActivity.simulateLongOperation(1, 3);
 
+			awaitCalculation();
+			
 			return resu;
 		}
 		
@@ -422,6 +494,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				Log.i(TAG, String.format("Finished fill data for category %d, found %d units", categoryId_, result.size()));
 				notifyDataSetChanged();
 			}
+			((MainActivity)context_).setResultListVisible(true);
 		}
 	};
 	
@@ -497,6 +570,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 							l.get(i).setBaseValue(baseValue_);
 						}
 					}
+					awaitCalculation();
 				}
 				else
 				{
