@@ -2,7 +2,8 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:shrinkColumns="2"
-    android:stretchColumns="0,1" >
+    android:stretchColumns="0,1" 
+    android:animateLayoutChanges="true">
 
     <TextView
         android:id="@+id/categoryLabel"
@@ -26,12 +27,10 @@
 
         <dh.sunicon.UnitAutoCompleteView
             android:id="@+id/baseUnitEditor"
-            style="@style/autocompletetextview_blue"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:inputType="textNoSuggestions"
             android:padding="5dp"
-            android:popupBackground="@drawable/edittext_default"
             android:singleLine="true"
             android:textColor="@android:color/primary_text_light"
             android:textSize="16sp"
@@ -81,6 +80,9 @@
     <ListView
         android:id="@android:id/list"
         android:layout_marginTop="10dp"
-        android:choiceMode="singleChoice" />
+        android:animateLayoutChanges="true"
+        android:choiceMode="singleChoice"
+        android:drawSelectorOnTop="false"
+        android:listSelector="@drawable/edittext_active"/>
 
 </TableLayout>

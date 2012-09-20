@@ -1,7 +1,8 @@
-<resources>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <style name="AppTheme" parent="android:Theme.Holo.Light.DarkActionBar">
         <item name="android:editTextStyle">@style/edittext_blue</item>
+        <item name="android:autoCompleteTextViewStyle">@style/autocompletetextview_blue</item>
     </style>
 
 </resources>

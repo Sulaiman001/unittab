@@ -1,17 +1,17 @@
 <resources xmlns:android="http://schemas.android.com/apk/res/android">
 
     <style name="AppTheme" parent="android:Theme.Light">
-        <item name="android:editTextStyle">@style/edittext_blue</item>
-        
-        <!-- <item name="android:autoCompleteTextViewStyle">@style/autocompletetextview_blue</item> -->
+       <item name="android:editTextStyle">@style/edittext_blue</item>
+       <item name="android:autoCompleteTextViewStyle">@style/autocompletetextview_blue</item>
     </style>
 
     <style name="edittext_blue" parent="@android:style/Widget.EditText">
         <item name="android:background">@drawable/edittext_blue_colorstate</item>
     </style>
     
-    <style name="autocompletetextview_blue" parent="@android:style/Widget.AutoCompleteTextView">
+     <style name="autocompletetextview_blue" parent="@android:style/Widget.AutoCompleteTextView">
         <item name="android:background">@drawable/edittext_blue_colorstate</item>
+        <item name="android:popupBackground">@drawable/droplist</item>
     </style>
-
+    
 </resources>
