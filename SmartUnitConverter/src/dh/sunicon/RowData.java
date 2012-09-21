@@ -134,6 +134,8 @@ public final class RowData implements Runnable
 			if (futureResult_!=null)
 			{
 				Log.d(TAG, "Cancel old base value");
+				//cancel old calcule
+				futureResult_.cancel(true);
 				resultListAdapter_.calcFutureResult_.remove(futureResult_);
 			}
 			
@@ -343,6 +345,10 @@ public final class RowData implements Runnable
 	 */
 	public static String formatDouble(double d)
 	{
+		if (Double.isNaN(d))
+		{
+			return "-";
+		}
 		String s = String.format("%.12g", d);
 		StringBuilder resu = new StringBuilder("<b>");
 		

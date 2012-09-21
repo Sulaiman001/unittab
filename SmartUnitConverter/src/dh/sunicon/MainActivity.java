@@ -83,9 +83,20 @@ public class MainActivity extends ListActivity
         
         clearBaseUnit(false);
         initEvents();
+        initResultListShowHideAnimation();
 	}
 
-	
+	private void initResultListShowHideAnimation()
+	{
+//		ObjectAnimator fadeinAnim = (ObjectAnimator) AnimatorInflater.loadAnimator(this, R.animator.fadein);
+//		ObjectAnimator fadeoutAnim = (ObjectAnimator) AnimatorInflater.loadAnimator(this, R.animator.fadeout);
+//		LayoutTransition transitioner = new LayoutTransition();
+//		transitioner.setAnimator(LayoutTransition.APPEARING, fadeinAnim);
+//		transitioner.setAnimator(LayoutTransition.DISAPPEARING, fadeoutAnim);
+//		
+//		ViewGroup container = (ViewGroup)this.getWindow().getDecorView().findViewById(R.id.mainView);
+//		container.setLayoutTransition(transitioner);		
+	}
 	
 	private void initEvents()
 	{

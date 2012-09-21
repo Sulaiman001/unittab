@@ -1,9 +1,10 @@
 <TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mainView"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
+    android:animateLayoutChanges="true"
     android:shrinkColumns="2"
-    android:stretchColumns="0,1" 
-    android:animateLayoutChanges="true">
+    android:stretchColumns="0,1" >
 
     <TextView
         android:id="@+id/categoryLabel"
@@ -83,6 +84,6 @@
         android:animateLayoutChanges="true"
         android:choiceMode="singleChoice"
         android:drawSelectorOnTop="false"
-        android:listSelector="@drawable/edittext_active"/>
+        android:listSelector="@drawable/edittext_active" />
 
 </TableLayout>
