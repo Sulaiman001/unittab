@@ -1,3 +1,43 @@
+
+
+
+select categoryId from
+(
+	select count(u.id) as ucnt, c.name, c.id as categoryId 
+	from unit u join category c on u.categoryId=c.id
+	group by c.id
+)
+where ucnt <= 1;
+
+
+
+select * from category where id in 
+(
+	select categoryId from
+	(
+		select count(u.id) as ucnt, c.name, c.id as categoryId 
+		from unit u join category c on u.categoryId=c.id
+		group by c.id
+	)
+	where ucnt <= 1
+);
+
+
+
+
+update category set enabled = 0 
+where id in 
+(
+	select categoryId from
+	(
+		select count(u.id) as ucnt, c.name, c.id as categoryId 
+		from unit u join category c on u.categoryId=c.id
+		group by c.id
+	)
+	where ucnt <= 1
+);
+
+
 select * from category where id=50;
 
 select * from unit where id=685;
@@ -21,4 +61,3 @@ select * from category where name like "%Fuel consum%";
 select * from unit where categoryId=32;
 
 select * from conversion where formula like "%e%" or reversedFormula like "%e%";
-

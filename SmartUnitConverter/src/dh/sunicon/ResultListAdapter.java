@@ -32,6 +32,9 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	static final String TAG = ResultListAdapter.class.getName();
 	private final LayoutInflater inflater_;
 	private final DatabaseHelper dbHelper_;
+	
+	static final String SELECT_CONVERSION_QUERY = "SELECT conversion.* FROM conversion JOIN unit ON conversion.base = unit.id WHERE unit.categoryId = ?"; 
+	
 	/**
 	 * Thread Pool to calculate the converted value
 	 */
@@ -377,7 +380,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				/* read all */
 				
 				Cursor cur = dbHelper_.getReadableDatabase().rawQuery(
-								"SELECT conversion.* FROM conversion JOIN unit ON conversion.base = unit.id WHERE unit.categoryId = ?",
+								SELECT_CONVERSION_QUERY,
 								new String[] { Long.toString(categoryId_) });
 			
 				final int idCi = cur.getColumnIndex("id");
@@ -441,7 +444,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			
 			Cursor cur = dbHelper_.getReadableDatabase().
 							query("unit", new String[]{"id", "name", "shortName"}, 
-								"categoryId=? AND id<>?", 
+								"enabled=1 AND categoryId=? AND id<>?", 
 								new String[] {Long.toString(categoryId), Long.toString(baseUnitId)}, 
 								null, null, "name");
 			

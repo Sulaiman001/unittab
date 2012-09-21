@@ -29,7 +29,7 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 			+" FROM unit INNER JOIN category ON unit.categoryId = category.id ";
 	
 	static final String WHERE1_QUERY_PART = 
-			"WHERE (lower(unitName) LIKE ? OR  lower(unitShortName) LIKE ? OR lower(categoryName) LIKE ?) ";
+			"WHERE category.enabled=1 AND unit.enabled=1 ";
 	
 	static final String WHERE2_QUERY_PART = 
 			"AND (lower(unitName) LIKE ? OR  lower(unitShortName) LIKE ? OR lower(categoryName) LIKE ?) ";
@@ -147,7 +147,8 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 			
 			// build the query by combining queryPartSelect + queryPartWhere1 (or 2) + queryPartLimit
 			
-			String wherePart = "";
+			String wherePart = WHERE1_QUERY_PART;
+			
 			LinkedList<String> selectionArgs = null;
 			
 			if (!TextUtils.isEmpty(constraint))
@@ -157,14 +158,8 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 				
 				final String[] words = filterText.split(" ");
 				
-				String firstWord = words[0];
-				wherePart = WHERE1_QUERY_PART;
-				selectionArgs.addLast('%'+firstWord+'%');
-				selectionArgs.addLast('%'+firstWord+'%');
-				selectionArgs.addLast('%'+firstWord+'%');
-				
 				final int wordCount = words.length;
-				for (int k = 1; k < wordCount; k++)
+				for (int k = 0; k < wordCount; k++)
 				{
 					String word = words[k];
 					if (TextUtils.isEmpty(word))

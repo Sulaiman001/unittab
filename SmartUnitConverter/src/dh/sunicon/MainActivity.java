@@ -32,14 +32,15 @@ public class MainActivity extends ListActivity
 {
 	static final String TAG = MainActivity.class.getName();
 	private DatabaseHelper dbHelper_;
-	private UnitsCursorAdapter unitsCursorAdapter_;
 	private TextView categoryLabel_;
 	private EditText baseValueEditor_;
 	private UnitAutoCompleteView baseUnitEditor_;
 	private EditText targetUnitFilterEditor_;
-	private ResultListAdapter resultListAdapter_;
 	//private AlertDialog actionPopupDlg_;
 	private Timer baseValueEditorTimer_;
+	
+	private UnitsCursorAdapter unitsCursorAdapter_;
+	private ResultListAdapter resultListAdapter_;
 	private long baseUnitId_ = -1;
 	private long categoryId_ = -1;
 	
@@ -48,7 +49,7 @@ public class MainActivity extends ListActivity
 		super.onCreate(savedInstanceState);
 
 		dbHelper_ = new DatabaseHelper(this);
-		final String initialQuery = UnitsCursorAdapter.SELECT_QUERY_PART + UnitsCursorAdapter.LIMIT_ORDER_QUERY_PART;
+		final String initialQuery = UnitsCursorAdapter.SELECT_QUERY_PART + UnitsCursorAdapter.WHERE1_QUERY_PART + UnitsCursorAdapter.LIMIT_ORDER_QUERY_PART;
 		final Cursor initialCursor = dbHelper_.getReadableDatabase().rawQuery(initialQuery, null);
 		
 		unitsCursorAdapter_ = new UnitsCursorAdapter(this, initialCursor, true);
@@ -108,6 +109,10 @@ public class MainActivity extends ListActivity
 			{
 				try
 				{
+					if (view == null)
+					{
+						return;
+					}
 					UnitsCursorAdapter.SuggestionData baseUnitData = (UnitsCursorAdapter.SuggestionData)view.getTag();
 					setBaseUnit(baseUnitData.getCategoryName(), baseUnitData.getUnitName(), baseUnitData.getCategoryId(), baseUnitData.getUnitId());
 				}
@@ -346,6 +351,11 @@ public class MainActivity extends ListActivity
 	
 	public void setBaseUnit(CharSequence categoryName, CharSequence unitName, long categoryId, long unitId)
 	{
+		if (categoryId == -1 && unitId == -1)
+		{
+			clearBaseUnit(false);
+			return;
+		}
 		categoryLabel_.setVisibility(View.VISIBLE);
 		categoryLabel_.setText(categoryName);
 		categoryId_ = categoryId;
@@ -389,6 +399,33 @@ public class MainActivity extends ListActivity
 		getMenuInflater().inflate(R.menu.activity_lesson_one, menu);
 		return true;
 	}
+	
+	@Override
+	protected void onSaveInstanceState(Bundle outState)
+	{
+//		private UnitsCursorAdapter unitsCursorAdapter_;
+//		private ResultListAdapter resultListAdapter_;
+//		private long baseUnitId_ = -1;
+//		private long categoryId_ = -1;
+
+		super.onSaveInstanceState(outState);
+		outState.putCharSequence("categoryName", categoryLabel_.getText());
+		outState.putCharSequence("baseUnitName", baseUnitEditor_.getText());
+		outState.putLong("categoryId", categoryId_);
+		outState.putLong("baseUnitId", baseUnitId_);
+	}
+
+	@Override
+	protected void onRestoreInstanceState(Bundle state)
+	{
+		super.onRestoreInstanceState(state);
+		setBaseUnit(
+				state.getCharSequence("categoryName"), 
+				state.getCharSequence("baseUnitName"),
+				state.getLong("categoryId"),
+				state.getLong("baseUnitId"));
+	}
+	
 	
 	public DatabaseHelper getDatabaseHelper(){
 		return dbHelper_;
