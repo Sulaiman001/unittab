@@ -26,6 +26,7 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.FilterQueryProvider;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -60,11 +61,11 @@ public class MainActivity extends ListActivity
 		categoryLabel_ = (TextView)findViewById(R.id.categoryLabel);
 		baseValueSwitcher_ = (ViewSwitcher)findViewById(R.id.baseValueSwitcher);
 		
-		initResultList();
 		initBaseValueEditor();
         initBaseValueSpinner();
         initBaseUnitAutoCompleteEditor();
         initTargetUnitFilterEditor();
+        initResultList();
         initResultListShowHideAnimation();
         clearBaseUnit(false);
 	}
@@ -149,42 +150,107 @@ public class MainActivity extends ListActivity
 	}
 
 	private void initBaseValueSpinner()
-		{
+	{
 	//		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
 	//        R.array.planets_array, android.R.layout.simple_spinner_item);
 	//
 	//// Specify the layout to use when the list of choices appears
 	//adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 	
-			baseValueSpinner_ = (Spinner)findViewById(R.id.valueSpinner);
-			baseValueSpinnerAdapter_ = new SimpleCursorAdapter(this, 
-					android.R.layout.simple_spinner_dropdown_item, 
-					null, 
-					new String[]{"v"}, ///the query of enumValues must return a column named "v" 
-					new int[]{android.R.layout.simple_spinner_item}, 
-					0);
-			baseValueSpinner_.setAdapter(baseValueSpinnerAdapter_);
-			
-			baseValueSpinner_.setOnItemSelectedListener(new OnItemSelectedListener()
+		baseValueSpinner_ = (Spinner)findViewById(R.id.valueSpinner);
+		baseValueSpinnerAdapter_ = new SimpleCursorAdapter(this, 
+				R.layout.spinner_item, 
+				null, 
+				new String[]{"v"}, ///the query of enumValues must return a column named "v" 
+				new int[]{R.id.spinnerLabelItem}, 
+				0);
+		baseValueSpinner_.setAdapter(baseValueSpinnerAdapter_);
+		baseValueSpinnerAdapter_.setFilterQueryProvider(new FilterQueryProvider()
+		{
+			/**
+			 * constraint must be the unitId, this function will return the cursor of the enumValues of a unit 
+			 */
+			@Override
+			public Cursor runQuery(CharSequence unitIdStr)
+			{
+				try
 				{
-					@Override
-					public void onItemSelected(AdapterView<?> parent, View view,
-							int position, long id)
+					if (TextUtils.isEmpty(unitIdStr))
 					{
-						// TODO Auto-generated method stub
-						
+						return null;
 					}
-	
-					@Override
-					public void onNothingSelected(AdapterView<?> parent)
-					{
-						// TODO Auto-generated method stub
-						
-					}
-		        	
-				});
-		}
+					
+					Cursor cur = dbHelper_.getReadableDatabase().
+							query("enumvalue", new String[]{"id as _id", "value as v"}, 
+								"unitid=?", 
+								new String[] {unitIdStr.toString()}, 
+								null, null, "value");
 
+					simulateLongOperation(3, 4);
+					
+					/* switch the baseValueEditor to spinner or normal editor*/
+					if (cur.getCount()>0)
+					{
+						//switch to the spinner
+						runOnUiThread(new Runnable()
+						{
+							@Override
+							public void run()
+							{
+								if (baseValueSwitcher_.getNextView() == baseValueSpinner_)
+								{
+									baseValueSwitcher_.showNext();
+								}
+							}
+						});
+					}
+					else
+					{
+						//switch to the editor
+						runOnUiThread(new Runnable()
+						{
+							@Override
+							public void run()
+							{
+								if (baseValueSwitcher_.getNextView() == baseValueEditor_)
+								{
+									baseValueSwitcher_.showNext();
+								}
+							}
+						});
+					}
+					
+					return cur;
+				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex);
+					return null;
+				}
+			}
+		});
+		
+		
+		baseValueSpinner_.setOnItemSelectedListener(new OnItemSelectedListener()
+		{
+			@Override
+			public void onItemSelected(AdapterView<?> parent, View view,
+					int position, long id)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+
+			@Override
+			public void onNothingSelected(AdapterView<?> parent)
+			{
+				// TODO Auto-generated method stub
+				
+			}
+        	
+		});
+	}
+	
 	private void initBaseUnitAutoCompleteEditor()
 	{
 		baseUnitEditor_ = (AutoCompleteTextView)findViewById(R.id.baseUnitEditor);
@@ -361,6 +427,8 @@ public class MainActivity extends ListActivity
 		categoryId_ = categoryId;
 		baseUnitId_ = unitId;
 		targetUnitFilterEditor_.setEnabled(true);
+		baseValueSpinnerAdapter_.getFilter().filter(Long.toString(unitId));
+		
 		try
 		{
 			getResultListAdapter().setBaseUnitId(categoryId_, baseUnitId_);

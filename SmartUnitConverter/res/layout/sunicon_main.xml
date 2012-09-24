@@ -2,6 +2,7 @@
     android:id="@+id/mainView"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
+    android:layout_marginLeft="5dp"
     android:animateLayoutChanges="true"
     android:shrinkColumns="2"
     android:stretchColumns="0,1" >
@@ -40,9 +41,10 @@
                 android:id="@+id/valueSpinner"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
+                android:background="@drawable/edittext_blue_colorstate"
                 android:padding="5dp"
-                android:visibility="gone" />
-            
+                android:popupBackground="@drawable/droplist"
+                android:textSize="16sp" />
         </ViewSwitcher>
 
         <AutoCompleteTextView

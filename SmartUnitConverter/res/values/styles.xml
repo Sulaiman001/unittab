@@ -9,7 +9,12 @@
         <item name="android:background">@drawable/edittext_blue_colorstate</item>
     </style>
     
-     <style name="autocompletetextview_blue" parent="@android:style/Widget.AutoCompleteTextView">
+    <style name="autocompletetextview_blue" parent="@android:style/Widget.AutoCompleteTextView">
+        <item name="android:background">@drawable/edittext_blue_colorstate</item>
+        <item name="android:popupBackground">@drawable/droplist</item>
+    </style>
+    
+    <style name="spinner_blue" parent="@android:style/Widget.Spinner">
         <item name="android:background">@drawable/edittext_blue_colorstate</item>
         <item name="android:popupBackground">@drawable/droplist</item>
     </style>
