@@ -7,6 +7,7 @@ import java.util.TimerTask;
 import android.app.ListActivity;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
@@ -19,13 +20,16 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnKeyListener;
-import android.view.View.OnLongClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ViewSwitcher;
 import dh.sunicon.datamodel.DatabaseHelper;
 
 public class MainActivity extends ListActivity 
@@ -33,14 +37,16 @@ public class MainActivity extends ListActivity
 	static final String TAG = MainActivity.class.getName();
 	private DatabaseHelper dbHelper_;
 	private TextView categoryLabel_;
+	private ViewSwitcher baseValueSwitcher_;
 	private EditText baseValueEditor_;
-	private UnitAutoCompleteView baseUnitEditor_;
-	private EditText targetUnitFilterEditor_;
-	//private AlertDialog actionPopupDlg_;
+	private Spinner baseValueSpinner_;
+	private AutoCompleteTextView baseUnitEditor_;
+	private EditText targetUnitFilterEditor_; 
 	private Timer baseValueEditorTimer_;
-	
-	private UnitsCursorAdapter unitsCursorAdapter_;
+
 	private ResultListAdapter resultListAdapter_;
+	private SimpleCursorAdapter baseValueSpinnerAdapter_;
+	
 	private long baseUnitId_ = -1;
 	private long categoryId_ = -1;
 	
@@ -49,131 +55,24 @@ public class MainActivity extends ListActivity
 		super.onCreate(savedInstanceState);
 
 		dbHelper_ = new DatabaseHelper(this);
-		final String initialQuery = UnitsCursorAdapter.SELECT_QUERY_PART + UnitsCursorAdapter.WHERE1_QUERY_PART + UnitsCursorAdapter.LIMIT_ORDER_QUERY_PART;
-		final Cursor initialCursor = dbHelper_.getReadableDatabase().rawQuery(initialQuery, null);
-		
-		unitsCursorAdapter_ = new UnitsCursorAdapter(this, initialCursor, true);
-		resultListAdapter_ = new ResultListAdapter(this);
-		
-//		final String[] popupItems = getResources().getStringArray(
-//				R.array.result_popup_menu);
-//		AlertDialog.Builder builder = new AlertDialog.Builder(this);
-//		//builder.setTitle("Pick a color");
-//		builder.setItems(popupItems, new DialogInterface.OnClickListener()
-//		{
-//			public void onClick(DialogInterface dialog, int item)
-//			{
-//				Toast.makeText(getApplicationContext(), popupItems[item],
-//						Toast.LENGTH_SHORT).show();
-//			}
-//		});
-//		actionPopupDlg_ = builder.create();
-		
 		setContentView(R.layout.sunicon_main);
 		
 		categoryLabel_ = (TextView)findViewById(R.id.categoryLabel);
-		baseUnitEditor_ = (UnitAutoCompleteView)findViewById(R.id.baseUnitEditor);
-		targetUnitFilterEditor_ = (EditText)findViewById(R.id.targetUnitFilterEditor);
-		baseValueEditor_= (EditText)findViewById(R.id.valueEditor);
+		baseValueSwitcher_ = (ViewSwitcher)findViewById(R.id.baseValueSwitcher);
 		
-        baseUnitEditor_.setAdapter(unitsCursorAdapter_);
-        baseUnitEditor_.setThreshold(1);
-        
-        setListAdapter(resultListAdapter_);
-        registerForContextMenu(getListView());
-        
-        clearBaseUnit(false);
-        initEvents();
+		initResultList();
+		initBaseValueEditor();
+        initBaseValueSpinner();
+        initBaseUnitAutoCompleteEditor();
+        initTargetUnitFilterEditor();
         initResultListShowHideAnimation();
+        clearBaseUnit(false);
 	}
 
-	private void initResultListShowHideAnimation()
+	private void initBaseValueEditor()
 	{
-//		ObjectAnimator fadeinAnim = (ObjectAnimator) AnimatorInflater.loadAnimator(this, R.animator.fadein);
-//		ObjectAnimator fadeoutAnim = (ObjectAnimator) AnimatorInflater.loadAnimator(this, R.animator.fadeout);
-//		LayoutTransition transitioner = new LayoutTransition();
-//		transitioner.setAnimator(LayoutTransition.APPEARING, fadeinAnim);
-//		transitioner.setAnimator(LayoutTransition.DISAPPEARING, fadeoutAnim);
-//		
-//		ViewGroup container = (ViewGroup)this.getWindow().getDecorView().findViewById(R.id.mainView);
-//		container.setLayoutTransition(transitioner);		
-	}
-	
-	private void initEvents()
-	{
-		baseUnitEditor_.setOnItemClickListener(new OnItemClickListener()
-		{
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id)
-			{
-				try
-				{
-					if (view == null)
-					{
-						return;
-					}
-					UnitsCursorAdapter.SuggestionData baseUnitData = (UnitsCursorAdapter.SuggestionData)view.getTag();
-					setBaseUnit(baseUnitData.getCategoryName(), baseUnitData.getUnitName(), baseUnitData.getCategoryId(), baseUnitData.getUnitId());
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}				
-			}
-		});
-		
-        baseUnitEditor_.setOnKeyListener(new OnKeyListener()
-		{
-			@Override
-			public boolean onKey(View v, int keyCode, KeyEvent event)
-			{
-				try
-				{
-					if (keyCode != KeyEvent.KEYCODE_DPAD_CENTER && keyCode != KeyEvent.KEYCODE_DPAD_UP && 
-							keyCode != KeyEvent.KEYCODE_DPAD_DOWN && keyCode != KeyEvent.KEYCODE_DPAD_LEFT && 
-							keyCode != KeyEvent.KEYCODE_DPAD_RIGHT && keyCode != KeyEvent.KEYCODE_ENTER &&
-							keyCode != KeyEvent.KEYCODE_TAB)
-					{
-						clearBaseUnit(true);
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}
-				return false;
-			}
-		});
-        
-        targetUnitFilterEditor_.addTextChangedListener(new TextWatcher()
-		{
-			@Override
-			public void onTextChanged(final CharSequence s, int start, int before, int count)
-			{
-				try
-				{
-					getResultListAdapter().getFilter().filter(s);
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}
-			}
-			
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count,
-					int after)
-			{
-			}
-			
-			@Override
-			public void afterTextChanged(Editable s)
-			{
-			}
-		});
-        
-        baseValueEditor_.addTextChangedListener(new TextWatcher()
+		baseValueEditor_= (EditText)findViewById(R.id.valueEditor);
+		baseValueEditor_.addTextChangedListener(new TextWatcher()
 		{
 			@Override
 			public void onTextChanged(final CharSequence s, int start, int before, int count)
@@ -188,7 +87,7 @@ public class MainActivity extends ListActivity
 					{
 						baseValueEditorTimer_.cancel(); //cancel the old onTextChange event
 					}
-
+	
 					//the timer is dumped, we must to create a new one
 					baseValueEditorTimer_ = new Timer();
 					
@@ -247,48 +146,149 @@ public class MainActivity extends ListActivity
 			{
 			}
 		});
-        
-        getListView().setOnLongClickListener(new OnLongClickListener()
+	}
+
+	private void initBaseValueSpinner()
+		{
+	//		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
+	//        R.array.planets_array, android.R.layout.simple_spinner_item);
+	//
+	//// Specify the layout to use when the list of choices appears
+	//adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+	
+			baseValueSpinner_ = (Spinner)findViewById(R.id.valueSpinner);
+			baseValueSpinnerAdapter_ = new SimpleCursorAdapter(this, 
+					android.R.layout.simple_spinner_dropdown_item, 
+					null, 
+					new String[]{"v"}, ///the query of enumValues must return a column named "v" 
+					new int[]{android.R.layout.simple_spinner_item}, 
+					0);
+			baseValueSpinner_.setAdapter(baseValueSpinnerAdapter_);
+			
+			baseValueSpinner_.setOnItemSelectedListener(new OnItemSelectedListener()
+				{
+					@Override
+					public void onItemSelected(AdapterView<?> parent, View view,
+							int position, long id)
+					{
+						// TODO Auto-generated method stub
+						
+					}
+	
+					@Override
+					public void onNothingSelected(AdapterView<?> parent)
+					{
+						// TODO Auto-generated method stub
+						
+					}
+		        	
+				});
+		}
+
+	private void initBaseUnitAutoCompleteEditor()
+	{
+		baseUnitEditor_ = (AutoCompleteTextView)findViewById(R.id.baseUnitEditor);
+		final String initialQuery = UnitsCursorAdapter.SELECT_QUERY_PART + UnitsCursorAdapter.WHERE1_QUERY_PART + UnitsCursorAdapter.LIMIT_ORDER_QUERY_PART;
+		final Cursor initialCursor = dbHelper_.getReadableDatabase().rawQuery(initialQuery, null);
+		UnitsCursorAdapter adapter = new UnitsCursorAdapter(this, initialCursor, false);
+		
+		baseUnitEditor_.setAdapter(adapter);
+	    baseUnitEditor_.setThreshold(1);
+	    
+	    baseUnitEditor_.setOnItemClickListener(new OnItemClickListener()
 		{
 			@Override
-			public boolean onLongClick(View v)
+			public void onItemClick(AdapterView<?> parent, View view,
+					int position, long id)
 			{
 				try
 				{
-					
+					if (view == null)
+					{
+						return;
+					}
+					UnitsCursorAdapter.SuggestionData baseUnitData = (UnitsCursorAdapter.SuggestionData)view.getTag();
+					setBaseUnit(baseUnitData.getCategoryName(), baseUnitData.getUnitName(), baseUnitData.getCategoryId(), baseUnitData.getUnitId());
 				}
 				catch (Exception ex)
 				{
-					Log.w(TAG, ex.toString());
+					Log.w(TAG, ex);
+				}				
+			}
+		});
+	    
+	    baseUnitEditor_.setOnKeyListener(new OnKeyListener()
+		{
+			@Override
+			public boolean onKey(View v, int keyCode, KeyEvent event)
+			{
+				try
+				{
+					if (keyCode != KeyEvent.KEYCODE_DPAD_CENTER && keyCode != KeyEvent.KEYCODE_DPAD_UP && 
+							keyCode != KeyEvent.KEYCODE_DPAD_DOWN && keyCode != KeyEvent.KEYCODE_DPAD_LEFT && 
+							keyCode != KeyEvent.KEYCODE_DPAD_RIGHT && keyCode != KeyEvent.KEYCODE_ENTER &&
+							keyCode != KeyEvent.KEYCODE_TAB)
+					{
+						clearBaseUnit(true);
+					}
+				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex);
 				}
 				return false;
 			}
 		});
-        
-//        getListView().setOnItemClickListener(new OnItemClickListener()
-//		{
-//			@Override
-//			public void onItemClick(AdapterView<?> parent, View view,
-//					int position, long id)
-//			{
-//				try
-//				{
-//					RowData row = (RowData) (getListAdapter()
-//							.getItem(position));
-//	
-//					actionPopupDlg_.show();
-//					/*
-//					Toast.makeText(MainActivity.this,
-//							row.getValue() + " " + row.getUnitName(),
-//							android.widget.Toast.LENGTH_LONG).show();
-//					*/
-//				}
-//				catch (Exception ex)
-//				{
-//					Log.w(TAG, ex.toString());
-//				}
-//			}
-//		});
+	}
+
+	private void initTargetUnitFilterEditor()
+	{
+		targetUnitFilterEditor_ = (EditText)findViewById(R.id.targetUnitFilterEditor);
+		targetUnitFilterEditor_.addTextChangedListener(new TextWatcher()
+		{
+			@Override
+			public void onTextChanged(final CharSequence s, int start, int before, int count)
+			{
+				try
+				{
+					getResultListAdapter().getFilter().filter(s);
+				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex);
+				}
+			}
+			
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after)
+			{
+			}
+			
+			@Override
+			public void afterTextChanged(Editable s)
+			{
+			}
+		});
+	}
+
+	private void initResultList()
+	{
+		resultListAdapter_ = new ResultListAdapter(this);
+		setListAdapter(resultListAdapter_);
+		registerForContextMenu(getListView());
+	}
+
+	private void initResultListShowHideAnimation()
+	{
+//		ObjectAnimator fadeinAnim = (ObjectAnimator) AnimatorInflater.loadAnimator(this, R.animator.fadein);
+//		ObjectAnimator fadeoutAnim = (ObjectAnimator) AnimatorInflater.loadAnimator(this, R.animator.fadeout);
+//		LayoutTransition transitioner = new LayoutTransition();
+//		transitioner.setAnimator(LayoutTransition.APPEARING, fadeinAnim);
+//		transitioner.setAnimator(LayoutTransition.DISAPPEARING, fadeoutAnim);
+//		
+//		ViewGroup container = (ViewGroup)this.getWindow().getDecorView().findViewById(R.id.mainView);
+//		container.setLayoutTransition(transitioner);		
 	}
 
 	@Override
@@ -403,11 +403,6 @@ public class MainActivity extends ListActivity
 	@Override
 	protected void onSaveInstanceState(Bundle outState)
 	{
-//		private UnitsCursorAdapter unitsCursorAdapter_;
-//		private ResultListAdapter resultListAdapter_;
-//		private long baseUnitId_ = -1;
-//		private long categoryId_ = -1;
-
 		super.onSaveInstanceState(outState);
 		outState.putCharSequence("categoryName", categoryLabel_.getText());
 		outState.putCharSequence("baseUnitName", baseUnitEditor_.getText());
@@ -429,11 +424,6 @@ public class MainActivity extends ListActivity
 	
 	public DatabaseHelper getDatabaseHelper(){
 		return dbHelper_;
-	}
-	
-	public UnitsCursorAdapter getUnitsCursorAdapter()
-	{
-		return unitsCursorAdapter_;
 	}
 	
 	/**
@@ -465,6 +455,5 @@ public class MainActivity extends ListActivity
 	{
 		return resultListAdapter_;
 	}
-
 	
 }

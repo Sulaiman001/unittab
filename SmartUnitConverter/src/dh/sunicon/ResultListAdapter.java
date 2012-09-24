@@ -329,7 +329,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		}
 		if (!conversionsLoadingRunner_.isFinished())
 		{
-			conversionsLoadingRunner_.waitToFinish(5, TimeUnit.SECONDS);
+			conversionsLoadingRunner_.waitToFinish(10, TimeUnit.SECONDS);
 		}
 		return conversionsLoadingRunner_.getConversions();
 	}

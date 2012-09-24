@@ -6,40 +6,56 @@
     android:shrinkColumns="2"
     android:stretchColumns="0,1" >
 
-    <TextView
-        android:id="@+id/categoryLabel"
-        android:gravity="right"
-        android:text="Length Distance"
-        android:textColor="#258AAF"
-        android:textSize="12sp" />
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
+
+        <TextView />
+
+        <TextView
+            android:id="@+id/categoryLabel"
+            android:text="Length Distance"
+            android:textColor="#258AAF"
+            android:textSize="12sp" />
+    </TableRow>
 
     <TableRow
         android:layout_width="fill_parent"
         android:layout_height="wrap_content" >
 
-        <EditText
-            android:id="@+id/valueEditor"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="5dp"
-            android:inputType="numberDecimal"
-            android:padding="5dp"
-            android:textSize="16sp" 
-            android:imeOptions="actionDone"
-            />
+        <ViewSwitcher
+            android:id="@+id/baseValueSwitcher"
+            android:layout_marginRight="5dp" >
 
-        <dh.sunicon.UnitAutoCompleteView
+            <EditText
+                android:id="@+id/valueEditor"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:imeOptions="actionDone"
+                android:inputType="numberDecimal"
+                android:padding="5dp"
+                android:textSize="16sp" />
+
+            <Spinner
+                android:id="@+id/valueSpinner"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:padding="5dp"
+                android:visibility="gone" />
+            
+        </ViewSwitcher>
+
+        <AutoCompleteTextView
             android:id="@+id/baseUnitEditor"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
+            android:imeOptions="actionDone"
             android:inputType="textNoSuggestions"
             android:padding="5dp"
             android:singleLine="true"
             android:textColor="@android:color/primary_text_light"
             android:textSize="16sp"
-            android:textStyle="bold"
-            android:imeOptions="actionDone"
-             />
+            android:textStyle="bold" />
 
         <Button
             android:id="@+id/clearBaseUnitButton"
