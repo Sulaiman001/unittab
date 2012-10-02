@@ -1,3 +1,21 @@
+
+SELECT conversion.* FROM conversion JOIN unit ON conversion.base = unit.id WHERE unit.categoryId = ?
+
+
+
+
+
+;
+
+
+dssdsd
+
+
+
+
+;
+
+
 -- Describe CONVERSION
 CREATE TABLE "corresponding" (
     "id" INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,

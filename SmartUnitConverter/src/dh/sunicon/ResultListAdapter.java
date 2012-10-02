@@ -1,9 +1,9 @@
 package dh.sunicon;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -25,15 +25,17 @@ import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
 import dh.sunicon.datamodel.Conversion;
+import dh.sunicon.datamodel.Corresponding;
 import dh.sunicon.datamodel.DatabaseHelper;
+import dh.sunicon.datamodel.EnumValue;
+import dh.sunicon.runnable.ConversionsLoadingRunner;
+import dh.sunicon.runnable.RowData;
 
 public class ResultListAdapter extends BaseAdapter implements Filterable
 {	
 	static final String TAG = ResultListAdapter.class.getName();
 	private final LayoutInflater inflater_;
 	private final DatabaseHelper dbHelper_;
-	
-	static final String SELECT_CONVERSION_QUERY = "SELECT conversion.* FROM conversion JOIN unit ON conversion.base = unit.id WHERE unit.categoryId = ?"; 
 	
 	/**
 	 * Thread Pool to calculate the converted value
@@ -42,7 +44,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	/**
 	 * the future result of calculation is stock in here
 	 */
-	volatile Queue<Future<?>> calcFutureResult_ = new LinkedList<Future<?>>();
+	private volatile Queue<Future<?>> calculationWatingPool_ = new LinkedList<Future<?>>();
 	
 	private final ExecutorService awaitCalculationThread_ = Executors
 			.newSingleThreadExecutor();
@@ -190,7 +192,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			{
 				conversionsLoadingRunner_.cancel();
 			}
-			conversionsLoadingRunner_ = new ConversionsLoadingRunner();
+			conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, categoryId_);
 			conversionsLoadingThread_.execute(conversionsLoadingRunner_);
 			
 			//fill the list with related target unit (of the same category)
@@ -211,7 +213,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	 * set base value and compute conversion values
 	 * @throws IllegalAccessException 
 	 */
-	public void setBaseValue(double baseValue) throws IllegalAccessException
+	public void setBaseValue(double baseValue, long baseValueEnumId) throws IllegalAccessException
 	{
 		if (onGuiThread())
 		{
@@ -241,7 +243,14 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			
 			for (int i = 0; i<count; i++)
 			{
-				data_.get(i).setBaseValue(baseValue_);
+				if (baseValueEnumId>0 && Double.isNaN(baseValue))
+				{
+					data_.get(i).setBaseValueEnum(baseValueEnumId);
+				}
+				else
+				{
+					data_.get(i).setBaseValue(baseValue_);
+				}
 			}
 			
 			/* wait the calculations finished then update the list View */
@@ -268,7 +277,23 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			throw new IllegalAccessException("setBaseValue() must be called from UI Thread. To be sure that data_ will not be changed during the computing");
 		}
 	}
-
+	
+	/**
+	 * unregister a calculation so the methode awaitCalculation() will NOT wait for it to finish 
+	 */
+	public void unregisterCalculationFromWatingPool(Future<?> f)
+	{
+		calculationWatingPool_.remove(f);
+	}
+	
+	/**
+	 * register a calculation so the methode awaitCalculation() will wait for it to finish 
+	 */
+	public void registerCalculationToWatingPool(Future<?> f)
+	{
+		calculationWatingPool_.offer(f);
+	}
+	
 	/**
 	 * waiting for calculationPoolThread_ to finish all the calculation
 	 * @throws ExecutionException 
@@ -280,9 +305,9 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		{
 			long startTime = System.currentTimeMillis();
 			
-			while (!calcFutureResult_.isEmpty())
+			while (!calculationWatingPool_.isEmpty())
 			{
-				Future<?> futRe = calcFutureResult_.poll();
+				Future<?> futRe = calculationWatingPool_.poll();
 				try
 				{
 					futRe.get();
@@ -323,6 +348,24 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	
 	public ArrayList<Conversion> getConversions() throws IllegalAccessException, InterruptedException
 	{
+		waitConversionLoadingRunner();
+		return conversionsLoadingRunner_.getConversions();
+	}
+
+	public ArrayList<Corresponding> getCorrespondings() throws IllegalAccessException, InterruptedException
+	{
+		waitConversionLoadingRunner();
+		return conversionsLoadingRunner_.getCorrespondings();
+	}
+	
+	public HashMap<Long, EnumValue> getEnumValues() throws IllegalAccessException, InterruptedException
+	{
+		waitConversionLoadingRunner();
+		return conversionsLoadingRunner_.getEnumValues();
+	}
+	
+	private void waitConversionLoadingRunner() throws IllegalAccessException, InterruptedException
+	{
 		if (conversionsLoadingRunner_==null)
 		{
 			throw new IllegalAccessException("The conversion loading has not been started. Base Unit was not set");
@@ -331,7 +374,6 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		{
 			conversionsLoadingRunner_.waitToFinish(10, TimeUnit.SECONDS);
 		}
-		return conversionsLoadingRunner_.getConversions();
 	}
 
 	public boolean onGuiThread()
@@ -344,91 +386,6 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	 * **** Inner classes ****
 	 */
 	
-	final class ConversionsLoadingRunner implements Runnable
-	{
-		private boolean cancelled_;
-		private boolean finished_ = false;
-		private CountDownLatch countDownLatch_ = new CountDownLatch(1);
-		
-		private ArrayList<Conversion> conversions_;
-		
-		public ArrayList<Conversion> getConversions()
-		{
-			return conversions_;
-		}
-
-		public void cancel()
-		{
-			cancelled_ = true;
-		}
-		
-		public boolean isFinished()
-		{
-			return finished_;
-		}
-		
-		public void waitToFinish(long timeout, TimeUnit timeUnit) throws InterruptedException
-		{
-			countDownLatch_.await(timeout, timeUnit);
-		}
-
-		@Override
-		public void run()
-		{
-			try
-			{	
-				/* read all */
-				
-				Cursor cur = dbHelper_.getReadableDatabase().rawQuery(
-								SELECT_CONVERSION_QUERY,
-								new String[] { Long.toString(categoryId_) });
-			
-				final int idCi = cur.getColumnIndex("id");
-				final int baseCi = cur.getColumnIndex("base");
-				final int targetCi = cur.getColumnIndex("target");
-				final int fxCi = cur.getColumnIndex("fx");
-				final int formulaCi = cur.getColumnIndex("formula");
-				final int reversedFormulaCi = cur.getColumnIndex("reversedFormula");
-				
-				conversions_ = new ArrayList<Conversion>();
-				
-				while (cur.moveToNext() && !cancelled_)
-				{
-					Conversion c = new Conversion(dbHelper_, 
-							cur.getLong(idCi),
-							cur.getLong(baseCi), 
-							cur.getLong(targetCi), 
-							cur.getDouble(fxCi), 
-							cur.getString(formulaCi), 
-							cur.getString(reversedFormulaCi));
-					conversions_.add(c);
-				}
-				
-				cur.close();
-				
-				if (cancelled_)
-				{
-					conversions_ = null;
-					Log.d(TAG, "Canceled loading conversions for Category "+categoryId_);
-				}
-				else
-				{
-					Log.d(TAG, "Finish loading conversions for Category "+categoryId_);
-				}
-			}
-			catch (Exception ex)
-			{
-				Log.w(TAG, ex);
-			}
-			finally
-			{
-				finished_ = true;
-				//notify other thread that this ones is finished
-				countDownLatch_.countDown();
-			}
-		}
-	}
-
 	/**
 	 * this AsynTask populates the DataRow list of the owner
 	 */

@@ -32,6 +32,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
 import dh.sunicon.datamodel.DatabaseHelper;
+import dh.sunicon.runnable.RowData;
 
 public class MainActivity extends ListActivity 
 {
@@ -113,12 +114,12 @@ public class MainActivity extends ListActivity
 										
 										if (TextUtils.isEmpty(s))
 										{
-											getResultListAdapter().setBaseValue(Double.NaN);
+											getResultListAdapter().setBaseValue(Double.NaN, -1);
 										}
 										else
 										{
 											double baseValue = Double.parseDouble(s.toString());
-											getResultListAdapter().setBaseValue(baseValue);
+											getResultListAdapter().setBaseValue(baseValue, -1);
 										}
 									}
 									catch (Exception ex)
@@ -186,7 +187,7 @@ public class MainActivity extends ListActivity
 								new String[] {unitIdStr.toString()}, 
 								null, null, "value");
 
-					simulateLongOperation(3, 4);
+					simulateLongOperation(3, 5);
 					
 					/* switch the baseValueEditor to spinner or normal editor*/
 					if (cur.getCount()>0)
@@ -197,9 +198,16 @@ public class MainActivity extends ListActivity
 							@Override
 							public void run()
 							{
-								if (baseValueSwitcher_.getNextView() == baseValueSpinner_)
+								try
 								{
-									baseValueSwitcher_.showNext();
+									if (baseValueSwitcher_.getNextView() == baseValueSpinner_)
+									{
+										baseValueSwitcher_.showNext();
+									}
+								}
+								catch (Exception ex)
+								{
+									Log.w(TAG, ex);
 								}
 							}
 						});
@@ -212,9 +220,16 @@ public class MainActivity extends ListActivity
 							@Override
 							public void run()
 							{
-								if (baseValueSwitcher_.getNextView() == baseValueEditor_)
+								try
 								{
-									baseValueSwitcher_.showNext();
+									if (baseValueSwitcher_.getNextView() == baseValueEditor_)
+									{
+										baseValueSwitcher_.showNext();
+									}
+								}
+								catch (Exception ex)
+								{
+									Log.w(TAG, ex);
 								}
 							}
 						});
@@ -237,15 +252,28 @@ public class MainActivity extends ListActivity
 			public void onItemSelected(AdapterView<?> parent, View view,
 					int position, long id)
 			{
-				// TODO Auto-generated method stub
-				
+				try
+				{
+					//Log.i(TAG, "convert unit with enumId = "+id);
+					getResultListAdapter().setBaseValue(Double.NaN, id);
+				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex);
+				}
 			}
 
 			@Override
 			public void onNothingSelected(AdapterView<?> parent)
 			{
-				// TODO Auto-generated method stub
-				
+				try
+				{
+					getResultListAdapter().setBaseValue(Double.NaN, (long)-1);
+				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex);
+				}
 			}
         	
 		});
@@ -471,22 +499,58 @@ public class MainActivity extends ListActivity
 	@Override
 	protected void onSaveInstanceState(Bundle outState)
 	{
-		super.onSaveInstanceState(outState);
-		outState.putCharSequence("categoryName", categoryLabel_.getText());
-		outState.putCharSequence("baseUnitName", baseUnitEditor_.getText());
-		outState.putLong("categoryId", categoryId_);
-		outState.putLong("baseUnitId", baseUnitId_);
+		try
+		{
+			super.onSaveInstanceState(outState);
+			outState.putCharSequence("categoryName", categoryLabel_.getText());
+			outState.putCharSequence("baseUnitName", baseUnitEditor_.getText());
+			outState.putLong("categoryId", categoryId_);
+			outState.putLong("baseUnitId", baseUnitId_);
+			
+			outState.putInt("categoryLabelVisible", categoryLabel_.getVisibility());
+			outState.putBoolean("targetUnitFilterEnable", targetUnitFilterEditor_.isEnabled());
+			
+			//outState.putInt("baseValueSpinnerPosition", baseValueSpinner_.getSelectedItemPosition());
+			outState.putParcelable("baseValueSpinner", baseValueSpinner_.onSaveInstanceState());
+			outState.putParcelable("resultListView", getListView().onSaveInstanceState());
+		}
+		catch (Exception ex)
+		{
+			Log.w(TAG, ex);
+		}
 	}
 
 	@Override
 	protected void onRestoreInstanceState(Bundle state)
 	{
-		super.onRestoreInstanceState(state);
-		setBaseUnit(
-				state.getCharSequence("categoryName"), 
-				state.getCharSequence("baseUnitName"),
-				state.getLong("categoryId"),
-				state.getLong("baseUnitId"));
+		try
+		{
+			super.onRestoreInstanceState(state);
+			
+			categoryLabel_.setVisibility(state.getInt("categoryLabelVisible"));
+			//categoryLabel_.setText(categoryName);
+			categoryId_ = state.getLong("categoryId");
+			baseUnitId_ = state.getLong("baseUnitId");
+			targetUnitFilterEditor_.setEnabled(state.getBoolean("targetUnitFilterEnable"));
+			//baseValueSpinnerAdapter_.getFilter().filter(Long.toString(unitId));
+			
+			setBaseUnit(
+					state.getCharSequence("categoryName"), 
+					state.getCharSequence("baseUnitName"),
+					state.getLong("categoryId"),
+					state.getLong("baseUnitId"));
+			
+//			int savedSpinnerPosition = state.getInt("baseValueSpinnerPosition");
+//			baseValueSpinner_.setTag(savedSpinnerPosition); //use to restore this position after populating the spinner
+//			baseValueSpinner_.setSelection(savedSpinnerPosition);
+			
+			baseValueSpinner_.onRestoreInstanceState(state.getParcelable("baseValueSpinner"));
+			getListView().onRestoreInstanceState(state.getParcelable("resultListView"));
+		}
+		catch (Exception ex)
+		{
+			Log.w(TAG, ex);
+		}
 	}
 	
 	
@@ -514,12 +578,21 @@ public class MainActivity extends ListActivity
 		}
 	}
 
+//	private void restoreSpinnerSelection()
+//	{
+//		if (baseValueSpinner_.getTag()!=null)
+//		{
+//			baseValueSpinner_.setSelection((Integer)(baseValueSpinner_.getTag()));
+//			baseValueSpinner_.setTag(null);
+//		}
+//	}
+	
 	public void setResultListVisible(boolean visible)
 	{
 		getListView().setVisibility(visible ? View.VISIBLE : View.GONE);
 	}
 	
-	ResultListAdapter getResultListAdapter()
+	public ResultListAdapter getResultListAdapter()
 	{
 		return resultListAdapter_;
 	}
