@@ -6,8 +6,6 @@ import java.util.TimerTask;
 
 import android.annotation.SuppressLint;
 import android.app.ListActivity;
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -41,7 +39,6 @@ public class MainActivity extends ListActivity
 {
 	static final String TAG = MainActivity.class.getName();
 	private DatabaseHelper dbHelper_;
-	private ClipboardManager clipboard_;
 	private TextView categoryLabel_;
 	private ViewSwitcher baseValueSwitcher_;
 	private EditText baseValueEditor_;
@@ -62,8 +59,6 @@ public class MainActivity extends ListActivity
 
 		dbHelper_ = new DatabaseHelper(this);
 		setContentView(R.layout.sunicon_main);
-		
-		clipboard_ = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
 		
 		categoryLabel_ = (TextView)findViewById(R.id.categoryLabel);
 		baseValueSwitcher_ = (ViewSwitcher)findViewById(R.id.baseValueSwitcher);
@@ -416,12 +411,14 @@ public class MainActivity extends ListActivity
 		int sdk = android.os.Build.VERSION.SDK_INT;
 		if(sdk < android.os.Build.VERSION_CODES.HONEYCOMB) 
 		{
-		    clipboard_.setText(text);
+			android.text.ClipboardManager clipboard = (android.text.ClipboardManager)getSystemService(CLIPBOARD_SERVICE); 
+		    clipboard.setText(text);
 		} 
 		else 
 		{
-			ClipData clip = ClipData.newPlainText(text, text);
-		    clipboard_.setPrimaryClip(clip);
+			android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
+			android.content.ClipData clip = android.content.ClipData.newPlainText(text, text);
+	        clipboard.setPrimaryClip(clip); 
 		}
 		Toast.makeText(this, "copied '"+text+"'", Toast.LENGTH_SHORT).show();
 	}
