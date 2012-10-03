@@ -14,16 +14,7 @@
         android:title="Copy Value and Unit name">
     </item>
     <item
-        android:id="@+id/setValueAsBaseItem"
-        android:title="Set Value as Base">
-    </item>
-    <item
         android:id="@+id/setUnitAsBaseItem"
         android:title="Set Unit as Base">
     </item>
-    <item
-        android:id="@+id/setUnitAndValueAsBaseItem"
-        android:title="Set Value and Unit as Base">
-    </item>
-
 </menu>

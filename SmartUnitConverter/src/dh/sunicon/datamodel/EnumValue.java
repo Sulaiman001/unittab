@@ -22,4 +22,10 @@ public class EnumValue extends BaseEntity
 	{
 		return value_;
 	}
+	
+	@Override
+	public String toString()
+	{
+		return value_;
+	}
 }

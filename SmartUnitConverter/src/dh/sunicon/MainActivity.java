@@ -4,7 +4,11 @@ import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import android.annotation.SuppressLint;
 import android.app.ListActivity;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.widget.SimpleCursorAdapter;
@@ -15,7 +19,6 @@ import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
-import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -38,6 +41,7 @@ public class MainActivity extends ListActivity
 {
 	static final String TAG = MainActivity.class.getName();
 	private DatabaseHelper dbHelper_;
+	private ClipboardManager clipboard_;
 	private TextView categoryLabel_;
 	private ViewSwitcher baseValueSwitcher_;
 	private EditText baseValueEditor_;
@@ -58,6 +62,8 @@ public class MainActivity extends ListActivity
 
 		dbHelper_ = new DatabaseHelper(this);
 		setContentView(R.layout.sunicon_main);
+		
+		clipboard_ = (ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
 		
 		categoryLabel_ = (TextView)findViewById(R.id.categoryLabel);
 		baseValueSwitcher_ = (ViewSwitcher)findViewById(R.id.baseValueSwitcher);
@@ -317,11 +323,8 @@ public class MainActivity extends ListActivity
 			public boolean onKey(View v, int keyCode, KeyEvent event)
 			{
 				try
-				{
-					if (keyCode != KeyEvent.KEYCODE_DPAD_CENTER && keyCode != KeyEvent.KEYCODE_DPAD_UP && 
-							keyCode != KeyEvent.KEYCODE_DPAD_DOWN && keyCode != KeyEvent.KEYCODE_DPAD_LEFT && 
-							keyCode != KeyEvent.KEYCODE_DPAD_RIGHT && keyCode != KeyEvent.KEYCODE_ENTER &&
-							keyCode != KeyEvent.KEYCODE_TAB)
+				{	
+					if (keyMakeTextChanged(keyCode))
 					{
 						clearBaseUnit(true);
 					}
@@ -398,13 +401,29 @@ public class MainActivity extends ListActivity
 	            
 	            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
 	            RowData rowData = (RowData)getListAdapter().getItem(info.position);
-	            menu.setHeaderTitle(rowData.getUnitName());
+	            menu.setHeaderTitle(rowData.getFullUnitName());
 			}
 		}
 		catch (Exception ex)
 		{
 			Log.w(TAG, ex);
 		}	
+	}
+	
+	@SuppressLint("NewApi")
+	private void copyToClipboard(String text)
+	{
+		int sdk = android.os.Build.VERSION.SDK_INT;
+		if(sdk < android.os.Build.VERSION_CODES.HONEYCOMB) 
+		{
+		    clipboard_.setText(text);
+		} 
+		else 
+		{
+			ClipData clip = ClipData.newPlainText(text, text);
+		    clipboard_.setPrimaryClip(clip);
+		}
+		Toast.makeText(this, "copied '"+text+"'", Toast.LENGTH_SHORT).show();
 	}
 	
 	@Override
@@ -417,22 +436,16 @@ public class MainActivity extends ListActivity
 		    switch (item.getItemId()) 
 		    {
 		        case R.id.copyValueItem:
-		        	Toast.makeText(this, "copyValueItem "+rowData.getValue(), Toast.LENGTH_SHORT).show();
+		        	copyToClipboard(rowData.getValueToCopy());
 		            return true;
 		        case R.id.copyUnitNameItem:
-		        	Toast.makeText(this, "copyUnitNameItem "+rowData.getUnitName(), Toast.LENGTH_SHORT).show();
+		        	copyToClipboard(rowData.getFullUnitName());
 		            return true;
 		        case R.id.copyValueAndUnitItem:
-		        	Toast.makeText(this, "copyValueAndUnitItem", Toast.LENGTH_SHORT).show();
-		            return true;
-		        case R.id.setValueAsBaseItem:
-		        	Toast.makeText(this, "setValueAsBaseItem", Toast.LENGTH_SHORT).show();
+		        	copyToClipboard(rowData.getValueToCopy()+ " " + rowData.getFullUnitName());
 		            return true;
 		        case R.id.setUnitAsBaseItem:
-		        	Toast.makeText(this, "setUnitAsBaseItem", Toast.LENGTH_SHORT).show();
-		            return true;
-		        case R.id.setUnitAndValueAsBaseItem:
-		        	Toast.makeText(this, "setUnitAndValueAsBaseItem", Toast.LENGTH_SHORT).show();
+		        	setBaseUnit(null, rowData.getUnitName(), categoryId_, rowData.getUnitId());
 		            return true;
 		    }
 		}
@@ -445,17 +458,24 @@ public class MainActivity extends ListActivity
 	
 	public void setBaseUnit(CharSequence categoryName, CharSequence unitName, long categoryId, long unitId)
 	{
-		if (categoryId == -1 && unitId == -1)
+		if (categoryId == -1 || unitId == -1)
 		{
 			clearBaseUnit(false);
 			return;
 		}
-		categoryLabel_.setVisibility(View.VISIBLE);
-		categoryLabel_.setText(categoryName);
+		if (categoryName != null)
+		{
+			categoryLabel_.setVisibility(View.VISIBLE);
+			categoryLabel_.setText(categoryName);
+		}
 		categoryId_ = categoryId;
 		baseUnitId_ = unitId;
 		targetUnitFilterEditor_.setEnabled(true);
 		baseValueSpinnerAdapter_.getFilter().filter(Long.toString(unitId));
+		if (unitName != null)
+		{
+			baseUnitEditor_.setText(unitName);
+		}	
 		
 		try
 		{
@@ -490,11 +510,11 @@ public class MainActivity extends ListActivity
 	}
 	
 	
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		getMenuInflater().inflate(R.menu.activity_lesson_one, menu);
-		return true;
-	}
+//	@Override
+//	public boolean onCreateOptionsMenu(Menu menu) {
+//		getMenuInflater().inflate(R.menu.activity_lesson_one, menu);
+//		return true;
+//	}
 	
 	@Override
 	protected void onSaveInstanceState(Bundle outState)
@@ -586,6 +606,13 @@ public class MainActivity extends ListActivity
 //			baseValueSpinner_.setTag(null);
 //		}
 //	}
+
+	private boolean keyMakeTextChanged(int keyCode)
+	{
+		return (7<=keyCode && keyCode<=17) || (29<=keyCode && keyCode<=56)
+				|| (67<=keyCode && keyCode<=77) || (144<=keyCode && keyCode<=163)
+				|| keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_FORWARD_DEL;
+	}
 	
 	public void setResultListVisible(boolean visible)
 	{

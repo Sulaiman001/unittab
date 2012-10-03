@@ -1,11 +1,10 @@
 package dh.sunicon.datamodel;
 
-import android.text.TextUtils;
 
 
 public class Corresponding extends BaseEntity
 {
-	private static final String TAG = Corresponding.class.getName();
+	//private static final String TAG = Corresponding.class.getName();
 	private long enumid1_;
 	private long enumid2_;
 

@@ -33,6 +33,7 @@ public final class RowData implements Runnable
 	/* change on baseValue_ and value_ must be synchronized */
 	private Double baseValue_ = Double.NaN;
 	private double targetValue_ = Double.NaN;
+	private EnumValue targetEnumValue_ = null; 
 	private String targetValueText_ = "-";
 	
 	private Long baseValueEnumId_ = (long)-1;
@@ -96,8 +97,23 @@ public final class RowData implements Runnable
 		}
 		return targetValueText_;
 	}
-
-	public String getUnitName()
+	
+	public String getValueToCopy()
+	{
+		if (targetEnumValue_ != null)
+		{
+			return targetEnumValue_.getValue();
+		}
+		else
+		{
+			return Double.toString(targetValue_);
+		}
+	}
+	
+	/**
+	 * return "km/h - Kilometer per hour"
+	 */
+	public String getFullUnitName()
 	{
 		if (TextUtils.isEmpty(targetUnitShortName_))
 		{
@@ -108,6 +124,14 @@ public final class RowData implements Runnable
 			return targetUnitShortName_;
 		}
 		return String.format("%s - %s", targetUnitShortName_, targetUnitName_);
+	}
+	
+	/**
+	 * return the long name of the unit "Kilometer per hour"
+	 */
+	public String getUnitName()
+	{
+		return targetUnitName_;
 	}
 	
 	public double getValue()
@@ -144,9 +168,7 @@ public final class RowData implements Runnable
 		{
 			baseValue_ = baseValue;
 			baseValueEnumId_ = (long) -1;
-			targetValue_ = Double.NaN; //reset the result before entering the calculation process
-			targetValueText_ = null;
-			
+			clearTargetValue();
 		}
 		
 		invokeCalculation();
@@ -154,7 +176,7 @@ public final class RowData implements Runnable
 	
 	public void setBaseValueEnum(long enumId)
 	{
-		if (baseValueEnumId_ == enumId && !TextUtils.isEmpty(targetValueText_))
+		if (baseValueEnumId_ == enumId && targetEnumValue_ != null)
 		{
 			//no need to invoke calculation, the old value_ is just right 
 			return;
@@ -164,8 +186,7 @@ public final class RowData implements Runnable
 		{
 			baseValue_ = Double.NaN;
 			baseValueEnumId_ = enumId;
-			targetValue_ = Double.NaN; //reset the result before entering the calculation process
-			targetValueText_ = null; 
+			clearTargetValue();
 		}
 		
 		invokeCalculation();
@@ -191,12 +212,11 @@ public final class RowData implements Runnable
 		resultListAdapter_.registerCalculationToWatingPool(futureResult_);
 	}
 	
-	public boolean clearTargetValue()
+	public void clearTargetValue()
 	{
-		boolean isValueChanged = !Double.isNaN(baseValue_);
 		targetValue_ = Double.NaN;
+		targetEnumValue_ = null;
 		targetValueText_ = null;
-		return isValueChanged;
 	}
 	
 	/**
@@ -252,6 +272,7 @@ public final class RowData implements Runnable
 					{
 						targetValue_ = resu;
 						targetValueText_ = resuStr;
+						targetEnumValue_ = null;
 						//invokeRefreshGui();
 					}
 					//else, a newer setBaseValue() was called, we must ignore the resu 
@@ -266,22 +287,14 @@ public final class RowData implements Runnable
 					originalValueEnumId = baseValueEnumId_;
 				}
 
-				String resu;
-				
-				if (baseUnitId_ == targetUnitId_)
-				{
-					resu = "Same as base Value";
-				}
-				else
-				{
-					resu = computeTargetValue(originalValueEnumId, baseUnitId_, targetUnitId_);
-				}
+				EnumValue resu = computeTargetValue(originalValueEnumId, baseUnitId_, targetUnitId_);
 				
 				synchronized (baseValueEnumId_)
 				{
 					if (baseValueEnumId_.equals(originalValueEnumId)) //baseValue_ has not been changed during the calculation process
 					{
-						targetValueText_ = resu;
+						targetEnumValue_ = resu;
+						targetValueText_ = resu.getValue();
 						//invokeRefreshGui();
 					}
 					//else, a newer setBaseValueEnum() was called, we must ignore the resu 
@@ -315,17 +328,12 @@ public final class RowData implements Runnable
 	
 	/**
 	 * Convert the "36" of "clothing size woman france" to "XX-Small" of "clothing size woman US"; 
-	 * @param baseValueEnumId
-	 * @param baseUnitId
-	 * @param targetUnitId
-	 * @throws InterruptedException 
-	 * @throws IllegalAccessException 
 	 */
-	String computeTargetValue(long baseValueEnumId, long baseUnitId, long targetUnitId) throws IllegalAccessException, InterruptedException
+	EnumValue computeTargetValue(long baseValueEnumId, long baseUnitId, long targetUnitId) throws IllegalAccessException, InterruptedException
 	{
 		if (cancelCalculation_ || baseValueEnumId == -1)
 		{
-			return "-";
+			return null;
 		}
 		
 		ArrayList<Corresponding> correspondings = resultListAdapter_.getCorrespondings();
@@ -356,7 +364,7 @@ public final class RowData implements Runnable
 			EnumValue visitingEnumValueObj = enumValues.get(visitingEnumValue);
 			if (visitingEnumValueObj != null && visitingEnumValueObj.getUnitId() == targetUnitId)
 			{
-				return visitingEnumValueObj.getValue();
+				return visitingEnumValueObj;
 			}
 			
 			// find all neighbors which are not visited
@@ -375,7 +383,7 @@ public final class RowData implements Runnable
 			}
 		}
 			
-		return "-";
+		return null;
 	}
 	
 	/**
