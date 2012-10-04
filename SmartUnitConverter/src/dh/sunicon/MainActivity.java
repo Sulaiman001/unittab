@@ -334,6 +334,25 @@ public class MainActivity extends ListActivity
 				return false;
 			}
 		});
+	    
+	    baseUnitEditor_.setOnFocusChangeListener(new android.view.View.OnFocusChangeListener()
+		{
+			@Override
+			public void onFocusChange(View v, boolean hasFocus)
+			{
+				try
+				{	
+					if (hasFocus)
+					{
+						baseUnitEditor_.showDropDown();
+					}
+				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex);
+				}
+			}
+		});
 	}
 
 	private void initTargetUnitFilterEditor()
