@@ -6,7 +6,6 @@ import java.util.TimerTask;
 
 import android.annotation.SuppressLint;
 import android.app.ListActivity;
-import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.widget.SimpleCursorAdapter;
@@ -53,11 +52,15 @@ public class MainActivity extends ListActivity
 	private long baseUnitId_ = -1;
 	private long categoryId_ = -1;
 	
+	private UnitHistoryManager unitHistory_;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 
 		dbHelper_ = new DatabaseHelper(this);
+		unitHistory_ = new UnitHistoryManager(dbHelper_);
+		
 		setContentView(R.layout.sunicon_main);
 		
 		categoryLabel_ = (TextView)findViewById(R.id.categoryLabel);
@@ -134,7 +137,7 @@ public class MainActivity extends ListActivity
 				}
 				catch (Exception ex)
 				{
-					Log.w(TAG, ex.toString());
+					Log.w(TAG, ex);
 				}
 			}
 			
@@ -283,12 +286,12 @@ public class MainActivity extends ListActivity
 	private void initBaseUnitAutoCompleteEditor()
 	{
 		baseUnitEditor_ = (AutoCompleteTextView)findViewById(R.id.baseUnitEditor);
-		final String initialQuery = UnitsCursorAdapter.SELECT_QUERY_PART + UnitsCursorAdapter.WHERE1_QUERY_PART + UnitsCursorAdapter.LIMIT_ORDER_QUERY_PART;
-		final Cursor initialCursor = dbHelper_.getReadableDatabase().rawQuery(initialQuery, null);
+		
+		final Cursor initialCursor = UnitsCursorAdapter.getInitialCursor(dbHelper_, true);
 		UnitsCursorAdapter adapter = new UnitsCursorAdapter(this, initialCursor, false);
 		
 		baseUnitEditor_.setAdapter(adapter);
-	    baseUnitEditor_.setThreshold(1);
+	    baseUnitEditor_.setThreshold(0);
 	    
 	    baseUnitEditor_.setOnItemClickListener(new OnItemClickListener()
 		{
@@ -453,7 +456,7 @@ public class MainActivity extends ListActivity
 		return super.onContextItemSelected(item);
 	}
 	
-	public void setBaseUnit(CharSequence categoryName, CharSequence unitName, long categoryId, long unitId)
+	public void setBaseUnit(CharSequence categoryName, CharSequence unitName, long categoryId, long unitId) throws IllegalAccessException
 	{
 		if (categoryId == -1 || unitId == -1)
 		{
@@ -474,14 +477,8 @@ public class MainActivity extends ListActivity
 			baseUnitEditor_.setText(unitName);
 		}	
 		
-		try
-		{
-			getResultListAdapter().setBaseUnitId(categoryId_, baseUnitId_);
-		}
-		catch (IllegalAccessException e)
-		{
-			Log.w(TAG, e);
-		}
+		unitHistory_.invokeSaveToHistory(unitId);
+		getResultListAdapter().setBaseUnitId(categoryId_, baseUnitId_);
 	}
 	
 	public void clearTargetUnitFilterButton_Click(View v)
@@ -528,8 +525,8 @@ public class MainActivity extends ListActivity
 			outState.putBoolean("targetUnitFilterEnable", targetUnitFilterEditor_.isEnabled());
 			
 			//outState.putInt("baseValueSpinnerPosition", baseValueSpinner_.getSelectedItemPosition());
-			outState.putParcelable("baseValueSpinner", baseValueSpinner_.onSaveInstanceState());
-			outState.putParcelable("resultListView", getListView().onSaveInstanceState());
+			//outState.putParcelable("baseValueSpinner", baseValueSpinner_.onSaveInstanceState());
+			//outState.putParcelable("resultListView", getListView().onSaveInstanceState());
 		}
 		catch (Exception ex)
 		{
@@ -544,11 +541,11 @@ public class MainActivity extends ListActivity
 		{
 			super.onRestoreInstanceState(state);
 			
-			categoryLabel_.setVisibility(state.getInt("categoryLabelVisible"));
+			//categoryLabel_.setVisibility(state.getInt("categoryLabelVisible"));
 			//categoryLabel_.setText(categoryName);
 			categoryId_ = state.getLong("categoryId");
 			baseUnitId_ = state.getLong("baseUnitId");
-			targetUnitFilterEditor_.setEnabled(state.getBoolean("targetUnitFilterEnable"));
+			//targetUnitFilterEditor_.setEnabled(state.getBoolean("targetUnitFilterEnable"));
 			//baseValueSpinnerAdapter_.getFilter().filter(Long.toString(unitId));
 			
 			setBaseUnit(

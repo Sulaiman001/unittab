@@ -1,3 +1,28 @@
+
+-- save to history
+
+INSERT OR REPLACE INTO unitHistory VALUES (datetime(), 3);
+
+-- clean history
+
+DELETE FROM unitHistory WHERE lastUsed NOT IN
+(
+SELECT lastUsed FROM unitHistory ORDER BY lastUsed DESC LIMIT 2
+)
+;
+sdsdsdf
+
+DROP TABLE "unitHistory";
+CREATE TABLE "unitHistory" (
+    "lastUsed" DATETIME PRIMARY KEY,
+    "unitId" INTEGER UNIQUE NOT NULL,
+    FOREIGN KEY("unitId") REFERENCES "unit"(id)
+);
+
+
+
+
+
 -- Create tables
 
 CREATE TABLE "category" (
@@ -121,5 +146,4 @@ INSERT INTO conversion(base, target, fx) VALUES (1,42,52.4934383202);
 INSERT INTO conversion(base, target, fx) VALUES (1,43,0.5876131155);
 INSERT INTO conversion(base, target, fx) VALUES (1,44,1000000000);
 INSERT INTO conversion(base, target, fx) VALUES (1,45,10000000000);
-
 
