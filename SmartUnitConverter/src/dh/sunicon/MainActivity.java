@@ -445,7 +445,7 @@ public class MainActivity extends ListActivity
 		        	copyToClipboard(rowData.getValueToCopy()+ " " + rowData.getFullUnitName());
 		            return true;
 		        case R.id.setUnitAsBaseItem:
-		        	setBaseUnit(null, rowData.getUnitName(), categoryId_, rowData.getUnitId());
+		        	setBaseUnit(null, rowData.getUnitName(), rowData.getCategoryId(), rowData.getUnitId());
 		            return true;
 		    }
 		}
@@ -463,9 +463,10 @@ public class MainActivity extends ListActivity
 			clearBaseUnit(false);
 			return;
 		}
+		
+		categoryLabel_.setVisibility(View.VISIBLE);
 		if (categoryName != null)
 		{
-			categoryLabel_.setVisibility(View.VISIBLE);
 			categoryLabel_.setText(categoryName);
 		}
 		categoryId_ = categoryId;

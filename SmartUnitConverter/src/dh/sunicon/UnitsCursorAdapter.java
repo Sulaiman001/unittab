@@ -29,7 +29,8 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 			+" FROM unit "
 			+" INNER JOIN unitHistory ON _id = unitHistory.unitId" 
 			+" INNER JOIN category ON unit.categoryId = category.id"
-			+" WHERE category.enabled=1 AND unit.enabled=1";
+			+" WHERE category.enabled=1 AND unit.enabled=1"
+			+" ORDER BY unitHistory.lastUsed DESC";
 	
 	static final String SELECT_QUERY_PART = 
 			"SELECT"

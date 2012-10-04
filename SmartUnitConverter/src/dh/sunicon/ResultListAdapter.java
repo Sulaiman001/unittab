@@ -413,7 +413,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			while (cur.moveToNext() && !isCancelled()) 
 			{
 				RowData co = new RowData(
-							ResultListAdapter.this, baseUnitId,
+							ResultListAdapter.this, categoryId, 
+							baseUnitId,
 							cur.getLong(idColumnIndex),
 							cur.getString(nameColumnIndex),
 							cur.getString(shortNameColumnIndex),

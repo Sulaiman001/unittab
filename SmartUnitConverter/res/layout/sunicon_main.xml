@@ -47,7 +47,7 @@
                 android:textSize="16sp" />
         </ViewSwitcher>
 
-        <AutoCompleteTextView
+        <dh.sunicon.UnitAutoCompleteView
             android:id="@+id/baseUnitEditor"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"

@@ -24,6 +24,7 @@ public final class RowData implements Runnable
 	 * the owner
 	 */
 	private final ResultListAdapter resultListAdapter_;
+	private final long categoryId_;
 	private final long baseUnitId_;
 	private final long targetUnitId_;
 	private final String targetUnitName_;
@@ -42,11 +43,12 @@ public final class RowData implements Runnable
 	
 	private volatile boolean cancelCalculation_ = false;
 	
-	private RowData(ResultListAdapter resultListAdapter, long baseUnitId, long targetUnitId, String targetUnitName,
+	private RowData(ResultListAdapter resultListAdapter, long categoryId, long baseUnitId, long targetUnitId, String targetUnitName,
 			String targetUnitShortName)
 	{
 		super();
 		this.resultListAdapter_ = resultListAdapter;
+		categoryId_ = categoryId;
 		baseUnitId_ = baseUnitId;
 		targetUnitId_ = targetUnitId;
 		targetUnitName_ = targetUnitName;
@@ -54,17 +56,17 @@ public final class RowData implements Runnable
 		keyword_ = String.format("%s %s", targetUnitShortName_, targetUnitName_).toLowerCase();
 	}
 	
-	public RowData(ResultListAdapter resultListAdapter, long baseUnitId, long targetUnitId, String targetUnitName,
+	public RowData(ResultListAdapter resultListAdapter, long categoryId, long baseUnitId, long targetUnitId, String targetUnitName,
 			String targetUnitShortName, double baseValue)
 	{
-		this(resultListAdapter, baseUnitId, targetUnitId, targetUnitName, targetUnitShortName);
+		this(resultListAdapter, categoryId, baseUnitId, targetUnitId, targetUnitName, targetUnitShortName);
 		setBaseValue(baseValue);
 	}
 	
-	public RowData(ResultListAdapter resultListAdapter, long baseUnitId, long targetUnitId, String targetUnitName,
+	public RowData(ResultListAdapter resultListAdapter, long categoryId, long baseUnitId, long targetUnitId, String targetUnitName,
 			String targetUnitShortName, long baseValueEnumId)
 	{
-		this(resultListAdapter, baseUnitId, targetUnitId, targetUnitName, targetUnitShortName);
+		this(resultListAdapter, categoryId, baseUnitId, targetUnitId, targetUnitName, targetUnitShortName);
 		setBaseValueEnum(baseValueEnumId);
 	}
 	
@@ -137,6 +139,11 @@ public final class RowData implements Runnable
 	public double getValue()
 	{
 		return targetValue_;
+	}
+	
+	public long getCategoryId()
+	{
+		return categoryId_;
 	}
 	
 	public long getTargetUnitId()
