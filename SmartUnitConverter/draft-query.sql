@@ -1,4 +1,6 @@
 
+select unit.id as _id from unit inner join unitHistory on _id = unitHistory.unitId;
+
 -- save to history
 
 INSERT OR REPLACE INTO unitHistory VALUES (datetime(), 3);

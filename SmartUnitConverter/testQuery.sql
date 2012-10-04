@@ -1,3 +1,7 @@
+select * from category where enabled = 0;
+
+
+
 
 SELECT conversion.* FROM conversion JOIN unit ON conversion.base = unit.id WHERE unit.categoryId = ?
 
