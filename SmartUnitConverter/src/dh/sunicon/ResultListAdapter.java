@@ -196,6 +196,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, categoryId_);
 			conversionsLoadingThread_.execute(conversionsLoadingRunner_);
 			
+			data_ = null;
+			
 			//fill the list with related target unit (of the same category)
 			if (fillDataTask_ != null)
 			{
@@ -218,7 +220,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	{
 		if (onGuiThread())
 		{
-			Log.i(TAG, String.format("setBaseValue = %f", baseValue));
+			Log.i(TAG, String.format("setBaseValue = %f, %d", baseValue, baseValueEnumId));
 			
 			baseValue_ = baseValue;
 			baseValueEnumId_ = baseValueEnumId;
@@ -229,12 +231,14 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				filter_.clearAllTargetValues();
 			}
 			
-			if (data_ == null)
+			if (data_ == null || data_.size() == 0)
 			{
+				Log.d(TAG, "RowData list is empty");
 				return;
 			}
 			
 			int count = data_.size();
+			
 			for (int i = 0; i<count; i++)
 			{
 				data_.get(i).clearTargetValue();
@@ -449,27 +453,35 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		@Override
 		protected void onPostExecute(ArrayList<RowData> result)
 		{
-			synchronized (lock_)
+			try
 			{
-				data_ = result;
+				synchronized (lock_)
+				{
+					data_ = result;
+				}
+				
+				//reset filter
+				if (filter_ != null)
+				{
+					filter_.resetFilterData();
+				}
+				
+				if (result == null || result.size() == 0)
+				{
+					notifyDataSetInvalidated();
+				}
+				else
+				{
+					Log.i(TAG, String.format("Finished fill data for category %d, found %d units", categoryId_, result.size()));
+					notifyDataSetChanged();
+					ResultListAdapter.this.setBaseValue(baseValue_, baseValueEnumId_); //redo the calculation
+				}
+				((MainActivity)context_).setResultListVisible(true);
 			}
-			
-			//reset filter
-			if (filter_ != null)
+			catch (Exception e)
 			{
-				filter_.resetFilterData();
+				Log.w(TAG, e);
 			}
-			
-			if (result == null || result.size() == 0)
-			{
-				notifyDataSetInvalidated();
-			}
-			else
-			{
-				Log.i(TAG, String.format("Finished fill data for category %d, found %d units", categoryId_, result.size()));
-				notifyDataSetChanged();
-			}
-			((MainActivity)context_).setResultListVisible(true);
 		}
 	};
 	

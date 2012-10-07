@@ -301,7 +301,14 @@ public final class RowData implements Runnable
 					if (baseValueEnumId_.equals(originalValueEnumId)) //baseValue_ has not been changed during the calculation process
 					{
 						targetEnumValue_ = resu;
-						targetValueText_ = resu.getValue();
+						if (resu!=null)
+						{
+							targetValueText_ = resu.getValue();
+						}
+						else
+						{
+							targetValueText_ = "-";
+						}
 						//invokeRefreshGui();
 					}
 					//else, a newer setBaseValueEnum() was called, we must ignore the resu 

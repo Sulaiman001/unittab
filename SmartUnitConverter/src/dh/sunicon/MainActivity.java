@@ -512,6 +512,8 @@ public class MainActivity extends ListActivity
 			return;
 		}
 		
+		Log.d(TAG, "setBaseUnit("+categoryName+","+unitName+")");
+		
 		categoryLabel_.setVisibility(View.VISIBLE);
 		if (categoryName != null)
 		{
@@ -520,13 +522,18 @@ public class MainActivity extends ListActivity
 		categoryId_ = categoryId;
 		baseUnitId_ = unitId;
 		targetUnitFilterEditor_.setEnabled(true);
+		
+		Log.d(TAG, "setBaseUnit.invokeSaveToHistory");
+		unitHistory_.invokeSaveToHistory(unitId);
+		
+		Log.d(TAG, "setBaseUnit.filterSpinner");
 		baseValueSpinnerAdapter_.getFilter().filter(Long.toString(unitId));
 		if (unitName != null)
 		{
 			baseUnitEditor_.setText(unitName);
 		}	
 		
-		unitHistory_.invokeSaveToHistory(unitId);
+		Log.d(TAG, "setBaseUnit.adapterSetBaseUnitId");
 		getResultListAdapter().setBaseUnitId(categoryId_, baseUnitId_);
 	}
 	
@@ -630,7 +637,7 @@ public class MainActivity extends ListActivity
 	{
 		Thread.sleep(200); //make sure that the spinner is populating
 		
-		if (spinnerLoadingLatch_!= null && spinnerLoadingLatch_.getCount() > 0) 
+		if (spinnerLoadingLatch_!= null) 
 		{
 			//the spinner is not finish populating
 			

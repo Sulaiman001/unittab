@@ -15,7 +15,7 @@ import dh.sunicon.datamodel.DatabaseHelper;
  */
 public class UnitHistoryManager
 {
-	static final String TAG = MainActivity.class.getName();
+	static final String TAG = UnitHistoryManager.class.getName();
 	private final int MAX_ENTRIES = 10;
 	
 	private final DatabaseHelper dbHelper_;
@@ -47,7 +47,7 @@ public class UnitHistoryManager
 	private void saveToHistory(final long unitId)
 	{
 		//dbHelper_.getWritableDatabase().execSQL(INSERT_HISTORY, new String[] {Long.toString(unitId)});
-		
+		Log.d(TAG, "Begin save history");
 		dbHelper_.getWritableDatabase().beginTransaction();
 		try
 		{
@@ -80,6 +80,7 @@ public class UnitHistoryManager
 		finally
 		{
 			dbHelper_.getWritableDatabase().endTransaction(); //rollback if not marked as successfull
+			Log.d(TAG, "End save history");
 		}
 	}
 }

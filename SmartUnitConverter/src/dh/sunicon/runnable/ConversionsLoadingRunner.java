@@ -79,6 +79,8 @@ public final class ConversionsLoadingRunner implements Runnable
 	{
 		try
 		{	
+			Log.d(TAG, "Begin loading conversions / correspondings for Category "+categoryId_);
+			
 			if (!cancelled_)
 			{
 				readConversions();
