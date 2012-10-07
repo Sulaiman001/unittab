@@ -58,6 +58,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	private long categoryId_;
 	private long baseUnitId_;
 	private double baseValue_ = Double.NaN;
+	private long baseValueEnumId_ = -1;
 	private TargetUnitFilter filter_;
 	private FillDataTask fillDataTask_;
 	
@@ -220,6 +221,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			Log.i(TAG, String.format("setBaseValue = %f", baseValue));
 			
 			baseValue_ = baseValue;
+			baseValueEnumId_ = baseValueEnumId;
 			
 			/* set all the value to "-" */
 			if (filter_!=null)
@@ -336,11 +338,6 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		return context_;
 	}
 
-	public double getBaseValue()
-	{
-		return baseValue_;
-	}
-	
 	public ExecutorService getCalculationPoolThread()
 	{
 		return calculationPoolThread_;
@@ -409,17 +406,34 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			int nameColumnIndex = cur.getColumnIndex("name");
 			int shortNameColumnIndex = cur.getColumnIndex("shortName");
 			double baseValue = baseValue_;
+			long baseValueEnumId = baseValueEnumId_;
+			
 			
 			while (cur.moveToNext() && !isCancelled()) 
 			{
-				RowData co = new RowData(
+				RowData co;
+				if (baseValueEnumId < 0)
+				{
+					co = new RowData(
+								ResultListAdapter.this, categoryId, 
+								baseUnitId,
+								cur.getLong(idColumnIndex),
+								cur.getString(nameColumnIndex),
+								cur.getString(shortNameColumnIndex),
+								baseValue
+							);
+				}
+				else
+				{
+					co = new RowData(
 							ResultListAdapter.this, categoryId, 
 							baseUnitId,
 							cur.getLong(idColumnIndex),
 							cur.getString(nameColumnIndex),
 							cur.getString(shortNameColumnIndex),
-							baseValue
+							baseValueEnumId
 						);
+				}
 				resu.add(co);
 			}
 
@@ -528,7 +542,14 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 						final int count = l.size();
 						for (int i = 0; i<count; i++)
 						{
-							l.get(i).setBaseValue(baseValue_);
+							if (baseValueEnumId_<0)
+							{
+								l.get(i).setBaseValue(baseValue_);
+							}
+							else
+							{
+								l.get(i).setBaseValueEnum(baseValueEnumId_);
+							}
 						}
 					}
 					awaitCalculation();

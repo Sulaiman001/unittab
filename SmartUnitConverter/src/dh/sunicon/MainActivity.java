@@ -3,6 +3,10 @@ package dh.sunicon;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 import android.annotation.SuppressLint;
 import android.app.ListActivity;
@@ -53,6 +57,7 @@ public class MainActivity extends ListActivity
 	private long categoryId_ = -1;
 	
 	private UnitHistoryManager unitHistory_;
+	private CountDownLatch spinnerLoadingLatch_;
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -152,8 +157,8 @@ public class MainActivity extends ListActivity
 			{
 			}
 		});
-	}
-
+	}	
+	
 	private void initBaseValueSpinner()
 	{
 	//		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
@@ -178,6 +183,7 @@ public class MainActivity extends ListActivity
 			@Override
 			public Cursor runQuery(CharSequence unitIdStr)
 			{
+				spinnerLoadingLatch_ = new CountDownLatch(1);
 				try
 				{
 					if (TextUtils.isEmpty(unitIdStr))
@@ -191,7 +197,7 @@ public class MainActivity extends ListActivity
 								new String[] {unitIdStr.toString()}, 
 								null, null, "value");
 
-					simulateLongOperation(3, 5);
+					//simulateLongOperation(3, 5);
 					
 					/* switch the baseValueEditor to spinner or normal editor*/
 					if (cur.getCount()>0)
@@ -245,6 +251,10 @@ public class MainActivity extends ListActivity
 				{
 					Log.w(TAG, ex);
 					return null;
+				}
+				finally
+				{
+					spinnerLoadingLatch_.countDown();
 				}
 			}
 		});
@@ -342,7 +352,7 @@ public class MainActivity extends ListActivity
 			{
 				try
 				{	
-					if (hasFocus)
+					if (isActivityRunning_ && hasFocus)
 					{
 						baseUnitEditor_.showDropDown();
 					}
@@ -382,6 +392,25 @@ public class MainActivity extends ListActivity
 			@Override
 			public void afterTextChanged(Editable s)
 			{
+			}
+		});
+		
+		targetUnitFilterEditor_.setOnFocusChangeListener(new android.view.View.OnFocusChangeListener()
+		{
+			@Override
+			public void onFocusChange(View v, boolean hasFocus)
+			{
+				try
+				{	
+					if (isActivityRunning_ && hasFocus)
+					{
+						getResultListAdapter().getFilter().filter(targetUnitFilterEditor_.getText());
+					}
+				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex);
+				}
 			}
 		});
 	}
@@ -515,6 +544,12 @@ public class MainActivity extends ListActivity
 		if (!keepTextOnBaseUnitEditor)
 		{
 			baseUnitEditor_.setText(null);
+			
+			//switch to the editor
+			if (baseValueSwitcher_.getNextView() == baseValueEditor_)
+			{
+				baseValueSwitcher_.showNext();
+			}
 		}
 	}
 	
@@ -544,7 +579,7 @@ public class MainActivity extends ListActivity
 			outState.putInt("categoryLabelVisible", categoryLabel_.getVisibility());
 			outState.putBoolean("targetUnitFilterEnable", targetUnitFilterEditor_.isEnabled());
 			
-			//outState.putInt("baseValueSpinnerPosition", baseValueSpinner_.getSelectedItemPosition());
+			outState.putInt("baseValueSpinnerPosition", baseValueSpinner_.getSelectedItemPosition());
 			//outState.putParcelable("baseValueSpinner", baseValueSpinner_.onSaveInstanceState());
 			//outState.putParcelable("resultListView", getListView().onSaveInstanceState());
 		}
@@ -573,13 +608,12 @@ public class MainActivity extends ListActivity
 					state.getCharSequence("baseUnitName"),
 					state.getLong("categoryId"),
 					state.getLong("baseUnitId"));
+			int savedSpinnerPosition = state.getInt("baseValueSpinnerPosition");
+			setBaseValueSpinnerSelection(savedSpinnerPosition);
 			
-//			int savedSpinnerPosition = state.getInt("baseValueSpinnerPosition");
-//			baseValueSpinner_.setTag(savedSpinnerPosition); //use to restore this position after populating the spinner
-//			baseValueSpinner_.setSelection(savedSpinnerPosition);
 			
-			baseValueSpinner_.onRestoreInstanceState(state.getParcelable("baseValueSpinner"));
-			getListView().onRestoreInstanceState(state.getParcelable("resultListView"));
+//			baseValueSpinner_.onRestoreInstanceState(state.getParcelable("baseValueSpinner"));
+//			getListView().onRestoreInstanceState(state.getParcelable("resultListView"));
 		}
 		catch (Exception ex)
 		{
@@ -587,6 +621,49 @@ public class MainActivity extends ListActivity
 		}
 	}
 	
+	/**
+	 * wait the spinner finish loading
+	 * @param position
+	 * @throws InterruptedException 
+	 */
+	private void setBaseValueSpinnerSelection(final int position) throws InterruptedException
+	{
+		Thread.sleep(200); //make sure that the spinner is populating
+		
+		if (spinnerLoadingLatch_!= null && spinnerLoadingLatch_.getCount() > 0) 
+		{
+			//the spinner is not finish populating
+			
+			ExecutorService waitingThread = Executors.newSingleThreadExecutor();
+			waitingThread.execute(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					try
+					{
+						spinnerLoadingLatch_.await(5, TimeUnit.SECONDS);
+					}
+					catch (InterruptedException e)
+					{
+						Log.w(TAG, e);
+					}
+					MainActivity.this.runOnUiThread(new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							baseValueSpinner_.setSelection(position);
+						}
+					});
+				}
+			});
+		}
+		else
+		{
+			baseValueSpinner_.setSelection(position);
+		}
+	}
 	
 	public DatabaseHelper getDatabaseHelper(){
 		return dbHelper_;
@@ -638,4 +715,27 @@ public class MainActivity extends ListActivity
 		return resultListAdapter_;
 	}
 	
+	
+	private boolean isActivityRunning_ = false;
+	
+	@Override
+	protected void onPause()
+	{
+		super.onPause();
+		isActivityRunning_ = false;
+	}
+	
+	@Override
+	protected void onStop()
+	{
+		super.onStop();
+		isActivityRunning_ = false;
+	}
+	
+	@Override
+	protected void onResume()
+	{
+		super.onResume();
+		isActivityRunning_ = true;
+	}
 }
