@@ -61,16 +61,16 @@
             android:textStyle="bold" />
 
         <Button
+            android:id="@+id/clearBaseUnitButton"
             style="@style/button_clear"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="clearBaseUnitButton_Click" />
+            android:layout_height="wrap_content" />
     </TableRow>
 
     <TableRow
-        android:layout_marginTop="5dp"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content" >
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp" >
 
         <TextView
             android:layout_width="wrap_content"
@@ -89,11 +89,10 @@
             android:textSize="16sp" />
 
         <Button
+            android:id="@+id/clearTargetUnitFilterButton"
             style="@style/button_clear"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:onClick="clearTargetUnitFilterButton_Click" >
-        </Button>
+            android:layout_height="wrap_content" />
     </TableRow>
 
     <ListView

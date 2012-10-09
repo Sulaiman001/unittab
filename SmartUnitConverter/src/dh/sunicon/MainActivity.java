@@ -1,748 +1,212 @@
 package dh.sunicon;
 
-import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.HashMap;
 
-import android.annotation.SuppressLint;
-import android.app.ListActivity;
-import android.database.Cursor;
+import android.content.Context;
 import android.os.Bundle;
-import android.support.v4.widget.SimpleCursorAdapter;
-import android.text.Editable;
-import android.text.TextUtils;
-import android.text.TextWatcher;
-import android.util.Log;
-import android.view.ContextMenu;
-import android.view.ContextMenu.ContextMenuInfo;
-import android.view.KeyEvent;
-import android.view.MenuInflater;
-import android.view.MenuItem;
+import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentTransaction;
 import android.view.View;
-import android.view.View.OnKeyListener;
-import android.widget.AdapterView;
-import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.AutoCompleteTextView;
-import android.widget.EditText;
-import android.widget.FilterQueryProvider;
-import android.widget.Spinner;
-import android.widget.TextView;
-import android.widget.Toast;
-import android.widget.ViewSwitcher;
+import android.widget.TabHost;
+import android.widget.TabHost.TabContentFactory;
 import dh.sunicon.datamodel.DatabaseHelper;
-import dh.sunicon.runnable.RowData;
 
-public class MainActivity extends ListActivity 
+public class MainActivity extends FragmentActivity implements
+		TabHost.OnTabChangeListener
 {
-	static final String TAG = MainActivity.class.getName();
+	private TabHost tabHost_;
+	private HashMap<String, TabInfo> tabsInfo_ = new HashMap<String, MainActivity.TabInfo>();
+	private TabInfo lastTab_ = null;
 	private DatabaseHelper dbHelper_;
-	private TextView categoryLabel_;
-	private ViewSwitcher baseValueSwitcher_;
-	private EditText baseValueEditor_;
-	private Spinner baseValueSpinner_;
-	private AutoCompleteTextView baseUnitEditor_;
-	private EditText targetUnitFilterEditor_; 
-	private Timer baseValueEditorTimer_;
-
-	private ResultListAdapter resultListAdapter_;
-	private SimpleCursorAdapter baseValueSpinnerAdapter_;
-	
-	private long baseUnitId_ = -1;
-	private long categoryId_ = -1;
-	
-	private UnitHistoryManager unitHistory_;
-	private CountDownLatch spinnerLoadingLatch_;
 	
 	@Override
-	public void onCreate(Bundle savedInstanceState) {
+	protected void onCreate(Bundle savedInstanceState)
+	{
 		super.onCreate(savedInstanceState);
-
 		dbHelper_ = new DatabaseHelper(this);
-		unitHistory_ = new UnitHistoryManager(dbHelper_);
-		
-		setContentView(R.layout.sunicon_main);
-		
-		categoryLabel_ = (TextView)findViewById(R.id.categoryLabel);
-		baseValueSwitcher_ = (ViewSwitcher)findViewById(R.id.baseValueSwitcher);
-		
-		initBaseValueEditor();
-        initBaseValueSpinner();
-        initBaseUnitAutoCompleteEditor();
-        initTargetUnitFilterEditor();
-        initResultList();
-        initResultListShowHideAnimation();
-        clearBaseUnit(false);
-	}
-
-	private void initBaseValueEditor()
-	{
-		baseValueEditor_= (EditText)findViewById(R.id.valueEditor);
-		baseValueEditor_.addTextChangedListener(new TextWatcher()
+		setContentView(R.layout.sunicon_main_tabhosts);
+		initTabHost(savedInstanceState);
+		if (savedInstanceState != null)
 		{
-			@Override
-			public void onTextChanged(final CharSequence s, int start, int before, int count)
-			{
-				try
-				{
-					setResultListVisible(false); //hide the list while waiting and perform calculation
-					
-					/* events absorber technique */
-					
-					if (baseValueEditorTimer_!=null) 
-					{
-						baseValueEditorTimer_.cancel(); //cancel the old onTextChange event
-					}
-	
-					//the timer is dumped, we must to create a new one
-					baseValueEditorTimer_ = new Timer();
-					
-					//schedule a task which will be execute in 500ms if the timer won't canceled due 
-					//to other (possible future) onTextChanged event
-					baseValueEditorTimer_.schedule(new TimerTask()  
-					{
-						@Override
-						public void run()
-						{
-							MainActivity.this.runOnUiThread(new Runnable()
-							{
-								@Override
-								public void run()
-								{
-									try
-									{
-										/*
-										 * do whatever onTextChanged event have to do. But it should be quick 
-										 * heavy process must be executed on other thread  
-										 */
-										
-										if (TextUtils.isEmpty(s))
-										{
-											getResultListAdapter().setBaseValue(Double.NaN, -1);
-										}
-										else
-										{
-											double baseValue = Double.parseDouble(s.toString());
-											getResultListAdapter().setBaseValue(baseValue, -1);
-										}
-									}
-									catch (Exception ex)
-									{
-										Log.w(TAG, ex);
-									}
-								}
-							});
-						}
-					}, 500);
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}
-			}
-			
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count,
-					int after)
-			{
-			}
-			
-			@Override
-			public void afterTextChanged(Editable s)
-			{
-			}
-		});
-	}	
-	
-	private void initBaseValueSpinner()
-	{
-	//		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-	//        R.array.planets_array, android.R.layout.simple_spinner_item);
-	//
-	//// Specify the layout to use when the list of choices appears
-	//adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-	
-		baseValueSpinner_ = (Spinner)findViewById(R.id.valueSpinner);
-		baseValueSpinnerAdapter_ = new SimpleCursorAdapter(this, 
-				R.layout.spinner_item, 
-				null, 
-				new String[]{"v"}, ///the query of enumValues must return a column named "v" 
-				new int[]{R.id.spinnerLabelItem}, 
-				0);
-		baseValueSpinner_.setAdapter(baseValueSpinnerAdapter_);
-		baseValueSpinnerAdapter_.setFilterQueryProvider(new FilterQueryProvider()
-		{
-			/**
-			 * constraint must be the unitId, this function will return the cursor of the enumValues of a unit 
-			 */
-			@Override
-			public Cursor runQuery(CharSequence unitIdStr)
-			{
-				spinnerLoadingLatch_ = new CountDownLatch(1);
-				try
-				{
-					if (TextUtils.isEmpty(unitIdStr))
-					{
-						return null;
-					}
-					
-					Cursor cur = dbHelper_.getReadableDatabase().
-							query("enumvalue", new String[]{"id as _id", "value as v"}, 
-								"unitid=?", 
-								new String[] {unitIdStr.toString()}, 
-								null, null, "value");
-
-					//simulateLongOperation(3, 5);
-					
-					/* switch the baseValueEditor to spinner or normal editor*/
-					if (cur.getCount()>0)
-					{
-						//switch to the spinner
-						runOnUiThread(new Runnable()
-						{
-							@Override
-							public void run()
-							{
-								try
-								{
-									if (baseValueSwitcher_.getNextView() == baseValueSpinner_)
-									{
-										baseValueSwitcher_.showNext();
-									}
-								}
-								catch (Exception ex)
-								{
-									Log.w(TAG, ex);
-								}
-							}
-						});
-					}
-					else
-					{
-						//switch to the editor
-						runOnUiThread(new Runnable()
-						{
-							@Override
-							public void run()
-							{
-								try
-								{
-									if (baseValueSwitcher_.getNextView() == baseValueEditor_)
-									{
-										baseValueSwitcher_.showNext();
-									}
-								}
-								catch (Exception ex)
-								{
-									Log.w(TAG, ex);
-								}
-							}
-						});
-					}
-					
-					return cur;
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-					return null;
-				}
-				finally
-				{
-					spinnerLoadingLatch_.countDown();
-				}
-			}
-		});
-		
-		
-		baseValueSpinner_.setOnItemSelectedListener(new OnItemSelectedListener()
-		{
-			@Override
-			public void onItemSelected(AdapterView<?> parent, View view,
-					int position, long id)
-			{
-				try
-				{
-					//Log.i(TAG, "convert unit with enumId = "+id);
-					getResultListAdapter().setBaseValue(Double.NaN, id);
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}
-			}
-
-			@Override
-			public void onNothingSelected(AdapterView<?> parent)
-			{
-				try
-				{
-					getResultListAdapter().setBaseValue(Double.NaN, (long)-1);
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}
-			}
-        	
-		});
-	}
-	
-	private void initBaseUnitAutoCompleteEditor()
-	{
-		baseUnitEditor_ = (AutoCompleteTextView)findViewById(R.id.baseUnitEditor);
-		
-		final Cursor initialCursor = UnitsCursorAdapter.getInitialCursor(dbHelper_, true);
-		UnitsCursorAdapter adapter = new UnitsCursorAdapter(this, initialCursor, false);
-		
-		baseUnitEditor_.setAdapter(adapter);
-	    baseUnitEditor_.setThreshold(0);
-	    
-	    baseUnitEditor_.setOnItemClickListener(new OnItemClickListener()
-		{
-			@Override
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id)
-			{
-				try
-				{
-					if (view == null)
-					{
-						return;
-					}
-					UnitsCursorAdapter.SuggestionData baseUnitData = (UnitsCursorAdapter.SuggestionData)view.getTag();
-					setBaseUnit(baseUnitData.getCategoryName(), baseUnitData.getUnitName(), baseUnitData.getCategoryId(), baseUnitData.getUnitId());
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}				
-			}
-		});
-	    
-	    baseUnitEditor_.setOnKeyListener(new OnKeyListener()
-		{
-			@Override
-			public boolean onKey(View v, int keyCode, KeyEvent event)
-			{
-				try
-				{	
-					if (keyMakeTextChanged(keyCode))
-					{
-						clearBaseUnit(true);
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}
-				return false;
-			}
-		});
-	    
-	    baseUnitEditor_.setOnFocusChangeListener(new android.view.View.OnFocusChangeListener()
-		{
-			@Override
-			public void onFocusChange(View v, boolean hasFocus)
-			{
-				try
-				{	
-					if (isActivityRunning_ && hasFocus)
-					{
-						baseUnitEditor_.showDropDown();
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}
-			}
-		});
-	}
-
-	private void initTargetUnitFilterEditor()
-	{
-		targetUnitFilterEditor_ = (EditText)findViewById(R.id.targetUnitFilterEditor);
-		targetUnitFilterEditor_.addTextChangedListener(new TextWatcher()
-		{
-			@Override
-			public void onTextChanged(final CharSequence s, int start, int before, int count)
-			{
-				try
-				{
-					getResultListAdapter().getFilter().filter(s);
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}
-			}
-			
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count,
-					int after)
-			{
-			}
-			
-			@Override
-			public void afterTextChanged(Editable s)
-			{
-			}
-		});
-		
-		targetUnitFilterEditor_.setOnFocusChangeListener(new android.view.View.OnFocusChangeListener()
-		{
-			@Override
-			public void onFocusChange(View v, boolean hasFocus)
-			{
-				try
-				{	
-					if (isActivityRunning_ && hasFocus)
-					{
-						getResultListAdapter().getFilter().filter(targetUnitFilterEditor_.getText());
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}
-			}
-		});
-	}
-
-	private void initResultList()
-	{
-		resultListAdapter_ = new ResultListAdapter(this);
-		setListAdapter(resultListAdapter_);
-		registerForContextMenu(getListView());
-	}
-
-	private void initResultListShowHideAnimation()
-	{
-//		ObjectAnimator fadeinAnim = (ObjectAnimator) AnimatorInflater.loadAnimator(this, R.animator.fadein);
-//		ObjectAnimator fadeoutAnim = (ObjectAnimator) AnimatorInflater.loadAnimator(this, R.animator.fadeout);
-//		LayoutTransition transitioner = new LayoutTransition();
-//		transitioner.setAnimator(LayoutTransition.APPEARING, fadeinAnim);
-//		transitioner.setAnimator(LayoutTransition.DISAPPEARING, fadeoutAnim);
-//		
-//		ViewGroup container = (ViewGroup)this.getWindow().getDecorView().findViewById(R.id.mainView);
-//		container.setLayoutTransition(transitioner);		
-	}
-
-	@Override
-	public void onCreateContextMenu(ContextMenu menu, View v,
-			ContextMenuInfo menuInfo)
-	{
-		try
-		{
-			if (v == getListView())
-			{
-				MenuInflater inflater = getMenuInflater();
-	            inflater.inflate(R.menu.result_list_contextmenu, menu);
-	            
-	            AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)menuInfo;
-	            RowData rowData = (RowData)getListAdapter().getItem(info.position);
-	            menu.setHeaderTitle(rowData.getFullUnitName());
-			}
-		}
-		catch (Exception ex)
-		{
-			Log.w(TAG, ex);
-		}	
-	}
-	
-	@SuppressLint("NewApi")
-	private void copyToClipboard(String text)
-	{
-		int sdk = android.os.Build.VERSION.SDK_INT;
-		if(sdk < android.os.Build.VERSION_CODES.HONEYCOMB) 
-		{
-			android.text.ClipboardManager clipboard = (android.text.ClipboardManager)getSystemService(CLIPBOARD_SERVICE); 
-		    clipboard.setText(text);
-		} 
-		else 
-		{
-			android.content.ClipboardManager clipboard = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE); 
-			android.content.ClipData clip = android.content.ClipData.newPlainText(text, text);
-	        clipboard.setPrimaryClip(clip); 
-		}
-		Toast.makeText(this, "copied '"+text+"'", Toast.LENGTH_SHORT).show();
-	}
-	
-	@Override
-	public boolean onContextItemSelected(MenuItem item)
-	{
-		try
-		{
-			AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
-			RowData rowData = (RowData)getListAdapter().getItem(info.position);
-		    switch (item.getItemId()) 
-		    {
-		        case R.id.copyValueItem:
-		        	copyToClipboard(rowData.getValueToCopy());
-		            return true;
-		        case R.id.copyUnitNameItem:
-		        	copyToClipboard(rowData.getFullUnitName());
-		            return true;
-		        case R.id.copyValueAndUnitItem:
-		        	copyToClipboard(rowData.getValueToCopy()+ " " + rowData.getFullUnitName());
-		            return true;
-		        case R.id.setUnitAsBaseItem:
-		        	setBaseUnit(null, rowData.getUnitName(), rowData.getCategoryId(), rowData.getUnitId());
-		            return true;
-		    }
-		}
-		catch (Exception ex)
-		{
-			Log.w(TAG, ex);
-		}
-		return super.onContextItemSelected(item);
-	}
-	
-	public void setBaseUnit(CharSequence categoryName, CharSequence unitName, long categoryId, long unitId) throws IllegalAccessException
-	{
-		if (categoryId == -1 || unitId == -1)
-		{
-			clearBaseUnit(false);
-			return;
-		}
-		
-		Log.d(TAG, "setBaseUnit("+categoryName+","+unitName+")");
-		
-		categoryLabel_.setVisibility(View.VISIBLE);
-		if (categoryName != null)
-		{
-			categoryLabel_.setText(categoryName);
-		}
-		categoryId_ = categoryId;
-		baseUnitId_ = unitId;
-		targetUnitFilterEditor_.setEnabled(true);
-		
-		Log.d(TAG, "setBaseUnit.invokeSaveToHistory");
-		unitHistory_.invokeSaveToHistory(unitId);
-		
-		Log.d(TAG, "setBaseUnit.filterSpinner");
-		baseValueSpinnerAdapter_.getFilter().filter(Long.toString(unitId));
-		if (unitName != null)
-		{
-			baseUnitEditor_.setText(unitName);
-		}	
-		
-		Log.d(TAG, "setBaseUnit.adapterSetBaseUnitId");
-		getResultListAdapter().setBaseUnitId(categoryId_, baseUnitId_);
-	}
-	
-	public void clearTargetUnitFilterButton_Click(View v)
-	{
-		targetUnitFilterEditor_.setText(null);
-	}
-
-	private void clearBaseUnit(boolean keepTextOnBaseUnitEditor)
-	{
-		categoryLabel_.setVisibility(View.GONE);
-		categoryId_ = -1;
-		baseUnitId_ = -1;
-		targetUnitFilterEditor_.setEnabled(false);
-		if (!keepTextOnBaseUnitEditor)
-		{
-			baseUnitEditor_.setText(null);
-			
-			//switch to the editor
-			if (baseValueSwitcher_.getNextView() == baseValueEditor_)
-			{
-				baseValueSwitcher_.showNext();
-			}
+			tabHost_.setCurrentTabByTag(savedInstanceState.getString("tab"));
 		}
 	}
-	
-	public void clearBaseUnitButton_Click(View v)
-	{
-		clearBaseUnit(false);
-	}
-	
-	
-//	@Override
-//	public boolean onCreateOptionsMenu(Menu menu) {
-//		getMenuInflater().inflate(R.menu.activity_lesson_one, menu);
-//		return true;
-//	}
-	
+
 	@Override
 	protected void onSaveInstanceState(Bundle outState)
 	{
-		try
+		outState.putString("tab", tabHost_.getCurrentTabTag()); // save the tab selected
+		super.onSaveInstanceState(outState);
+	}
+
+	/**
+	 * Initialise the Tab Host
+	 */
+	private void initTabHost(Bundle args)
+	{
+		tabHost_ = (TabHost) findViewById(android.R.id.tabhost);
+		tabHost_.setup();
+		
+		final String conversionTag = "Converter";
+		final String conversionIndicator = "Converter"; //TODO: multi language
+        {
+	        TabInfo tabInfo = new TabInfo(conversionTag, ConverterFragment.class, args);
+	        MainActivity.addTab(
+	        		this, 
+	        		tabHost_, 
+	        		tabHost_.newTabSpec(conversionTag).setIndicator(conversionIndicator), 
+	        		tabInfo 
+	        		);
+	        tabsInfo_.put(tabInfo.tag_, tabInfo);
+        }
+        
+        final String explorerTag = "Explorer";
+        final String explorerIndicator = "Explorer"; //TODO: multi language
+        {
+	        TabInfo tabInfo = new TabInfo(explorerTag, ExplorerFragment.class, args);
+	        MainActivity.addTab(
+	        		this, 
+	        		tabHost_, 
+	        		tabHost_.newTabSpec(explorerTag).setIndicator(explorerIndicator), 
+	        		tabInfo 
+	        		);
+	        tabsInfo_.put(tabInfo.tag_, tabInfo);
+        }
+        
+        // Default to first tab
+        onTabChanged(conversionTag);
+
+        tabHost_.setOnTabChangedListener(this);
+		
+//		TabInfo tabInfo = null;
+//		TabsFragmentActivity.addTab(this, this.tabHost_, this.tabHost_
+//				.newTabSpec("Tab1").setIndicator("Tab 1"),
+//				(tabInfo = new TabInfo("Tab1", Tab1Fragment.class, args)));
+//		this.mapTabInfo_.put(tabInfo.tag_, tabInfo);
+//		TabsFragmentActivity.addTab(this, this.tabHost_, this.tabHost_
+//				.newTabSpec("Tab2").setIndicator("Tab 2"),
+//				(tabInfo = new TabInfo("Tab2", Tab2Fragment.class, args)));
+//		this.mapTabInfo_.put(tabInfo.tag_, tabInfo);
+//		TabsFragmentActivity.addTab(this, this.tabHost_, this.tabHost_
+//				.newTabSpec("Tab3").setIndicator("Tab 3"),
+//				(tabInfo = new TabInfo("Tab3", Tab3Fragment.class, args)));
+//		this.mapTabInfo_.put(tabInfo.tag_, tabInfo);
+//		// Default to first tab
+//		this.onTabChanged("Tab1");
+//		//
+//		tabHost_.setOnTabChangedListener(this);
+	}
+
+	/**
+	 * @param activity
+	 * @param tabHost
+	 * @param tabSpec
+	 * @param clss_
+	 * @param args_
+	 */
+	private static void addTab(MainActivity activity, TabHost tabHost,
+			TabHost.TabSpec tabSpec, TabInfo tabInfo)
+	{
+		// Attach a Tab view factory to the spec
+		tabSpec.setContent(activity.new TabFactory(activity));
+		String tag = tabSpec.getTag();
+
+		// Check to see if we already have a fragment for this tab, probably
+		// from a previously saved state. If so, deactivate it, because our
+		// initial state is that a tab isn't shown.
+		tabInfo.fragment_ = activity.getSupportFragmentManager()
+				.findFragmentByTag(tag);
+		
+		if (tabInfo.fragment_ != null && !tabInfo.fragment_.isDetached())
 		{
-			super.onSaveInstanceState(outState);
-			outState.putCharSequence("categoryName", categoryLabel_.getText());
-			outState.putCharSequence("baseUnitName", baseUnitEditor_.getText());
-			outState.putLong("categoryId", categoryId_);
-			outState.putLong("baseUnitId", baseUnitId_);
-			
-			outState.putInt("categoryLabelVisible", categoryLabel_.getVisibility());
-			outState.putBoolean("targetUnitFilterEnable", targetUnitFilterEditor_.isEnabled());
-			
-			outState.putInt("baseValueSpinnerPosition", baseValueSpinner_.getSelectedItemPosition());
-			//outState.putParcelable("baseValueSpinner", baseValueSpinner_.onSaveInstanceState());
-			//outState.putParcelable("resultListView", getListView().onSaveInstanceState());
+			FragmentTransaction ft = activity.getSupportFragmentManager()
+					.beginTransaction();
+			ft.detach(tabInfo.fragment_);
+			ft.commit();
+			activity.getSupportFragmentManager().executePendingTransactions();
 		}
-		catch (Exception ex)
+
+		tabHost.addTab(tabSpec);
+	}
+
+	/**
+	 * (non-Javadoc)
+	 * 
+	 * @see android.widget.TabHost.OnTabChangeListener#onTabChanged(java.lang.String)
+	 */
+	public void onTabChanged(String tag)
+	{
+		TabInfo newTab = this.tabsInfo_.get(tag);
+		if (lastTab_ != newTab)
 		{
-			Log.w(TAG, ex);
+			FragmentTransaction ft = this.getSupportFragmentManager()
+					.beginTransaction();
+			if (lastTab_ != null)
+			{
+				if (lastTab_.fragment_ != null)
+				{
+					ft.detach(lastTab_.fragment_);
+				}
+			}
+			if (newTab != null)
+			{
+				if (newTab.fragment_ == null)
+				{
+					newTab.fragment_ = Fragment.instantiate(this,
+							newTab.clss_.getName(), newTab.args_);
+					ft.add(R.id.realtabcontent, newTab.fragment_, newTab.tag_);
+				}
+				else
+				{
+					ft.attach(newTab.fragment_);
+				}
+			}
+
+			lastTab_ = newTab;
+			ft.commit();
+			this.getSupportFragmentManager().executePendingTransactions();
 		}
 	}
 
-	@Override
-	protected void onRestoreInstanceState(Bundle state)
+	public DatabaseHelper getDatabaseHelper()
 	{
-		try
-		{
-			super.onRestoreInstanceState(state);
-			
-			//categoryLabel_.setVisibility(state.getInt("categoryLabelVisible"));
-			//categoryLabel_.setText(categoryName);
-			categoryId_ = state.getLong("categoryId");
-			baseUnitId_ = state.getLong("baseUnitId");
-			//targetUnitFilterEditor_.setEnabled(state.getBoolean("targetUnitFilterEnable"));
-			//baseValueSpinnerAdapter_.getFilter().filter(Long.toString(unitId));
-			
-			setBaseUnit(
-					state.getCharSequence("categoryName"), 
-					state.getCharSequence("baseUnitName"),
-					state.getLong("categoryId"),
-					state.getLong("baseUnitId"));
-			int savedSpinnerPosition = state.getInt("baseValueSpinnerPosition");
-			setBaseValueSpinnerSelection(savedSpinnerPosition);
-			
-			
-//			baseValueSpinner_.onRestoreInstanceState(state.getParcelable("baseValueSpinner"));
-//			getListView().onRestoreInstanceState(state.getParcelable("resultListView"));
-		}
-		catch (Exception ex)
-		{
-			Log.w(TAG, ex);
-		}
-	}
-	
-	/**
-	 * wait the spinner finish loading
-	 * @param position
-	 * @throws InterruptedException 
-	 */
-	private void setBaseValueSpinnerSelection(final int position) throws InterruptedException
-	{
-		Thread.sleep(200); //make sure that the spinner is populating
-		
-		if (spinnerLoadingLatch_!= null) 
-		{
-			//the spinner is not finish populating
-			
-			ExecutorService waitingThread = Executors.newSingleThreadExecutor();
-			waitingThread.execute(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					try
-					{
-						spinnerLoadingLatch_.await(5, TimeUnit.SECONDS);
-					}
-					catch (InterruptedException e)
-					{
-						Log.w(TAG, e);
-					}
-					MainActivity.this.runOnUiThread(new Runnable()
-					{
-						@Override
-						public void run()
-						{
-							baseValueSpinner_.setSelection(position);
-						}
-					});
-				}
-			});
-		}
-		else
-		{
-			baseValueSpinner_.setSelection(position);
-		}
-	}
-	
-	public DatabaseHelper getDatabaseHelper(){
 		return dbHelper_;
 	}
 	
-	/**
-	 * Simulate a thread of long operation
-	 * @param minSecond
-	 * @param maxSecond
-	 */
-	public static void simulateLongOperation(int minSecond, int maxSecond)
+	private class TabInfo
 	{
-		Random rand = new Random(System.currentTimeMillis());
-		long timeToSleep = (rand.nextInt(maxSecond-minSecond)+minSecond)*1000;
-		
-		try
+		private String tag_;
+		private Class<?> clss_;
+		private Bundle args_;
+		private Fragment fragment_;
+	
+		TabInfo(String tag, Class<?> clazz, Bundle args)
 		{
-			Thread.sleep(timeToSleep);
+			this.tag_ = tag;
+			this.clss_ = clazz;
+			this.args_ = args;
 		}
-		catch (InterruptedException e)
-		{
-			Log.w("SimulationQuery", e);
-		}
+	
 	}
 
-//	private void restoreSpinnerSelection()
-//	{
-//		if (baseValueSpinner_.getTag()!=null)
-//		{
-//			baseValueSpinner_.setSelection((Integer)(baseValueSpinner_.getTag()));
-//			baseValueSpinner_.setTag(null);
-//		}
-//	}
-
-	private boolean keyMakeTextChanged(int keyCode)
+	class TabFactory implements TabContentFactory
 	{
-		return (7<=keyCode && keyCode<=17) || (29<=keyCode && keyCode<=56)
-				|| (67<=keyCode && keyCode<=77) || (144<=keyCode && keyCode<=163)
-				|| keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_FORWARD_DEL;
-	}
+		private final Context context_;
 	
-	public void setResultListVisible(boolean visible)
-	{
-		getListView().setVisibility(visible ? View.VISIBLE : View.GONE);
-	}
+		public TabFactory(Context context)
+		{
+			context_ = context;
+		}
 	
-	public ResultListAdapter getResultListAdapter()
-	{
-		return resultListAdapter_;
-	}
+		@Override
+		public View createTabContent(String tag)
+		{
+			View v = new View(context_);
+			v.setMinimumWidth(0);
+			v.setMinimumHeight(0);
+			return v;
+		}
 	
-	
-	private boolean isActivityRunning_ = false;
-	
-	@Override
-	protected void onPause()
-	{
-		super.onPause();
-		isActivityRunning_ = false;
-	}
-	
-	@Override
-	protected void onStop()
-	{
-		super.onStop();
-		isActivityRunning_ = false;
-	}
-	
-	@Override
-	protected void onResume()
-	{
-		super.onResume();
-		isActivityRunning_ = true;
 	}
 }

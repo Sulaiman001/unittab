@@ -10,7 +10,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Looper;
@@ -54,7 +53,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	private final ExecutorService conversionsLoadingThread_ = Executors
 			.newSingleThreadExecutor();
 	private ConversionsLoadingRunner conversionsLoadingRunner_ = null;
-	private Context context_;
+	private ConverterFragment owner_;
 	private long categoryId_;
 	private long baseUnitId_;
 	private double baseValue_ = Double.NaN;
@@ -98,11 +97,11 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	private final Object lock_ = new Object();
 	private ArrayList<RowData> data_;
 	
-	public ResultListAdapter(Context context)
+	public ResultListAdapter(ConverterFragment owner)
 	{
-		context_ = context;
-		dbHelper_ = ((MainActivity)context_).getDatabaseHelper();
-		inflater_ = LayoutInflater.from(context);
+		owner_ = owner;
+		dbHelper_ = owner_.getDatabaseHelper();
+		inflater_ = LayoutInflater.from(owner.getActivity());
 	}
 	
 	@Override
@@ -183,7 +182,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		{
 			Log.i(TAG, String.format("Populate category = %d baseUnit = %d", categoryId, baseUnitId));
 		
-			((MainActivity)context_).setResultListVisible(false);
+			((ConverterFragment)owner_).setResultListVisible(false);
 			
 			categoryId_ = categoryId;
 			baseUnitId_ = baseUnitId;
@@ -266,13 +265,20 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				public void run()
 				{
 					awaitCalculation();
-					((MainActivity)context_).runOnUiThread(new Runnable()
+					owner_.getActivity().runOnUiThread(new Runnable()
 					{
 						@Override
 						public void run()
 						{
-							notifyDataSetChanged();
-							((MainActivity)context_).setResultListVisible(true);
+							try
+							{
+								notifyDataSetChanged();
+								((ConverterFragment)owner_).setResultListVisible(true);
+							}
+							catch (Exception ex)
+							{
+								Log.w(TAG, ex);
+							}
 						}
 					});
 				}
@@ -336,11 +342,6 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			Log.w(TAG, ex);
 		}
 	}
-	
-	public Context getContext()
-	{
-		return context_;
-	}
 
 	public ExecutorService getCalculationPoolThread()
 	{
@@ -395,59 +396,67 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		@Override
 		protected ArrayList<RowData> doInBackground(Long... params)
 		{
-			ArrayList<RowData> resu = new ArrayList<RowData>();
-
-			long categoryId = params[0];
-			long baseUnitId = params[1];
-			
-			Cursor cur = dbHelper_.getReadableDatabase().
-							query("unit", new String[]{"id", "name", "shortName"}, 
-								"enabled=1 AND categoryId=? AND id<>?", 
-								new String[] {Long.toString(categoryId), Long.toString(baseUnitId)}, 
-								null, null, "name");
-			
-			int idColumnIndex = cur.getColumnIndex("id");
-			int nameColumnIndex = cur.getColumnIndex("name");
-			int shortNameColumnIndex = cur.getColumnIndex("shortName");
-			double baseValue = baseValue_;
-			long baseValueEnumId = baseValueEnumId_;
-			
-			
-			while (cur.moveToNext() && !isCancelled()) 
+			try
 			{
-				RowData co;
-				if (baseValueEnumId < 0)
+				ArrayList<RowData> resu = new ArrayList<RowData>();
+	
+				long categoryId = params[0];
+				long baseUnitId = params[1];
+				
+				Cursor cur = dbHelper_.getReadableDatabase().
+								query("unit", new String[]{"id", "name", "shortName"}, 
+									"enabled=1 AND categoryId=? AND id<>?", 
+									new String[] {Long.toString(categoryId), Long.toString(baseUnitId)}, 
+									null, null, "name");
+				
+				int idColumnIndex = cur.getColumnIndex("id");
+				int nameColumnIndex = cur.getColumnIndex("name");
+				int shortNameColumnIndex = cur.getColumnIndex("shortName");
+				double baseValue = baseValue_;
+				long baseValueEnumId = baseValueEnumId_;
+				
+				
+				while (cur.moveToNext() && !isCancelled()) 
 				{
-					co = new RowData(
+					RowData co;
+					if (baseValueEnumId < 0)
+					{
+						co = new RowData(
+									ResultListAdapter.this, categoryId, 
+									baseUnitId,
+									cur.getLong(idColumnIndex),
+									cur.getString(nameColumnIndex),
+									cur.getString(shortNameColumnIndex),
+									baseValue
+								);
+					}
+					else
+					{
+						co = new RowData(
 								ResultListAdapter.this, categoryId, 
 								baseUnitId,
 								cur.getLong(idColumnIndex),
 								cur.getString(nameColumnIndex),
 								cur.getString(shortNameColumnIndex),
-								baseValue
+								baseValueEnumId
 							);
+					}
+					resu.add(co);
 				}
-				else
-				{
-					co = new RowData(
-							ResultListAdapter.this, categoryId, 
-							baseUnitId,
-							cur.getLong(idColumnIndex),
-							cur.getString(nameColumnIndex),
-							cur.getString(shortNameColumnIndex),
-							baseValueEnumId
-						);
-				}
-				resu.add(co);
+	
+				cur.close();
+				
+				//MainActivity.simulateLongOperation(1, 3);
+	
+				awaitCalculation();
+				
+				return resu;
 			}
-
-			cur.close();
-			
-			//MainActivity.simulateLongOperation(1, 3);
-
-			awaitCalculation();
-			
-			return resu;
+			catch (Exception ex)
+			{
+				Log.w(TAG, ex);
+				return null;
+			}
 		}
 		
 		@Override
@@ -476,7 +485,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 					notifyDataSetChanged();
 					ResultListAdapter.this.setBaseValue(baseValue_, baseValueEnumId_); //redo the calculation
 				}
-				((MainActivity)context_).setResultListVisible(true);
+				((ConverterFragment)owner_).setResultListVisible(true);
 			}
 			catch (Exception e)
 			{

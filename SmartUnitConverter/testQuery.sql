@@ -1,3 +1,11 @@
+728 1208 1210
+
+;
+select * from enumValue where id = 723;
+select * from unit where id = 1208;
+
+
+
 select * from category where enabled = 0;
 
 

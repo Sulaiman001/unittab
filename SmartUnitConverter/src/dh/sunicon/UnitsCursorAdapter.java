@@ -208,6 +208,10 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 	{
 		if (isHistoryEnable)
 		{
+			if (dbHelper == null)
+			{
+				return null;
+			}
 			Cursor cur = dbHelper.getReadableDatabase().rawQuery(SELECT_HISTORY,  null);
 			Log.d(TAG, "Initial cursor Size = "+cur.getCount());
 			if (cur.getCount() > 0) 
