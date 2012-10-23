@@ -11,27 +11,30 @@
 
         <LinearLayout
             android:layout_width="fill_parent"
-            android:layout_height="fill_parent"
+            android:layout_height="wrap_content"
             android:orientation="vertical" >
 
             <TabWidget
                 android:id="@android:id/tabs"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="0"
                 android:orientation="horizontal" />
 
             <FrameLayout
                 android:id="@android:id/tabcontent"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_weight="0" />
-
-            <FrameLayout
-                android:id="@+android:id/realtabcontent"
                 android:layout_width="fill_parent"
-                android:layout_height="0dp"
-                android:layout_weight="1" />
+                android:layout_height="fill_parent" >
+
+                <dh.sunicon.workarounds.TabPatchView
+                    android:id="@+android:id/converterTab"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent" />
+
+                <dh.sunicon.workarounds.TabPatchView
+                    android:id="@+android:id/explorerTab"
+                    android:layout_width="fill_parent"
+                    android:layout_height="fill_parent" />
+            </FrameLayout>
         </LinearLayout>
     </TabHost>
 

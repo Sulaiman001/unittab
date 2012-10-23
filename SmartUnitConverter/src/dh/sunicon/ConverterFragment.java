@@ -67,6 +67,7 @@ public class ConverterFragment extends ListFragment
 	
 	private boolean isActivityRunning_ = false;
 
+	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState)
@@ -84,6 +85,7 @@ public class ConverterFragment extends ListFragment
 		try
 		{
 			super.onActivityCreated(savedInstanceState);
+			setRetainInstance(true);
 			
 			dbHelper_ = ((MainActivity)getActivity()).getDatabaseHelper();
 			unitHistory_ = new UnitHistoryManager(dbHelper_);
@@ -130,6 +132,7 @@ public class ConverterFragment extends ListFragment
 					categoryId_,
 					baseUnitId_);
 		
+			baseValueEditor_.setText(preferences.getString("baseValue", null));
 			setBaseValueSpinnerSelection(preferences.getInt("spinnerPos", -1));
 		}
 		catch (Exception ex)
@@ -150,6 +153,7 @@ public class ConverterFragment extends ListFragment
 		editor.putInt("spinnerPos", baseValueSpinner_.getSelectedItemPosition());
 		editor.putString("categoryName", categoryLabel_.getText().toString());
 		editor.putString("baseUnitName", baseUnitEditor_.getText().toString());
+		editor.putString("baseValue", baseValueEditor_.getText().toString());
 		
 		editor.commit();
 	}
@@ -684,7 +688,7 @@ public class ConverterFragment extends ListFragment
 	 */
 	private void setBaseValueSpinnerSelection(final int position) throws InterruptedException
 	{
-		Thread.sleep(200); //make sure that the spinner is populating
+		Thread.sleep(500); //make sure that the spinner is populating
 		
 		if (spinnerLoadingLatch_!= null) 
 		{
