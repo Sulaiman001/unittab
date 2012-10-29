@@ -45,29 +45,29 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 			" WHERE category.enabled=1 AND unit.enabled=1";
 	
 	static final String WHERE2_QUERY_PART = 
-			" AND (lower(unitName) LIKE ? OR  lower(unitShortName) LIKE ? OR lower(categoryName) LIKE ?)";	
+			" AND (lower(unitName) LIKE ? OR  lower(unitShortName) LIKE ? OR lower(categoryName) LIKE ?)";
 	
 	/**
 	 * Cursor contains 60 rows max 
 	 */
-	static final String LIMIT_ORDER_QUERY_PART = " ORDER BY unitName LIMIT 60";
+	static final String LIMIT_ORDER_QUERY_PART = " ORDER BY unitName, unitShortName LIMIT 100";
 	
 	private final LayoutInflater inflater_;
 	private final DatabaseHelper dbHelper_;
 	
-	public UnitsCursorAdapter(Context context, Cursor c,
+	public UnitsCursorAdapter(Context context, Cursor c, DatabaseHelper dbHelper,
 			boolean autoRequery)
 	{
 		super(context, c, autoRequery);
-		dbHelper_ = ((MainActivity)context).getDatabaseHelper();
+		dbHelper_ = dbHelper;
 		inflater_ = LayoutInflater.from(context);
 	}
 
-	public UnitsCursorAdapter(Context context, Cursor c,
+	public UnitsCursorAdapter(Context context, Cursor c, DatabaseHelper dbHelper,
 			int flags)
 	{
 		super(context, c, flags);
-		dbHelper_ = ((MainActivity)context).getDatabaseHelper();
+		dbHelper_ = dbHelper;
 		inflater_ = LayoutInflater.from(context);
 	}
 	
@@ -75,7 +75,7 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 	public View newView(Context context, Cursor cursor, ViewGroup parent)
 	{
 		//get the LinearLayout from the unit_dropdown_item
-		View unitDropDownItemView = inflater_.inflate(R.layout.unit_dropdown_item, parent, false);
+		View unitDropDownItemView = inflater_.inflate(R.layout.unit_category_item, parent, false);
 		
 		//save children views in the tag to avoid call findViewById
 		TextView categoryLabel = (TextView) unitDropDownItemView.findViewById(R.id.categoryLabel);
@@ -213,10 +213,11 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 				return null;
 			}
 			Cursor cur = dbHelper.getReadableDatabase().rawQuery(SELECT_HISTORY,  null);
-			Log.d(TAG, "Initial cursor Size = "+cur.getCount());
-			if (cur.getCount() > 0) 
+			int cursorSize = cur.getCount();
+			Log.v(TAG, "Initial cursor Size = "+cursorSize);
+			if (cursorSize > 0) 
 			{
-				Log.d(TAG, "Return history");
+				Log.v(TAG, "Return history");
 				return cur;
 			}
 			else
@@ -237,7 +238,7 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 	 */
 	private static Cursor selectTop60Units(DatabaseHelper dbHelper)
 	{
-		Log.d(TAG, "Return top 60 unit");
+		Log.v(TAG, "Return top 60 unit");
 		String topUnitQuery = SELECT_QUERY_PART + WHERE1_QUERY_PART + LIMIT_ORDER_QUERY_PART;
 		return dbHelper.getReadableDatabase().rawQuery(topUnitQuery,  null);
 	}
@@ -298,6 +299,7 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 		{
 			return unitLabel_;
 		}
+		
 		
 	}
 }

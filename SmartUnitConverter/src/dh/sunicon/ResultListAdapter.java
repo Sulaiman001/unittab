@@ -10,6 +10,10 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Looper;
@@ -104,6 +108,79 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		inflater_ = LayoutInflater.from(owner.getActivity());
 	}
 	
+	public ResultListAdapter(ConverterFragment owner, JSONObject jsonSavedState) throws JSONException {
+		this(owner);
+		categoryId_ = jsonSavedState.getLong("categoryId");
+		baseUnitId_ = jsonSavedState.getLong("baseUnitId");
+		if (jsonSavedState.has("baseValue")) {
+			baseValue_ = jsonSavedState.getDouble("baseValue");
+		}
+		else {
+			baseValue_ = Double.NaN;
+		}
+		baseValueEnumId_ = jsonSavedState.getLong("baseValueEnumId");
+		
+		if (jsonSavedState.has("filter")){
+			filter_ = new TargetUnitFilter(this, jsonSavedState.getJSONArray("filter"));
+		}
+		
+		if (jsonSavedState.has("conversionsLoadingRunner"))
+		{
+			conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, jsonSavedState.getJSONObject("conversionsLoadingRunner"));
+			conversionsLoadingThread_.execute(conversionsLoadingRunner_);
+		}
+		
+		if (jsonSavedState.has("data"))
+		{
+			JSONArray jsonRowData = jsonSavedState.getJSONArray("data");
+			if (jsonRowData!=null)
+			{
+				int n = jsonRowData.length();
+				if (n<=0){ 
+					return;
+				}
+				data_ = new ArrayList<RowData>();
+				for (int i = 0; i<n; i++) {
+					data_.add(
+						new RowData(
+								this,
+								jsonRowData.getJSONObject(i))
+					);
+				}
+			}
+		}
+	}
+	
+	public JSONObject serialize() throws JSONException
+	{
+		JSONObject json = new JSONObject();
+		json.put("categoryId", categoryId_);
+		json.put("baseUnitId", baseUnitId_);
+		if (!Double.isNaN(baseValue_)) {
+			json.put("baseValue", baseValue_);
+		}
+		json.put("baseValueEnumId", baseValueEnumId_);
+		
+		if (conversionsLoadingRunner_!=null)
+		{
+			json.put("conversionsLoadingRunner", conversionsLoadingRunner_.serialize());
+		}
+		
+		if (filter_ != null)
+		{
+			json.put("filter", filter_.serialize());
+		}
+		if (data_!=null) {
+			JSONArray jsonRowData = new JSONArray();
+			for (RowData r : data_){
+				jsonRowData.put(r.serialize());
+			}
+			json.put("data", jsonRowData);
+		}
+		
+		return json;
+	}
+	
 	@Override
 	public int getCount()
 	{
@@ -180,7 +257,12 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	{
 		if (onGuiThread())
 		{
-			Log.i(TAG, String.format("Populate category = %d baseUnit = %d", categoryId, baseUnitId));
+			if (categoryId == categoryId_ && baseUnitId == baseUnitId_)
+			{
+				return; //nothing changed
+			}
+			
+			Log.d(TAG, String.format("setBaseUnit category = %d baseUnit = %d", categoryId, baseUnitId));
 		
 			((ConverterFragment)owner_).setResultListVisible(false);
 			
@@ -195,7 +277,10 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, categoryId_);
 			conversionsLoadingThread_.execute(conversionsLoadingRunner_);
 			
-			data_ = null;
+			synchronized (lock_)
+			{
+				data_ = null;
+			}
 			
 			//fill the list with related target unit (of the same category)
 			if (fillDataTask_ != null)
@@ -219,70 +304,83 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	{
 		if (onGuiThread())
 		{
-			Log.i(TAG, String.format("setBaseValue = %f, %d", baseValue, baseValueEnumId));
-			
-			baseValue_ = baseValue;
-			baseValueEnumId_ = baseValueEnumId;
-			
-			/* set all the value to "-" */
-			if (filter_!=null)
+			if (baseValue != baseValue_ || baseValueEnumId != baseValueEnumId_)
 			{
-				filter_.clearAllTargetValues();
-			}
-			
-			if (data_ == null || data_.size() == 0)
-			{
-				Log.d(TAG, "RowData list is empty");
-				return;
-			}
-			
-			int count = data_.size();
-			
-			for (int i = 0; i<count; i++)
-			{
-				data_.get(i).clearTargetValue();
-			}
-			notifyDataSetChanged();
-			
-			/* calculate all value */
-			
-			for (int i = 0; i<count; i++)
-			{
-				if (baseValueEnumId>0 && Double.isNaN(baseValue))
+				Log.i(TAG, String.format("setBaseValue = %f, %d", baseValue, baseValueEnumId));
+				
+				baseValue_ = baseValue;
+				baseValueEnumId_ = baseValueEnumId;
+				
+				/* set all the value to "-" */
+				if (filter_!=null)
 				{
-					data_.get(i).setBaseValueEnum(baseValueEnumId);
+					filter_.clearAllTargetValues();
 				}
-				else
+				
+				if (data_ == null || data_.size() == 0)
 				{
-					data_.get(i).setBaseValue(baseValue_);
+					Log.d(TAG, "RowData list is empty");
+					return;
 				}
-			}
-			
-			/* wait the calculations finished then update the list View */
-			awaitCalculationThread_.execute(new Runnable()
-			{
-				@Override
-				public void run()
+				
+				int count = data_.size();
+				
+				for (int i = 0; i<count; i++)
 				{
-					awaitCalculation();
-					owner_.getActivity().runOnUiThread(new Runnable()
+					data_.get(i).clearTargetValue();
+				}
+				notifyDataSetChanged();
+				
+				/* calculate all value */
+				
+				for (int i = 0; i<count; i++)
+				{
+					if (baseValueEnumId>0 && Double.isNaN(baseValue))
 					{
-						@Override
-						public void run()
-						{
-							try
-							{
-								notifyDataSetChanged();
-								((ConverterFragment)owner_).setResultListVisible(true);
-							}
-							catch (Exception ex)
-							{
-								Log.w(TAG, ex);
-							}
-						}
-					});
+						data_.get(i).setBaseValueEnum(baseValueEnumId);
+					}
+					else
+					{
+						data_.get(i).setBaseValue(baseValue_);
+					}
 				}
-			});
+				
+				/* wait the calculations finished then update the list View */
+				awaitCalculationThread_.execute(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						awaitCalculation();
+						if (owner_.getActivity() == null)
+						{
+							return;
+						}
+						owner_.getActivity().runOnUiThread(new Runnable()
+						{
+							@Override
+							public void run()
+							{
+								try
+								{
+									notifyDataSetChanged();
+									((ConverterFragment)owner_).setResultListVisible(true);
+								}
+								catch (Exception ex)
+								{
+									Log.w(TAG, ex);
+								}
+							}
+						});
+					}
+				});
+			}
+			else
+			{
+				Log.w(TAG, "Ignore calculation because the baseValue has not been changed");
+				((ConverterFragment)owner_).setResultListVisible(true);
+			}
+			
 		}
 		else
 		{
@@ -335,7 +433,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			}
 			
 			long endTime = System.currentTimeMillis();
-			Log.i(TAG, "await calculation "+(endTime - startTime)+"ms");
+			Log.d(TAG, "await calculation "+(endTime - startTime)+"ms");
 		}
 		catch (Exception ex)
 		{
@@ -383,6 +481,10 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		return Looper.getMainLooper().getThread() == Thread.currentThread();
 	}
 	
+	public DatabaseHelper getDbHelper()
+	{
+		return dbHelper_;
+	}
 	
 	/*
 	 * **** Inner classes ****
@@ -481,7 +583,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				}
 				else
 				{
-					Log.i(TAG, String.format("Finished fill data for category %d, found %d units", categoryId_, result.size()));
+					Log.d(TAG, String.format("Finished fill data for category %d, found %d units", categoryId_, result.size()));
 					notifyDataSetChanged();
 					ResultListAdapter.this.setBaseValue(baseValue_, baseValueEnumId_); //redo the calculation
 				}
@@ -504,6 +606,40 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		private final int DELAY_PERFORM_FILTERING = 500;
 		private Object lockLastConstraint_ = new Object();
 		private String lastConstraint_;
+		
+		public TargetUnitFilter() {
+			super();
+		}
+		
+		public TargetUnitFilter(ResultListAdapter owner, JSONArray jsonData) throws JSONException{
+			super();
+			if (jsonData == null) {
+				return;
+			}
+			int n = jsonData.length();
+			if (n<=0){ 
+				return;
+			}
+			fullData_ = new ArrayList<RowData>();
+			for (int i = 0; i<n; i++) {
+				fullData_.add(
+					new RowData(
+							owner,
+							jsonData.getJSONObject(i))
+				);
+			}
+		}
+		
+		public JSONArray serialize() throws JSONException {
+			if (fullData_ == null) {
+				return null;
+			}
+			JSONArray json = new JSONArray();
+			for (RowData r : fullData_){
+				json.put(r.serialize());
+			}
+			return json;
+		}
 		
 		@Override
 		protected FilterResults performFiltering(CharSequence constraint)
@@ -635,7 +771,10 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				return;
 			}
 			
-			data_ = (ArrayList<RowData>) (results.values);
+			synchronized (lock_)
+			{
+				data_ = (ArrayList<RowData>) (results.values);
+			}
 			
 			if (results.count > 0)
 			{
@@ -677,6 +816,5 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			}
 			fullData_ = null;
 		}
-		
 	}
 }

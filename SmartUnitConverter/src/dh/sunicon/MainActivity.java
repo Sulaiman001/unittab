@@ -1,9 +1,13 @@
 package dh.sunicon;
 
+import android.app.Activity;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentActivity;
+import android.util.Log;
 import android.widget.TabHost;
 import android.widget.TabHost.TabSpec;
 import dh.sunicon.datamodel.DatabaseHelper;
@@ -11,6 +15,7 @@ import dh.sunicon.datamodel.DatabaseHelper;
 public class MainActivity extends FragmentActivity implements
 		TabHost.OnTabChangeListener
 {
+	private static final String TAG = MainActivity.class.getName();
 	private TabHost tabHost_;
 //	private HashMap<String, TabInfo> tabsInfo_ = new HashMap<String, MainActivity.TabInfo>();
 //	private TabInfo lastTab_ = null;
@@ -97,5 +102,39 @@ public class MainActivity extends FragmentActivity implements
 	public DatabaseHelper getDatabaseHelper()
 	{
 		return dbHelper_;
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+		if (requestCode == ConverterFragment.UNIT_PICKER_REQUEST && resultCode == RESULT_OK) {
+
+			long categoryId = data.getLongExtra("categoryId", -1);
+			long unitId = data.getLongExtra("unitId", -1);
+			String categoryName = data.getStringExtra("categoryName");
+			String unitName = data.getStringExtra("unitName");
+			
+			/* save to preferences */
+			
+			SharedPreferences preferences = this.getPreferences(Activity.MODE_PRIVATE);
+			SharedPreferences.Editor editor = preferences.edit(); 
+			editor.putLong("categoryId", categoryId); 
+			editor.putLong("baseUnitId", unitId);
+			editor.putString("categoryName", categoryName);
+			editor.putString("baseUnitName", unitName);
+			editor.commit();
+			
+			/* set on interfaces */
+			
+			FragmentManager fm = getSupportFragmentManager();
+			ConverterFragment convfg = (ConverterFragment)(fm.findFragmentByTag(Integer.toString(R.id.converterTab)));
+			try {
+				convfg.setBaseUnit(categoryName, unitName, 
+						categoryId, unitId);
+			} catch (IllegalAccessException e) {
+				Log.w(TAG, e);
+			}
+			
+		}
 	}
 }

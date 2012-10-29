@@ -1,10 +1,11 @@
 <resources>
+
     <string name="app_name">Smart Unit Converter</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_lesson_one">Lesson One</string>
-	<string name="label_text_with_suggestion">Text with suggestion</string>	
-	
-	<string-array name="result_popup_menu">
+    <string name="label_text_with_suggestion">Text with suggestion</string>
+
+    <string-array name="result_popup_menu">
         <item>Copy Value</item>
         <item>Copy Unit name</item>
         <item>Copy Value and Unit name</item>
@@ -12,4 +13,8 @@
         <item>Set Unit as Base</item>
         <item>Set Value and Unit as Base</item>
     </string-array>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_unit_picker">Unit Picker</string>
+
 </resources>

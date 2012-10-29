@@ -5,6 +5,10 @@
        <item name="android:autoCompleteTextViewStyle">@style/autocompletetextview_blue</item>
     </style>
 
+    <style name="NoTitleDialog" parent="android:style/Theme.Dialog">
+    	<item name="android:windowNoTitle">true</item>
+	</style>
+    
     <style name="edittext_blue" parent="@android:style/Widget.EditText">
         <item name="android:background">@drawable/edittext_blue_colorstate</item>
     </style>

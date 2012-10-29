@@ -1,5 +1,8 @@
 package dh.sunicon.datamodel;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 
 
 public class Corresponding extends BaseEntity
@@ -15,6 +18,24 @@ public class Corresponding extends BaseEntity
 		this.enumid2_ = enumid2;
 	}
 
+	public Corresponding(DatabaseHelper dbHelper, JSONObject jsonData) throws JSONException
+	{
+		this(dbHelper, jsonData.getLong("id")
+				, jsonData.getLong("enumid1")
+				, jsonData.getLong("enumid2"));
+	}
+
+	public JSONObject serialize() throws JSONException
+	{
+		JSONObject json = new JSONObject();
+		
+		json.put("id", getId());
+		json.put("enumid1", enumid1_);
+		json.put("enumid2", enumid2_);
+		
+		return json;
+	}
+	
 	public long getEnumid1()
 	{
 		return enumid1_;

@@ -5,6 +5,10 @@ import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.database.Cursor;
 import android.util.Log;
 import dh.sunicon.datamodel.Conversion;
@@ -32,8 +36,8 @@ public final class ConversionsLoadingRunner implements Runnable
 	private final DatabaseHelper dbHelper_;
 	private final long categoryId_;
 	
-	private boolean cancelled_;
-	private boolean finished_ = false;
+	private boolean cancelled_ = false;
+	private boolean finished_;
 	private CountDownLatch countDownLatch_ = new CountDownLatch(1);
 	
 	private ArrayList<Conversion> conversions_;
@@ -44,7 +48,59 @@ public final class ConversionsLoadingRunner implements Runnable
 	{
 		dbHelper_ = dbHelper;
 		categoryId_ = categoryId;
+		finished_ = false;
+		countDownLatch_ = new CountDownLatch(1);
 	}
+	
+	public ConversionsLoadingRunner(DatabaseHelper dbHelper, JSONObject savedState) throws JSONException
+	{
+		dbHelper_ = dbHelper;
+		categoryId_ = savedState.getLong("categoryId");
+		finished_ = false;
+		countDownLatch_ = new CountDownLatch(1);
+//		if (!finished_)
+//		{
+//			countDownLatch_ = new CountDownLatch(1);
+//		}
+//		else
+//		{
+//			countDownLatch_ = new CountDownLatch(0);
+//			conversions_ = new ArrayList<Conversion>();
+//			JSONArray jsonConversions = 
+//		}
+	}
+	
+	public JSONObject serialize() throws JSONException {
+		JSONObject json = new JSONObject();
+		
+		json.put("categoryId", categoryId_);
+//		json.put("finished", finished_);
+//
+//		if (!finished_) {
+//			return json;
+//		}
+//			
+//		JSONArray jsonConversions = new JSONArray();
+//		for (Conversion c : conversions_) {
+//			jsonConversions.put(c.serialize());
+//		}
+//		json.put("conversions", jsonConversions);
+//		
+//		JSONArray jsonCorrespondings = new JSONArray();
+//		for (Corresponding c : correspondings_) {
+//			jsonCorrespondings.put(c.serialize());
+//		}
+//		json.put("correspondings", jsonCorrespondings);
+//		
+//		JSONArray jsonEnumValues_ = new JSONArray();
+//		for (EnumValue e : enumValues_.values()) {
+//			jsonEnumValues_.put(e.serialize());
+//		}
+//		json.put("enumValues", jsonEnumValues_);
+		
+		return json;
+	}
+	
 	
 	public ArrayList<Conversion> getConversions()
 	{

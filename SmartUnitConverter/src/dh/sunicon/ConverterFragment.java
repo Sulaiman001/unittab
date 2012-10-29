@@ -8,8 +8,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.json.JSONObject;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
@@ -21,18 +24,15 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
-import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnKeyListener;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
-import android.widget.AdapterView.OnItemClickListener;
 import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FilterQueryProvider;
@@ -51,9 +51,10 @@ public class ConverterFragment extends ListFragment
 	private ViewSwitcher baseValueSwitcher_;
 	private EditText baseValueEditor_;
 	private Spinner baseValueSpinner_;
-	private AutoCompleteTextView baseUnitEditor_;
+	private Button baseUnitPickerButton_;
 	private EditText targetUnitFilterEditor_;
 	private Button clearTargetUnitFilterButton_;
+	private ViewSwitcher resultListSwitcher_;
 	private Timer baseValueEditorTimer_;
 
 	private ResultListAdapter resultListAdapter_;
@@ -66,7 +67,13 @@ public class ConverterFragment extends ListFragment
 	private CountDownLatch spinnerLoadingLatch_;
 	
 	private boolean isActivityRunning_ = false;
-
+	
+//	@Override
+//	public void onCreate(Bundle savedInstanceState) 
+//	{
+//		super.onCreate(savedInstanceState);
+//		setRetainInstance(true);
+//	}
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -80,20 +87,17 @@ public class ConverterFragment extends ListFragment
 	}
 	
 	@Override
-	public void onActivityCreated(Bundle savedInstanceState)
-	{
+	public void onActivityCreated(Bundle savedInstanceState) {
 		try
 		{
 			super.onActivityCreated(savedInstanceState);
-			setRetainInstance(true);
-			
+
 			dbHelper_ = ((MainActivity)getActivity()).getDatabaseHelper();
 			unitHistory_ = new UnitHistoryManager(dbHelper_);
 			
 			categoryLabel_ = (TextView)this.getView().findViewById(R.id.categoryLabel);
 			baseValueSwitcher_ = (ViewSwitcher)this.getView().findViewById(R.id.baseValueSwitcher);
-			
-			isActivityRunning_ = true;
+			resultListSwitcher_ = (ViewSwitcher)this.getView().findViewById(R.id.resultListSwitcher);
 			
 			if (dbHelper_ == null)
 			{
@@ -101,13 +105,22 @@ public class ConverterFragment extends ListFragment
 				return;
 			}
 			
-			initBaseUnitAutoCompleteEditor();
+			initBaseUnitPickerButton();
 			initBaseValueEditor();
 			initBaseValueSpinner();
 			initTargetUnitFilterEditor();
 			initResultList();
 			initResultListShowHideAnimation();
 			clearBaseUnit(false);
+			
+			if (savedInstanceState != null)
+			{
+				restoreFromBundles(savedInstanceState);
+			}
+			else
+			{
+				restoreFromPreferences();
+			}
 		}
 		catch (Exception ex)
 		{
@@ -115,30 +128,103 @@ public class ConverterFragment extends ListFragment
 		}
 	}
 
-	@Override
-	public void onResume()
-	{
-		super.onResume();
+//	@Override
+//	public void onResume()
+//	{
+//		super.onResume();
+//	}
+
+	private void restoreFromPreferences() {
+		Log.i(TAG + "-SR", "Restore State from Preference");
 		SharedPreferences preferences = this.getActivity().getPreferences(Activity.MODE_PRIVATE);
-		
+		if (preferences == null)
+		{
+			return;
+		}
 		try
 		{
 			categoryId_ = preferences.getLong("categoryId", -1);
 			baseUnitId_ = preferences.getLong("baseUnitId", -1);
+			String baseValue = preferences.getString("baseValue", null);
 			
 			setBaseUnit(
 					preferences.getString("categoryName", null), 
 					preferences.getString("baseUnitName", null),
 					categoryId_,
 					baseUnitId_);
-		
-			baseValueEditor_.setText(preferences.getString("baseValue", null));
+			
+			baseValueEditor_.setText(baseValue);
+			setBaseValue(baseValue);
+			
 			setBaseValueSpinnerSelection(preferences.getInt("spinnerPos", -1));
 		}
 		catch (Exception ex)
 		{
 			Log.w(TAG, ex);
 		}
+	}
+	
+	private void restoreFromBundles(Bundle savedState) {
+		suspendEvents();
+		try
+		{
+			categoryLabel_.setVisibility(savedState.getInt("categoryLabelVisibility"));
+			categoryLabel_.setText(savedState.getCharSequence("categoryLabelText"));
+			categoryId_ = savedState.getLong("categoryId");
+			baseUnitId_ = savedState.getLong("baseUnitId");
+			baseValueEditor_.setText(savedState.getCharSequence("baseValueEditorText"));
+			baseUnitPickerButton_.setText(savedState.getCharSequence("baseUnitPickerButtonText"));
+			targetUnitFilterEditor_.setText(savedState.getCharSequence("targetUnitFilterEditorText"));
+			targetUnitFilterEditor_.setEnabled(savedState.getBoolean("targetUnitFilterEditorEnable"));
+			clearTargetUnitFilterButton_.setEnabled(savedState.getBoolean("targetUnitFilterEditorEnable"));
+			
+			//TODO restore baseValueSpinnerItemPosition
+			baseValueSpinnerAdapter_.getFilter().filter(Long.toString(baseUnitId_));
+			setBaseValueSpinnerSelection(savedState.getInt("baseValueSpinnerItemPosition"));
+			if (savedState.getBoolean("spinnerVisible") && baseValueSwitcher_.getNextView() == baseValueSpinner_)
+			{
+				baseValueSwitcher_.showNext();
+			}
+			
+			//restore resultListAdapter_
+			JSONObject jsonResultListAdapter = new JSONObject(savedState.getString("resultListAdapter"));
+			resultListAdapter_ = new ResultListAdapter(this, jsonResultListAdapter);
+			setListAdapter(resultListAdapter_);
+			
+			Log.i(TAG + "-SR", "Restore Spinner selection "+savedState.getInt("baseValueSpinnerItemPosition"));
+		}
+		catch (Exception ex)
+		{
+			Log.w(TAG, ex);
+		}
+		finally {
+			resumeEvents();
+		}
+	}
+	
+	@Override
+	public void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		Log.i(TAG + "-SR", "Save State"); 
+		try
+		{
+			outState.putCharSequence("categoryLabelText", categoryLabel_.getText());
+			outState.putInt("categoryLabelVisibility", categoryLabel_.getVisibility());
+			outState.putLong("categoryId", categoryId_);
+			outState.putLong("baseUnitId", baseUnitId_);
+			outState.putCharSequence("baseValueEditorText", baseValueEditor_.getText());
+			outState.putInt("baseValueSpinnerItemPosition", baseValueSpinner_.getSelectedItemPosition());
+			outState.putCharSequence("baseUnitPickerButtonText", baseUnitPickerButton_.getText());
+			outState.putCharSequence("targetUnitFilterEditorText", targetUnitFilterEditor_.getText());
+			outState.putBoolean("targetUnitFilterEditorEnable", targetUnitFilterEditor_.isEnabled());
+			outState.putString("resultListAdapter", resultListAdapter_.serialize().toString());
+			outState.putBoolean("spinnerVisible", baseValueSwitcher_.getNextView() == baseValueEditor_);
+		}
+		catch (Exception ex)
+		{
+			Log.w(TAG, ex);
+		}
+
 	}
 	
 	@Override
@@ -150,9 +236,10 @@ public class ConverterFragment extends ListFragment
 
 		editor.putLong("categoryId", categoryId_); 
 		editor.putLong("baseUnitId", baseUnitId_);
-		editor.putInt("spinnerPos", baseValueSpinner_.getSelectedItemPosition());
 		editor.putString("categoryName", categoryLabel_.getText().toString());
-		editor.putString("baseUnitName", baseUnitEditor_.getText().toString());
+		editor.putString("baseUnitName", baseUnitPickerButton_.getText().toString());
+		
+		editor.putInt("spinnerPos", baseValueSpinner_.getSelectedItemPosition());
 		editor.putString("baseValue", baseValueEditor_.getText().toString());
 		
 		editor.commit();
@@ -165,6 +252,13 @@ public class ConverterFragment extends ListFragment
 		isActivityRunning_ = false;
 	}
 	
+	@Override
+	public void onStart()
+	{
+		super.onStart();
+		isActivityRunning_ = true;
+	}
+	
 	private void initBaseValueEditor()
 	{
 		baseValueEditor_= (EditText)this.getView().findViewById(R.id.valueEditor);
@@ -175,11 +269,15 @@ public class ConverterFragment extends ListFragment
 			{
 				try
 				{
+					if (isEventsSuspending())
+					{
+						return;
+					}
 					if (!isActivityRunning_ || getResultListAdapter() == null)
 					{
 						return;
 					}
-					
+										
 					setResultListVisible(false); //hide the list while waiting and perform calculation
 					
 					/* events absorber technique */
@@ -199,34 +297,26 @@ public class ConverterFragment extends ListFragment
 						@Override
 						public void run()
 						{
-							ConverterFragment.this.getActivity().runOnUiThread(new Runnable()
-							{
-								@Override
-								public void run()
+							if (ConverterFragment.this.getActivity() != null) //no need this if
+								ConverterFragment.this.getActivity().runOnUiThread(new Runnable()
 								{
-									try
+									@Override
+									public void run()
 									{
-										/*
-										 * do whatever onTextChanged event have to do. But it should be quick 
-										 * heavy process must be executed on other thread  
-										 */
-										
-										if (TextUtils.isEmpty(s))
+										try
 										{
-											getResultListAdapter().setBaseValue(Double.NaN, -1);
+											/*
+											 * do whatever onTextChanged event have to do. But it should be quick 
+											 * heavy process must be executed on other thread  
+											 */
+											setBaseValue(s);
 										}
-										else
+										catch (Exception ex)
 										{
-											double baseValue = Double.parseDouble(s.toString());
-											getResultListAdapter().setBaseValue(baseValue, -1);
+											Log.w(TAG, ex);
 										}
 									}
-									catch (Exception ex)
-									{
-										Log.w(TAG, ex);
-									}
-								}
-							});
+								});
 						}
 					}, 500);
 				}
@@ -251,12 +341,6 @@ public class ConverterFragment extends ListFragment
 	
 	private void initBaseValueSpinner()
 	{
-	//		ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,
-	//        R.array.planets_array, android.R.layout.simple_spinner_item);
-	//
-	//// Specify the layout to use when the list of choices appears
-	//adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-	
 		baseValueSpinner_ = (Spinner)this.getView().findViewById(R.id.valueSpinner);
 		baseValueSpinnerAdapter_ = new SimpleCursorAdapter(this.getActivity(), 
 				R.layout.spinner_item, 
@@ -358,12 +442,16 @@ public class ConverterFragment extends ListFragment
 			{
 				try
 				{
+					if (isEventsSuspending())
+					{
+						return;
+					}
 					if (!isActivityRunning_ || getResultListAdapter() == null)
 					{
 						return;
 					}
 					
-					//Log.i(TAG, "convert unit with enumId = "+id);
+					Log.d(TAG, "spinner changes position = "+position);
 					getResultListAdapter().setBaseValue(Double.NaN, id);
 				}
 				catch (Exception ex)
@@ -377,6 +465,11 @@ public class ConverterFragment extends ListFragment
 			{
 				try
 				{
+					if (isEventsSuspending())
+					{
+						return;
+					}
+					
 					if (!isActivityRunning_ || getResultListAdapter() == null)
 					{
 						return;
@@ -393,83 +486,15 @@ public class ConverterFragment extends ListFragment
 		});
 	}
 	
-	private void initBaseUnitAutoCompleteEditor()
+	public final static int UNIT_PICKER_REQUEST = 1000;
+	
+	private void initBaseUnitPickerButton()
 	{
-		baseUnitEditor_ = (AutoCompleteTextView)this.getView().findViewById(R.id.baseUnitEditor);
-		
-		final Cursor initialCursor = UnitsCursorAdapter.getInitialCursor(dbHelper_, true);
-		UnitsCursorAdapter adapter = new UnitsCursorAdapter(this.getActivity(), initialCursor, false);
-		
-		baseUnitEditor_.setAdapter(adapter);
-	    baseUnitEditor_.setThreshold(0);
-	    
-	    baseUnitEditor_.setOnItemClickListener(new OnItemClickListener()
-		{
+		baseUnitPickerButton_ = (Button)this.getView().findViewById(R.id.baseUnitPickerButton);
+		baseUnitPickerButton_.setOnClickListener(new OnClickListener() {
 			@Override
-			public void onItemClick(AdapterView<?> parent, View view,
-					int position, long id)
-			{
-				try
-				{
-					if (view == null)
-					{
-						return;
-					}
-					UnitsCursorAdapter.SuggestionData baseUnitData = (UnitsCursorAdapter.SuggestionData)view.getTag();
-					setBaseUnit(baseUnitData.getCategoryName(), baseUnitData.getUnitName(), baseUnitData.getCategoryId(), baseUnitData.getUnitId());
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}				
-			}
-		});
-	    
-	    baseUnitEditor_.setOnKeyListener(new OnKeyListener()
-		{
-			@Override
-			public boolean onKey(View v, int keyCode, KeyEvent event)
-			{
-				try
-				{	
-					if (keyMakeTextChanged(keyCode))
-					{
-						clearBaseUnit(true);
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}
-				return false;
-			}
-		});
-	    
-	    baseUnitEditor_.setOnFocusChangeListener(new android.view.View.OnFocusChangeListener()
-		{
-			@Override
-			public void onFocusChange(View v, boolean hasFocus)
-			{
-				try
-				{	
-					if (isActivityRunning_ && hasFocus)
-					{
-						baseUnitEditor_.showDropDown();
-					}
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}
-			}
-		});
-	    
-	    ((Button)(this.getView().findViewById(R.id.clearBaseUnitButton))).setOnClickListener(new android.view.View.OnClickListener()
-		{
-			@Override
-			public void onClick(View v)
-			{
-				clearBaseUnit(false);
+			public void onClick(View v) {
+				ConverterFragment.this.getActivity().startActivityForResult(new Intent(ConverterFragment.this.getActivity(), UnitPicker.class), UNIT_PICKER_REQUEST);
 			}
 		});
 	}
@@ -484,6 +509,11 @@ public class ConverterFragment extends ListFragment
 			{
 				try
 				{
+					if (isEventsSuspending())
+					{
+						return;
+					}
+					
 					if (!isActivityRunning_ || getResultListAdapter() == null)
 					{
 						return;
@@ -516,6 +546,10 @@ public class ConverterFragment extends ListFragment
 			{
 				try
 				{	
+					if (isEventsSuspending())
+					{
+						return;
+					}
 					if (isActivityRunning_ && hasFocus)
 					{
 						getResultListAdapter().getFilter().filter(targetUnitFilterEditor_.getText());
@@ -632,11 +666,13 @@ public class ConverterFragment extends ListFragment
 	{
 		if (categoryId == -1 || unitId == -1)
 		{
-			clearBaseUnit(false);
+			clearBaseUnit(true);
 			return;
 		}
 		
 		Log.d(TAG, "setBaseUnit("+categoryName+","+unitName+")");
+		
+		setResultListVisible(false);
 		
 		categoryLabel_.setVisibility(View.VISIBLE);
 		if (categoryName != null)
@@ -647,18 +683,18 @@ public class ConverterFragment extends ListFragment
 		baseUnitId_ = unitId;
 		targetUnitFilterEditor_.setEnabled(true);
 		clearTargetUnitFilterButton_.setEnabled(true);
+		baseUnitPickerButton_.setText(unitName);
 		
-		Log.d(TAG, "setBaseUnit.invokeSaveToHistory");
+		Log.v(TAG, "setBaseUnit.invokeSaveToHistory");
 		unitHistory_.invokeSaveToHistory(unitId);
 		
 		Log.d(TAG, "setBaseUnit.filterSpinner");
 		baseValueSpinnerAdapter_.getFilter().filter(Long.toString(unitId));
 		if (unitName != null)
 		{
-			baseUnitEditor_.setText(unitName);
+			baseUnitPickerButton_.setText(unitName);
 		}	
 		
-		Log.d(TAG, "setBaseUnit.adapterSetBaseUnitId");
 		getResultListAdapter().setBaseUnitId(categoryId_, baseUnitId_);
 	}
 	
@@ -671,7 +707,7 @@ public class ConverterFragment extends ListFragment
 		clearTargetUnitFilterButton_.setEnabled(false);
 		if (!keepTextOnBaseUnitEditor)
 		{
-			baseUnitEditor_.setText(null);
+			baseUnitPickerButton_.setText(null);
 			
 			//switch to the editor
 			if (baseValueSwitcher_.getNextView() == baseValueEditor_)
@@ -688,6 +724,10 @@ public class ConverterFragment extends ListFragment
 	 */
 	private void setBaseValueSpinnerSelection(final int position) throws InterruptedException
 	{
+		if (!isActivityRunning_)
+		{
+			return;
+		}
 		Thread.sleep(500); //make sure that the spinner is populating
 		
 		if (spinnerLoadingLatch_!= null) 
@@ -708,6 +748,10 @@ public class ConverterFragment extends ListFragment
 					{
 						Log.w(TAG, e);
 					}
+					if (ConverterFragment.this.getActivity() == null)
+					{
+						return;
+					}
 					ConverterFragment.this.getActivity().runOnUiThread(new Runnable()
 					{
 						@Override
@@ -722,6 +766,19 @@ public class ConverterFragment extends ListFragment
 		else
 		{
 			baseValueSpinner_.setSelection(position);
+		}
+	}
+	
+	private void setBaseValue(CharSequence s) throws IllegalAccessException
+	{
+		if (TextUtils.isEmpty(s))
+		{
+			getResultListAdapter().setBaseValue(Double.NaN, -1);
+		}
+		else
+		{
+			double baseValue = Double.parseDouble(s.toString());
+			getResultListAdapter().setBaseValue(baseValue, -1);
 		}
 	}
 	
@@ -758,18 +815,55 @@ public class ConverterFragment extends ListFragment
 //		}
 //	}
 
-	private boolean keyMakeTextChanged(int keyCode)
+//	private boolean keyMakeTextChanged(int keyCode)
+//	{
+//		return (7<=keyCode && keyCode<=17) || (29<=keyCode && keyCode<=56)
+//				|| (67<=keyCode && keyCode<=77) || (144<=keyCode && keyCode<=163)
+//				|| keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_FORWARD_DEL;
+//	}
+	
+	private int eventsSuspendingLevel = 0;
+	
+	private boolean isEventsSuspending()
 	{
-		return (7<=keyCode && keyCode<=17) || (29<=keyCode && keyCode<=56)
-				|| (67<=keyCode && keyCode<=77) || (144<=keyCode && keyCode<=163)
-				|| keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_FORWARD_DEL;
+		return eventsSuspendingLevel > 0;
+	}	
+	private void suspendEvents()
+	{
+		if (eventsSuspendingLevel < 0)
+		{
+			eventsSuspendingLevel = 0;
+		}
+		eventsSuspendingLevel++;
+	}
+	
+	private void resumeEvents()
+	{
+		if (eventsSuspendingLevel<=0)
+		{
+			return;
+		}
+		eventsSuspendingLevel--;
 	}
 	
 	public void setResultListVisible(boolean visible)
 	{
-		if (isActivityRunning_ && isVisible())
+		if (resultListSwitcher_!=null)
 		{
-			getListView().setVisibility(visible ? View.VISIBLE : View.GONE);
+			if (visible != (resultListSwitcher_.getCurrentView() == getListView()))
+			{
+				if (visible)
+				{
+					Log.d(TAG, "switch to result list");
+					resultListSwitcher_.showPrevious();
+				}
+				else
+				{
+					Log.d(TAG, "switch to progress bar");
+					resultListSwitcher_.showNext();
+				}
+			}
+			//getListView().setVisibility(visible ? View.VISIBLE : View.GONE);
 		}
 	}
 	

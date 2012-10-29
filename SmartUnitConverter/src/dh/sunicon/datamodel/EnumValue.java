@@ -1,5 +1,8 @@
 package dh.sunicon.datamodel;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 
 public class EnumValue extends BaseEntity
 {
@@ -11,6 +14,10 @@ public class EnumValue extends BaseEntity
 		super(dbHelper, id);
 		unitId_ = unitId;
 		value_ = value;
+	}
+	
+	public EnumValue(DatabaseHelper dbHelper, JSONObject json) throws JSONException{
+		this(dbHelper, json.getLong("unitId"), json.getLong("id"), json.optString("value"));
 	}
 
 	public long getUnitId()
@@ -27,5 +34,15 @@ public class EnumValue extends BaseEntity
 	public String toString()
 	{
 		return value_;
+	}
+	
+	public JSONObject serialize() throws JSONException {
+		JSONObject json = new JSONObject();
+		
+		json.put("id", getId());
+		json.put("unitId", unitId_);
+		json.put("value_", value_);
+		
+		return json;
 	}
 }

@@ -1,5 +1,8 @@
 package dh.sunicon.datamodel;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.database.Cursor;
 import android.text.TextUtils;
 import android.util.Log;
@@ -23,7 +26,31 @@ public class Conversion extends BaseEntity
 		this.formula_ = formula;
 		this.reversedFormula_ = reversedFormula;
 	}
+	
+	public Conversion(DatabaseHelper dbHelper, JSONObject jsonData) throws JSONException
+	{
+		this(dbHelper, jsonData.getLong("id")
+				, jsonData.getLong("base")
+				, jsonData.getLong("target")
+				, jsonData.has("fx") ? jsonData.getDouble("fx") : null
+				, jsonData.getString("formula")
+				, jsonData.getString("reversedFormula"));
+	}
 
+	public JSONObject serialize() throws JSONException
+	{
+		JSONObject json = new JSONObject();
+		
+		json.put("id", getId());
+		json.put("base", base_);
+		json.put("target", target_);
+		json.put("fx", fx_);
+		json.put("formula", formula_);
+		json.put("reversedFormula", reversedFormula_);
+		
+		return json;
+	}
+	
 	public long getBaseUnitId()
 	{
 		return base_;

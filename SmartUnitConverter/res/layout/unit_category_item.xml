@@ -5,22 +5,23 @@
     android:orientation="horizontal" >
 
     <TextView
-        android:id="@+id/valueLabel"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_weight="50"
-        android:gravity="right"
-        android:text="1234567890123456789"
-        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-    <TextView
         android:id="@+id/unitLabel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_weight="50"
-        android:paddingLeft="10dip"
-        android:text="Miles Per inches United nanometer"
-        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:gravity="left"
+        android:text="Kilometer"
+        android:textAppearance="?android:attr/textAppearanceMedium" />
+
+    <TextView
+        android:id="@+id/categoryLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="50"
+        android:gravity="right"
+        android:paddingLeft="5dip"
+        android:text="Length / Distance"
+        android:textAppearance="?android:attr/textAppearanceSmall"
         android:textColor="#258AAF" />
 
 </LinearLayout>

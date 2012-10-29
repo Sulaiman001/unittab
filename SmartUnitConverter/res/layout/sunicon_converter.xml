@@ -1,114 +1,122 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 
+<!--
 <dh.sunicon.workaround.TabPatchView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="0dip"
     android:layout_height="0dip" >
- -->
-    <TableLayout
-        xmlns:android="http://schemas.android.com/apk/res/android"
-        android:id="@+id/mainView"
+-->
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mainView"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginLeft="5dp"
+    android:layout_marginRight="5dp"
+    android:animateLayoutChanges="true"
+    android:shrinkColumns="2"
+    android:stretchColumns="0,1" >
+
+    <TableRow
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="5dp"
-        android:animateLayoutChanges="true"
-        android:shrinkColumns="2"
-        android:stretchColumns="0,1" >
+        android:layout_height="wrap_content" >
 
-        <TableRow
+        <TextView />
+
+        <TextView
+            android:id="@+id/categoryLabel"
+            android:text="Length Distance"
+            android:textColor="#258AAF"
+            android:textSize="14sp" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
+
+        <ViewSwitcher
+            android:id="@+id/baseValueSwitcher"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
-
-            <TextView />
-
-            <TextView
-                android:id="@+id/categoryLabel"
-                android:text="Length Distance"
-                android:textColor="#258AAF"
-                android:textSize="12sp" />
-        </TableRow>
-
-        <TableRow
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content" >
-
-            <ViewSwitcher
-                android:id="@+id/baseValueSwitcher"
-                android:layout_marginRight="5dp" >
-
-                <EditText
-                    android:id="@+id/valueEditor"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:imeOptions="actionDone"
-                    android:inputType="numberDecimal"
-                    android:padding="5dp"
-                    android:textSize="16sp" />
-
-                <Spinner
-                    android:id="@+id/valueSpinner"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/edittext_blue_colorstate"
-                    android:padding="5dp"
-                    android:popupBackground="@drawable/droplist"
-                    android:textSize="16sp" />
-            </ViewSwitcher>
-
-            <dh.sunicon.UnitAutoCompleteView
-                android:id="@+id/baseUnitEditor"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:imeOptions="actionDone"
-                android:inputType="textNoSuggestions"
-                android:maxLength="27"
-                android:padding="5dp"
-                android:singleLine="true"
-                android:textColor="@android:color/primary_text_light"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-
-            <Button
-                android:id="@+id/clearBaseUnitButton"
-                style="@style/button_clear"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-        </TableRow>
-
-        <TableRow
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="5dp" >
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="5dp"
-                android:text="Convert to" />
+            android:layout_height="fill_parent"
+            android:layout_marginRight="5dp" >
 
             <EditText
-                android:id="@+id/targetUnitFilterEditor"
+                android:id="@+id/valueEditor"
                 android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:enabled="false"
-                android:inputType="textNoSuggestions|textFilter"
-                android:padding="5dp"
-                android:singleLine="true"
-                android:textSize="16sp" />
+                android:layout_height="fill_parent"
+                android:layout_margin="0dp"
+                android:imeOptions="actionDone"
+                android:inputType="numberDecimal"
+                android:padding="5dp" />
 
-            <Button
-                android:id="@+id/clearTargetUnitFilterButton"
-                style="@style/button_clear"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
-        </TableRow>
+            <Spinner
+                android:id="@+id/valueSpinner"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_margin="0dp"
+                android:background="@drawable/edittext_blue_colorstate"
+                android:padding="5dp"
+                android:popupBackground="@drawable/droplist" />
+        </ViewSwitcher>
+
+        <Button
+            android:id="@+id/baseUnitPickerButton"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/edittext_active"
+            android:hint="choose an unit"
+            android:maxLength="27"
+            android:padding="5dp"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textStyle="bold" />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp" >
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="5dp"
+            android:text="Convert to" />
+
+        <EditText
+            android:id="@+id/targetUnitFilterEditor"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:enabled="false"
+            android:imeOptions="actionDone"
+            android:inputType="textNoSuggestions|textFilter"
+            android:padding="5dp"
+            android:singleLine="true"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+        <Button
+            android:id="@+id/clearTargetUnitFilterButton"
+            style="@style/button_clear"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </TableRow>
+
+    <ViewSwitcher
+        android:id="@+id/resultListSwitcher"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_marginTop="10dp" >
 
         <ListView
             android:id="@android:id/list"
-            android:layout_marginTop="10dp"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
             android:animateLayoutChanges="true"
             android:choiceMode="singleChoice"
             android:drawSelectorOnTop="false"
             android:listSelector="@drawable/edittext_active" />
-    </TableLayout>
 
-<!-- </dh.sunicon.workaround.TabPatchView> -->
+        <ProgressBar
+            android:id="@+id/progressbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </ViewSwitcher>
+
+</TableLayout> <!-- </dh.sunicon.workaround.TabPatchView> -->

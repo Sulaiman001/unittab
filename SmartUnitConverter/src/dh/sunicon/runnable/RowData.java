@@ -5,6 +5,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.Future;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import dh.sunicon.ResultListAdapter;
@@ -35,8 +39,6 @@ public final class RowData implements Runnable
 	private Double baseValue_ = Double.NaN;
 	private double targetValue_ = Double.NaN;
 	private EnumValue targetEnumValue_ = null; 
-	private String targetValueText_ = "-";
-	
 	private Long baseValueEnumId_ = (long)-1;
 	
 	private Future<?> futureResult_; 
@@ -70,6 +72,55 @@ public final class RowData implements Runnable
 		setBaseValueEnum(baseValueEnumId);
 	}
 	
+	public RowData(ResultListAdapter resultListAdapter, JSONObject json) throws JSONException
+	{
+		this(resultListAdapter, 
+				json.getLong("categoryId"), 
+				json.getLong("baseUnitId"), 
+				json.getLong("targetUnitId"), 
+				json.getString("targetUnitName"), 
+				json.optString("targetUnitShortName")
+				);
+		if (json.has("baseValue")) {			
+			baseValue_ = json.getDouble("baseValue");
+		}
+		if (json.has("targetValue")) {
+			targetValue_ = json.getDouble("targetValue");
+		}
+		else {
+			targetValue_ = Double.NaN;
+		}
+		if (json.has("targetEnumValue")) {			
+			targetEnumValue_ = new EnumValue(resultListAdapter.getDbHelper(), json.getJSONObject("targetEnumValue"));
+		}
+		if (json.has("baseValueEnumId")) {
+			baseValueEnumId_ = json.getLong("baseValueEnumId");
+		}
+	}
+	
+	public JSONObject serialize() throws JSONException {
+		JSONObject json = new JSONObject();
+		
+		json.put("categoryId", categoryId_);
+		json.put("baseUnitId", baseUnitId_);
+		json.put("targetUnitId", targetUnitId_);
+		json.put("targetUnitName", targetUnitName_);
+		json.put("targetUnitShortName", targetUnitShortName_);
+		
+		if (baseValue_!=null && !baseValue_.isNaN()) {	
+			json.put("baseValue", baseValue_); //can be null
+		}
+		if (!Double.isNaN(targetValue_)) {
+			json.put("targetValue", targetValue_);
+		}
+		if (targetEnumValue_!=null) {
+			json.put("targetEnumValue", targetEnumValue_.serialize());
+		}
+		json.put("baseValueEnumId", baseValueEnumId_);
+		
+		return json;
+	}
+	
 	public long getUnitId()
 	{
 		return targetUnitId_;
@@ -93,11 +144,12 @@ public final class RowData implements Runnable
 	}
 	public String getValueHtmlized()
 	{
-		if (TextUtils.isEmpty(targetValueText_))
+		if (targetEnumValue_ != null)
 		{
-			return "-";
+			return targetEnumValue_.toString();
 		}
-		return targetValueText_;
+		
+		return formatDouble(targetValue_);
 	}
 	
 	public String getValueToCopy()
@@ -165,9 +217,9 @@ public final class RowData implements Runnable
 	 */
 	public void setBaseValue(double baseValue)
 	{
-		if (baseValue_.equals(baseValue) && !TextUtils.isEmpty(targetValueText_))
+		if (baseValue_.equals(baseValue) && !Double.isNaN(targetValue_))
 		{
-			//no need to invoke calculation, the old value_ is just right 
+			//no need to invoke calculation, the current targetValue_ is just right 
 			return;
 		}
 		
@@ -208,7 +260,7 @@ public final class RowData implements Runnable
 		
 		if (futureResult_!=null)
 		{
-			Log.d(TAG, "Cancel old base value");
+			Log.v(TAG, "Cancel old base value");
 			//cancel old calculation
 			futureResult_.cancel(true);
 			resultListAdapter_.unregisterCalculationFromWatingPool(futureResult_);
@@ -223,7 +275,6 @@ public final class RowData implements Runnable
 	{
 		targetValue_ = Double.NaN;
 		targetEnumValue_ = null;
-		targetValueText_ = null;
 	}
 	
 	/**
@@ -243,7 +294,7 @@ public final class RowData implements Runnable
 	{
 		try
 		{
-			if (baseValueEnumId_ < 0) //normal case: km/h..
+			//if (baseValueEnumId_ < 0) //normal case: km/h..
 			{
 				/* copy the current baseValue_ to original Value */
 				double originalValue;
@@ -271,21 +322,18 @@ public final class RowData implements Runnable
 					//MainActivity.simulateLongOperation(1, 4);
 				}
 				
-				String resuStr = formatDouble(resu);
-				
 				synchronized (baseValue_)
 				{
 					if (baseValue_.equals(originalValue)) //baseValue_ has not been changed during the calculation process
 					{
 						targetValue_ = resu;
-						targetValueText_ = resuStr;
-						targetEnumValue_ = null;
 						//invokeRefreshGui();
 					}
 					//else, a newer setBaseValue() was called, we must ignore the resu 
 				}
 			}
-			else //enum unit: clothing size..
+			//else //enum unit: clothing size..
+			if (baseValueEnumId_ >= 0)
 			{
 				long originalValueEnumId;
 				
@@ -301,15 +349,6 @@ public final class RowData implements Runnable
 					if (baseValueEnumId_.equals(originalValueEnumId)) //baseValue_ has not been changed during the calculation process
 					{
 						targetEnumValue_ = resu;
-						if (resu!=null)
-						{
-							targetValueText_ = resu.getValue();
-						}
-						else
-						{
-							targetValueText_ = "-";
-						}
-						//invokeRefreshGui();
 					}
 					//else, a newer setBaseValueEnum() was called, we must ignore the resu 
 				}
@@ -358,8 +397,6 @@ public final class RowData implements Runnable
 			Log.w(TAG, String.format("Cancel convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d. Because correspondings or enumValues tables is null", baseValueEnumId, baseUnitId, targetUnitId));
 		}
 		
-		Log.d(TAG, String.format("Start convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d", baseValueEnumId, baseUnitId, targetUnitId));
-
 		int correspondingsCount = correspondings.size();
 		
 		/* use BFS to find path from baseValueEnumId to one of enumValue of the targetUnitId on the correspondings graph */
@@ -378,6 +415,7 @@ public final class RowData implements Runnable
 			EnumValue visitingEnumValueObj = enumValues.get(visitingEnumValue);
 			if (visitingEnumValueObj != null && visitingEnumValueObj.getUnitId() == targetUnitId)
 			{
+				Log.v(TAG, String.format("Convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d, found enumId = %d", baseValueEnumId, baseUnitId, targetUnitId, visitingEnumValueObj.getId()));
 				return visitingEnumValueObj;
 			}
 			
@@ -397,6 +435,7 @@ public final class RowData implements Runnable
 			}
 		}
 			
+		Log.v(TAG, String.format("Convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d, NO RESU", baseValueEnumId, baseUnitId, targetUnitId));
 		return null;
 	}
 	
@@ -430,7 +469,7 @@ public final class RowData implements Runnable
 			return Double.NaN;
 		}
 		
-		Log.d(TAG, String.format("Start convert %f from baseUnitId=%d to targetUnitId=%d", baseValue, baseUnitId, targetUnitId));
+		Log.v(TAG, String.format("Start convert %f from baseUnitId=%d to targetUnitId=%d", baseValue, baseUnitId, targetUnitId));
 		
 		int conversionsCount = conversions.size();
 		
@@ -560,5 +599,6 @@ public final class RowData implements Runnable
 		
 		return resu.toString();
 	}
+	
 	
 }

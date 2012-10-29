@@ -13,10 +13,26 @@ public class ExplorerFragment extends Fragment
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
 			Bundle savedInstanceState)
 	{
-		if (container == null) 
+		if (container == null)
 		{
 			return null;
 		}
 		return (LinearLayout)inflater.inflate(R.layout.sunicon_explorer, container, false);
 	}
+	
+	@Override
+	public void onActivityCreated(Bundle savedInstanceState)
+	{
+		super.onActivityCreated(savedInstanceState);
+		setRetainInstance(true);
+	}
+	
+	@Override
+	public void onStart()
+	{
+		super.onStart();
+
+		//getListView().setAdapter(arr);
+	}
+	
 }

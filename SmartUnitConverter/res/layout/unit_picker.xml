@@ -1,0 +1,29 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_marginLeft="5dip"
+    android:layout_marginRight="5dip"
+    android:orientation="vertical" >
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Enter (part of) category name and/or (part of) unit name"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <EditText
+        android:id="@+id/filterEdit"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="eg: &apos;lit fuel&apos;..."
+        android:imeOptions="actionDone"
+        android:inputType="textNoSuggestions|textFilter" />
+
+    <ListView
+        android:id="@android:id/list"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" >
+    </ListView>
+
+</LinearLayout>
