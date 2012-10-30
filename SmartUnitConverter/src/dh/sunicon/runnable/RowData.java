@@ -8,7 +8,6 @@ import java.util.concurrent.Future;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.text.Html;
 import android.text.TextUtils;
 import android.util.Log;
 import dh.sunicon.ResultListAdapter;

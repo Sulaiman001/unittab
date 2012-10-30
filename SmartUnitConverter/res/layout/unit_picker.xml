@@ -16,7 +16,7 @@
         android:id="@+id/filterEdit"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:hint="eg: &apos;lit fuel&apos;..."
+        android:hint="eg: &apos;lit fuel&apos; or &apos;dista km&apos;..."
         android:imeOptions="actionDone"
         android:padding="5dp"
         android:inputType="textNoSuggestions|textFilter" />

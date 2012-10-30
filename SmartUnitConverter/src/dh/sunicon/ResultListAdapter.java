@@ -317,11 +317,11 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 //					filter_.clearAllTargetValues();
 //				}
 //				
-//				if (data_ == null || data_.size() == 0)
-//				{
-//					Log.d(TAG, "RowData list is empty");
-//					return;
-//				}
+				if (data_ == null || data_.size() == 0)
+				{
+					Log.d(TAG, "RowData list is empty");
+					return;
+				}
 //				
 //				int count = data_.size();
 //				
