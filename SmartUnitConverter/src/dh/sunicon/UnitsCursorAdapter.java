@@ -48,9 +48,9 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 			" AND (lower(unitName) LIKE ? OR  lower(unitShortName) LIKE ? OR lower(categoryName) LIKE ?)";
 	
 	/**
-	 * Cursor contains 60 rows max 
+	 * Cursor contains 200 rows max 
 	 */
-	static final String LIMIT_ORDER_QUERY_PART = " ORDER BY unitName, unitShortName LIMIT 100";
+	static final String LIMIT_ORDER_QUERY_PART = " ORDER BY unitName, unitShortName LIMIT 200";
 	
 	private final LayoutInflater inflater_;
 	private final DatabaseHelper dbHelper_;
