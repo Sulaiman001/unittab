@@ -19,6 +19,7 @@
         </activity>
         <activity
             android:name=".UnitPicker"
+            android:windowSoftInputMode="stateVisible"
             android:label="@string/title_activity_unit_picker">
             <!--  android:theme="@style/NoTitleDialog"  -->  
         </activity>

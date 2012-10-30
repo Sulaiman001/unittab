@@ -41,7 +41,7 @@ public class EnumValue extends BaseEntity
 		
 		json.put("id", getId());
 		json.put("unitId", unitId_);
-		json.put("value_", value_);
+		json.put("value", value_);
 		
 		return json;
 	}

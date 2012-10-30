@@ -264,7 +264,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			
 			Log.d(TAG, String.format("setBaseUnit category = %d baseUnit = %d", categoryId, baseUnitId));
 		
-			((ConverterFragment)owner_).setResultListVisible(false);
+			((ConverterFragment)owner_).setComputationStateFinished(false);
 			
 			categoryId_ = categoryId;
 			baseUnitId_ = baseUnitId;
@@ -311,25 +311,27 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				baseValue_ = baseValue;
 				baseValueEnumId_ = baseValueEnumId;
 				
-				/* set all the value to "-" */
-				if (filter_!=null)
-				{
-					filter_.clearAllTargetValues();
-				}
-				
-				if (data_ == null || data_.size() == 0)
-				{
-					Log.d(TAG, "RowData list is empty");
-					return;
-				}
+//				/* set all the value to "-" */
+//				if (filter_!=null)
+//				{
+//					filter_.clearAllTargetValues();
+//				}
+//				
+//				if (data_ == null || data_.size() == 0)
+//				{
+//					Log.d(TAG, "RowData list is empty");
+//					return;
+//				}
+//				
+//				int count = data_.size();
+//				
+//				for (int i = 0; i<count; i++)
+//				{
+//					data_.get(i).clearTargetValue();
+//				}
+//				notifyDataSetChanged();
 				
 				int count = data_.size();
-				
-				for (int i = 0; i<count; i++)
-				{
-					data_.get(i).clearTargetValue();
-				}
-				notifyDataSetChanged();
 				
 				/* calculate all value */
 				
@@ -364,7 +366,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 								try
 								{
 									notifyDataSetChanged();
-									((ConverterFragment)owner_).setResultListVisible(true);
+									((ConverterFragment)owner_).setComputationStateFinished(true);
 								}
 								catch (Exception ex)
 								{
@@ -378,7 +380,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			else
 			{
 				Log.w(TAG, "Ignore calculation because the baseValue has not been changed");
-				((ConverterFragment)owner_).setResultListVisible(true);
+				((ConverterFragment)owner_).setComputationStateFinished(true);
 			}
 			
 		}
@@ -587,7 +589,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 					notifyDataSetChanged();
 					ResultListAdapter.this.setBaseValue(baseValue_, baseValueEnumId_); //redo the calculation
 				}
-				((ConverterFragment)owner_).setResultListVisible(true);
+				((ConverterFragment)owner_).setComputationStateFinished(true);
 			}
 			catch (Exception e)
 			{
@@ -786,18 +788,18 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			}
 		}
 		
-		public void clearAllTargetValues()
-		{
-			if (fullData_ == null)
-			{
-				return;
-			}
-			int count = fullData_.size();
-			for (int i = 0; i<count; i++)
-			{
-				fullData_.get(i).clearTargetValue();
-			}
-		}
+//		public void clearAllTargetValues()
+//		{
+//			if (fullData_ == null)
+//			{
+//				return;
+//			}
+//			int count = fullData_.size();
+//			for (int i = 0; i<count; i++)
+//			{
+//				fullData_.get(i).clearTargetValue();
+//			}
+//		}
 		
 		/**
 		 * Must be called each time the result list (data_) is re-populate

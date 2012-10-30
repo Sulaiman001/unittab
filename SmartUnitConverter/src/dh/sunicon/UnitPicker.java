@@ -79,8 +79,8 @@ public class UnitPicker extends ListActivity {
 	@Override
 	protected void onResume() {
 		super.onResume();
-		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-		imm.showSoftInput(filterEdit_, InputMethodManager.SHOW_IMPLICIT);
+//		InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+//		imm.showSoftInput(filterEdit_, InputMethodManager.SHOW_IMPLICIT);
 		
 		filterEdit_.requestFocus();
 	}

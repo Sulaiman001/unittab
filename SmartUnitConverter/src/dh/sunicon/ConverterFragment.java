@@ -17,6 +17,9 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
+import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.Loader;
+import android.support.v4.widget.CursorAdapter;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -40,10 +43,13 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ViewSwitcher;
+
+import com.commonsware.cwac.loaderex.acl.SQLiteCursorLoader;
+
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.runnable.RowData;
 
-public class ConverterFragment extends ListFragment 
+public class ConverterFragment extends ListFragment implements LoaderCallbacks<Cursor>
 {
 	static final String TAG = ConverterFragment.class.getName();
 	private DatabaseHelper dbHelper_;
@@ -59,12 +65,13 @@ public class ConverterFragment extends ListFragment
 
 	private ResultListAdapter resultListAdapter_;
 	private SimpleCursorAdapter baseValueSpinnerAdapter_;
+	private int spinnerPositionToRestore_ = -1;
 	
 	private long baseUnitId_ = -1;
 	private long categoryId_ = -1;
 	
 	private UnitHistoryManager unitHistory_;
-	private CountDownLatch spinnerLoadingLatch_;
+	//private CountDownLatch spinnerLoadingLatch_;
 	
 	private boolean isActivityRunning_ = false;
 	
@@ -134,6 +141,7 @@ public class ConverterFragment extends ListFragment
 //		super.onResume();
 //	}
 
+	/* this methode init the loader so it should be called in onActivityCreated */
 	private void restoreFromPreferences() {
 		Log.i(TAG + "-SR", "Restore State from Preference");
 		SharedPreferences preferences = this.getActivity().getPreferences(Activity.MODE_PRIVATE);
@@ -156,7 +164,10 @@ public class ConverterFragment extends ListFragment
 			baseValueEditor_.setText(baseValue);
 			setBaseValue(baseValue);
 			
-			setBaseValueSpinnerSelection(preferences.getInt("spinnerPos", -1));
+			//restore baseValueSpinnerItemPosition
+			spinnerPositionToRestore_ = preferences.getInt("spinnerPos", -1);
+			getLoaderManager().initLoader(0, null, this); //should be called in onActivityCreated
+			//setBaseValueSpinnerSelection(preferences.getInt("spinnerPos", -1));
 		}
 		catch (Exception ex)
 		{
@@ -164,6 +175,7 @@ public class ConverterFragment extends ListFragment
 		}
 	}
 	
+	/* this methode init the loader so it should be called in onActivityCreated */
 	private void restoreFromBundles(Bundle savedState) {
 		suspendEvents();
 		try
@@ -178,9 +190,11 @@ public class ConverterFragment extends ListFragment
 			targetUnitFilterEditor_.setEnabled(savedState.getBoolean("targetUnitFilterEditorEnable"));
 			clearTargetUnitFilterButton_.setEnabled(savedState.getBoolean("targetUnitFilterEditorEnable"));
 			
-			//TODO restore baseValueSpinnerItemPosition
-			baseValueSpinnerAdapter_.getFilter().filter(Long.toString(baseUnitId_));
-			setBaseValueSpinnerSelection(savedState.getInt("baseValueSpinnerItemPosition"));
+			//restore baseValueSpinnerItemPosition
+			spinnerPositionToRestore_ = savedState.getInt("baseValueSpinnerItemPosition");
+			getLoaderManager().initLoader(0, null, this); //should be called in onActivityCreated
+//			baseValueSpinnerAdapter_.getFilter().filter(Long.toString(baseUnitId_));
+//			setBaseValueSpinnerSelection(savedState.getInt("baseValueSpinnerItemPosition"));
 			if (savedState.getBoolean("spinnerVisible") && baseValueSwitcher_.getNextView() == baseValueSpinner_)
 			{
 				baseValueSwitcher_.showNext();
@@ -278,7 +292,7 @@ public class ConverterFragment extends ListFragment
 						return;
 					}
 										
-					setResultListVisible(false); //hide the list while waiting and perform calculation
+					setComputationStateFinished(false); //hide the list while waiting and perform calculation
 					
 					/* events absorber technique */
 					
@@ -349,89 +363,89 @@ public class ConverterFragment extends ListFragment
 				new int[]{R.id.spinnerLabelItem}, 
 				0);
 		baseValueSpinner_.setAdapter(baseValueSpinnerAdapter_);
-		baseValueSpinnerAdapter_.setFilterQueryProvider(new FilterQueryProvider()
-		{
-			/**
-			 * constraint must be the unitId, this function will return the cursor of the enumValues of a unit 
-			 */
-			@Override
-			public Cursor runQuery(CharSequence unitIdStr)
-			{
-				spinnerLoadingLatch_ = new CountDownLatch(1);
-				try
-				{
-					if (TextUtils.isEmpty(unitIdStr))
-					{
-						return null;
-					}
-					
-					Cursor cur = dbHelper_.getReadableDatabase().
-							query("enumvalue", new String[]{"id as _id", "value as v"}, 
-								"unitid=?", 
-								new String[] {unitIdStr.toString()}, 
-								null, null, "value");
-
-					//simulateLongOperation(3, 5);
-					
-					/* switch the baseValueEditor to spinner or normal editor*/
-					if (cur.getCount()>0)
-					{
-						//switch to the spinner
-						getActivity().runOnUiThread(new Runnable()
-						{
-							@Override
-							public void run()
-							{
-								try
-								{
-									if (baseValueSwitcher_.getNextView() == baseValueSpinner_)
-									{
-										baseValueSwitcher_.showNext();
-									}
-								}
-								catch (Exception ex)
-								{
-									Log.w(TAG, ex);
-								}
-							}
-						});
-					}
-					else
-					{
-						//switch to the editor
-						getActivity().runOnUiThread(new Runnable()
-						{
-							@Override
-							public void run()
-							{
-								try
-								{
-									if (baseValueSwitcher_.getNextView() == baseValueEditor_)
-									{
-										baseValueSwitcher_.showNext();
-									}
-								}
-								catch (Exception ex)
-								{
-									Log.w(TAG, ex);
-								}
-							}
-						});
-					}
-					
-					return cur;
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-					return null;
-				}
-				finally
-				{
-					spinnerLoadingLatch_.countDown();
-				}
-			}
-		});
+//		baseValueSpinnerAdapter_.setFilterQueryProvider(new FilterQueryProvider()
+//		{
+//			/**
+//			 * constraint must be the unitId, this function will return the cursor of the enumValues of a unit 
+//			 */
+//			@Override
+//			public Cursor runQuery(CharSequence unitIdStr)
+//			{
+//				spinnerLoadingLatch_ = new CountDownLatch(1);
+//				try
+//				{
+//					if (TextUtils.isEmpty(unitIdStr))
+//					{
+//						return null;
+//					}
+//					
+//					Cursor cur = dbHelper_.getReadableDatabase().
+//							query("enumvalue", new String[]{"id as _id", "value as v"}, 
+//								"unitid=?", 
+//								new String[] {unitIdStr.toString()}, 
+//								null, null, "value");
+//
+//					//simulateLongOperation(3, 5);
+//					
+//					/* switch the baseValueEditor to spinner or normal editor*/
+//					if (cur.getCount()>0)
+//					{
+//						//switch to the spinner
+//						getActivity().runOnUiThread(new Runnable()
+//						{
+//							@Override
+//							public void run()
+//							{
+//								try
+//								{
+//									if (baseValueSwitcher_.getNextView() == baseValueSpinner_)
+//									{
+//										baseValueSwitcher_.showNext();
+//									}
+//								}
+//								catch (Exception ex)
+//								{
+//									Log.w(TAG, ex);
+//								}
+//							}
+//						});
+//					}
+//					else
+//					{
+//						//switch to the editor
+//						getActivity().runOnUiThread(new Runnable()
+//						{
+//							@Override
+//							public void run()
+//							{
+//								try
+//								{
+//									if (baseValueSwitcher_.getNextView() == baseValueEditor_)
+//									{
+//										baseValueSwitcher_.showNext();
+//									}
+//								}
+//								catch (Exception ex)
+//								{
+//									Log.w(TAG, ex);
+//								}
+//							}
+//						});
+//					}
+//					
+//					return cur;
+//				}
+//				catch (Exception ex)
+//				{
+//					Log.w(TAG, ex);
+//					return null;
+//				}
+//				finally
+//				{
+//					spinnerLoadingLatch_.countDown();
+//				}
+//			}
+//		});
 		
 		
 		baseValueSpinner_.setOnItemSelectedListener(new OnItemSelectedListener()
@@ -451,7 +465,7 @@ public class ConverterFragment extends ListFragment
 						return;
 					}
 					
-					Log.d(TAG, "spinner changes position = "+position);
+					//Log.d(TAG, "spinner changes position = "+position);
 					getResultListAdapter().setBaseValue(Double.NaN, id);
 				}
 				catch (Exception ex)
@@ -672,7 +686,7 @@ public class ConverterFragment extends ListFragment
 		
 		Log.d(TAG, "setBaseUnit("+categoryName+","+unitName+")");
 		
-		setResultListVisible(false);
+		setComputationStateFinished(false);
 		
 		categoryLabel_.setVisibility(View.VISIBLE);
 		if (categoryName != null)
@@ -689,7 +703,8 @@ public class ConverterFragment extends ListFragment
 		unitHistory_.invokeSaveToHistory(unitId);
 		
 		Log.d(TAG, "setBaseUnit.filterSpinner");
-		baseValueSpinnerAdapter_.getFilter().filter(Long.toString(unitId));
+		//baseValueSpinnerAdapter_.getFilter().filter(Long.toString(unitId));
+		getLoaderManager().restartLoader(0, null, this);
 		if (unitName != null)
 		{
 			baseUnitPickerButton_.setText(unitName);
@@ -717,57 +732,57 @@ public class ConverterFragment extends ListFragment
 		}
 	}
 	
-	/**
-	 * wait the spinner finish loading
-	 * @param position
-	 * @throws InterruptedException 
-	 */
-	private void setBaseValueSpinnerSelection(final int position) throws InterruptedException
-	{
-		if (!isActivityRunning_)
-		{
-			return;
-		}
-		Thread.sleep(500); //make sure that the spinner is populating
-		
-		if (spinnerLoadingLatch_!= null) 
-		{
-			//the spinner is not finish populating
-			
-			ExecutorService waitingThread = Executors.newSingleThreadExecutor();
-			waitingThread.execute(new Runnable()
-			{
-				@Override
-				public void run()
-				{
-					try
-					{
-						spinnerLoadingLatch_.await(5, TimeUnit.SECONDS);
-					}
-					catch (InterruptedException e)
-					{
-						Log.w(TAG, e);
-					}
-					if (ConverterFragment.this.getActivity() == null)
-					{
-						return;
-					}
-					ConverterFragment.this.getActivity().runOnUiThread(new Runnable()
-					{
-						@Override
-						public void run()
-						{
-							baseValueSpinner_.setSelection(position);
-						}
-					});
-				}
-			});
-		}
-		else
-		{
-			baseValueSpinner_.setSelection(position);
-		}
-	}
+//	/**
+//	 * wait the spinner finish loading
+//	 * @param position
+//	 * @throws InterruptedException 
+//	 */
+//	private void setBaseValueSpinnerSelection(final int position) throws InterruptedException
+//	{
+//		if (!isActivityRunning_)
+//		{
+//			return;
+//		}
+//		Thread.sleep(500); //make sure that the spinner is populating
+//		
+//		if (spinnerLoadingLatch_!= null) 
+//		{
+//			//the spinner is not finish populating
+//			
+//			ExecutorService waitingThread = Executors.newSingleThreadExecutor();
+//			waitingThread.execute(new Runnable()
+//			{
+//				@Override
+//				public void run()
+//				{
+//					try
+//					{
+//						spinnerLoadingLatch_.await(5, TimeUnit.SECONDS);
+//					}
+//					catch (InterruptedException e)
+//					{
+//						Log.w(TAG, e);
+//					}
+//					if (ConverterFragment.this.getActivity() == null)
+//					{
+//						return;
+//					}
+//					ConverterFragment.this.getActivity().runOnUiThread(new Runnable()
+//					{
+//						@Override
+//						public void run()
+//						{
+//							baseValueSpinner_.setSelection(position);
+//						}
+//					});
+//				}
+//			});
+//		}
+//		else
+//		{
+//			baseValueSpinner_.setSelection(position);
+//		}
+//	}
 	
 	private void setBaseValue(CharSequence s) throws IllegalAccessException
 	{
@@ -846,20 +861,23 @@ public class ConverterFragment extends ListFragment
 		eventsSuspendingLevel--;
 	}
 	
-	public void setResultListVisible(boolean visible)
+	public void setComputationStateFinished(boolean finished)
 	{
 		if (resultListSwitcher_!=null)
 		{
-			if (visible != (resultListSwitcher_.getCurrentView() == getListView()))
+			if (finished)
 			{
-				if (visible)
+				Log.d(TAG, "switch to result list");
+				if (resultListSwitcher_.getNextView() == getListView())
 				{
-					Log.d(TAG, "switch to result list");
-					resultListSwitcher_.showPrevious();
+					resultListSwitcher_.showNext();
 				}
-				else
+			}
+			else
+			{
+				Log.d(TAG, "switch to progress bar");
+				if (resultListSwitcher_.getNextView() != getListView())
 				{
-					Log.d(TAG, "switch to progress bar");
 					resultListSwitcher_.showNext();
 				}
 			}
@@ -870,6 +888,57 @@ public class ConverterFragment extends ListFragment
 	public ResultListAdapter getResultListAdapter()
 	{
 		return resultListAdapter_;
+	}
+
+	@Override
+	public Loader<Cursor> onCreateLoader(int loaderId, Bundle args)
+	{
+		Log.d(TAG + "-Loader", "onCreateLoader baseUnitId="+baseUnitId_);
+		
+		Loader<Cursor> loader=
+		    new SQLiteCursorLoader(this.getActivity(), dbHelper_, 
+		    		"SELECT id as _id, value as v "
+		        + "FROM enumvalue WHERE unitid=?", new String[] {Long.toString(baseUnitId_)});
+		
+		return loader;
+	}
+
+	@Override
+	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor)
+	{
+		baseValueSpinnerAdapter_.changeCursor(cursor);
+		if (cursor.getCount()>0)
+	    {
+			Log.d(TAG + "-Loader", "onLoadFinished set switch to spinner & restore position="+spinnerPositionToRestore_);
+
+			//switch to the spinner
+			if (baseValueSwitcher_.getNextView() == baseValueSpinner_)
+			{
+				baseValueSwitcher_.showNext();
+			}
+			
+			//restore position if needed
+			if (spinnerPositionToRestore_>=0) {
+		    	baseValueSpinner_.setSelection(spinnerPositionToRestore_);
+		    	spinnerPositionToRestore_ = -1;
+		    }
+	    }
+		else
+		{
+			Log.d(TAG + "-Loader", "onLoadFinished set switch to editor");
+			
+			//switch to the editor
+			if (baseValueSwitcher_.getNextView() == baseValueEditor_)
+			{
+				baseValueSwitcher_.showNext();
+			}
+		}
+	}
+
+	@Override
+	public void onLoaderReset(Loader<Cursor> loader)
+	{
+		baseValueSpinnerAdapter_.changeCursor(null);
 	}
 	
 }

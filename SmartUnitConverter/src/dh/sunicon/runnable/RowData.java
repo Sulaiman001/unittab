@@ -217,7 +217,7 @@ public final class RowData implements Runnable
 	 */
 	public void setBaseValue(double baseValue)
 	{
-		if (baseValue_.equals(baseValue) && !Double.isNaN(targetValue_))
+		if (baseValue_!=null && baseValue_.equals(baseValue) && !Double.isNaN(targetValue_))
 		{
 			//no need to invoke calculation, the current targetValue_ is just right 
 			return;
@@ -226,8 +226,7 @@ public final class RowData implements Runnable
 		synchronized (baseValue_)
 		{
 			baseValue_ = baseValue;
-			baseValueEnumId_ = (long) -1;
-			clearTargetValue();
+			targetValue_ = Double.NaN;
 		}
 		
 		invokeCalculation();
@@ -237,15 +236,14 @@ public final class RowData implements Runnable
 	{
 		if (baseValueEnumId_ == enumId && targetEnumValue_ != null)
 		{
-			//no need to invoke calculation, the old value_ is just right 
+			//no need to invoke calculation, the current targetEnumValue_ is just right 
 			return;
 		}
 		
 		synchronized (baseValueEnumId_)
 		{
-			baseValue_ = Double.NaN;
 			baseValueEnumId_ = enumId;
-			clearTargetValue();
+			targetEnumValue_ = null;
 		}
 		
 		invokeCalculation();
@@ -271,12 +269,6 @@ public final class RowData implements Runnable
 		resultListAdapter_.registerCalculationToWatingPool(futureResult_);
 	}
 	
-	public void clearTargetValue()
-	{
-		targetValue_ = Double.NaN;
-		targetEnumValue_ = null;
-	}
-	
 	/**
 	 * Add more security layer to make sure that the calculation will stop, it shoud be called before we dump this RowData
 	 * Once this methode is called, this object row data cannot be re-used to perform calculation
@@ -294,7 +286,7 @@ public final class RowData implements Runnable
 	{
 		try
 		{
-			//if (baseValueEnumId_ < 0) //normal case: km/h..
+			if (baseValue_ != null && !baseValue_.isNaN()) //normal case: km/h..
 			{
 				/* copy the current baseValue_ to original Value */
 				double originalValue;
