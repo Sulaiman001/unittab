@@ -1,14 +1,13 @@
 package dh.sunicon;
 
 import android.app.ListActivity;
-import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.EditText;
@@ -16,7 +15,8 @@ import dh.sunicon.UnitsCursorAdapter.SuggestionData;
 import dh.sunicon.datamodel.DatabaseHelper;
 
 public class UnitPicker extends ListActivity {
-
+	private static final String TAG = UnitPicker.class.toString();
+	
 	private EditText filterEdit_;
 	private UnitsCursorAdapter unitCursorAdapter_;
 	private DatabaseHelper dbHelper_;
@@ -84,5 +84,19 @@ public class UnitPicker extends ListActivity {
 		
 		filterEdit_.requestFocus();
 	}
+	
+	@Override
+    protected void onDestroy()
+    {
+    	super.onDestroy();
+    	try
+    	{
+    		dbHelper_.close();
+    	}
+    	catch (Exception ex)
+    	{
+    		Log.w(TAG, ex);
+    	}
+    }
 }
 

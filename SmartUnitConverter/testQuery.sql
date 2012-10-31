@@ -1,3 +1,22 @@
+
+select categoryId, count(id) as c from unit 
+group by categoryid
+having c<2
+;
+
+
+
+select * from category where id = 11;
+
+
+update "category" set "enabled"="0" where "id"="11";
+
+
+
+select * from unit 
+order by lower(name) asc;
+
+
 728 1208 1210
 
 ;

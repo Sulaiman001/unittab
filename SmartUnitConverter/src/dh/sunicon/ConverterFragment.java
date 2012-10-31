@@ -46,12 +46,14 @@ import dh.sunicon.runnable.RowData;
 public class ConverterFragment extends ListFragment implements LoaderCallbacks<Cursor>
 {
 	static final String TAG = ConverterFragment.class.getName();
+	static final int VALUE_SPINNER_LOADER = 0;
 	private DatabaseHelper dbHelper_;
 	private TextView categoryLabel_;
 	private ViewSwitcher baseValueSwitcher_;
 	private EditText baseValueEditor_;
 	private Spinner baseValueSpinner_;
 	private Button baseUnitPickerButton_;
+	private Button baseUnitPicker2Button_;
 	private EditText targetUnitFilterEditor_;
 	private Button clearTargetUnitFilterButton_;
 	private ViewSwitcher resultListSwitcher_;
@@ -107,6 +109,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			}
 			
 			initBaseUnitPickerButton();
+			initBaseUnitPicker2Button();
 			initBaseValueEditor();
 			initBaseValueSpinner();
 			initTargetUnitFilterEditor();
@@ -160,7 +163,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			
 			//restore baseValueSpinnerItemPosition
 			spinnerPositionToRestore_ = preferences.getInt("spinnerPos", -1);
-			getLoaderManager().initLoader(0, null, this); //should be called in onActivityCreated
+			getLoaderManager().initLoader(VALUE_SPINNER_LOADER, null, this); //should be called in onActivityCreated
 			//setBaseValueSpinnerSelection(preferences.getInt("spinnerPos", -1));
 		}
 		catch (Exception ex)
@@ -186,7 +189,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			
 			//restore baseValueSpinnerItemPosition
 			spinnerPositionToRestore_ = savedState.getInt("baseValueSpinnerItemPosition");
-			getLoaderManager().initLoader(0, null, this); //should be called in onActivityCreated
+			getLoaderManager().initLoader(VALUE_SPINNER_LOADER, null, this); //should be called in onActivityCreated
 //			baseValueSpinnerAdapter_.getFilter().filter(Long.toString(baseUnitId_));
 //			setBaseValueSpinnerSelection(savedState.getInt("baseValueSpinnerItemPosition"));
 			if (savedState.getBoolean("spinnerVisible") && baseValueSwitcher_.getNextView() == baseValueSpinner_)
@@ -507,6 +510,21 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		});
 	}
 
+	private void initBaseUnitPicker2Button()
+	{
+		baseUnitPicker2Button_ = (Button)this.getView().findViewById(R.id.baseUnitPicker2Button);
+		baseUnitPicker2Button_.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent i = new Intent(ConverterFragment.this.getActivity(), UnitPicker2.class);
+				i.putExtra("categoryId", categoryId_);
+				i.putExtra("categoryName", categoryLabel_.getText());
+				ConverterFragment.this.getActivity().startActivityForResult(i, UNIT_PICKER_REQUEST);
+			}
+		});
+	}
+	
+	
 	private void initTargetUnitFilterEditor()
 	{
 		targetUnitFilterEditor_ = (EditText)this.getView().findViewById(R.id.targetUnitFilterEditor);
@@ -698,7 +716,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		
 		Log.d(TAG, "setBaseUnit.filterSpinner");
 		//baseValueSpinnerAdapter_.getFilter().filter(Long.toString(unitId));
-		getLoaderManager().restartLoader(0, null, this);
+		getLoaderManager().restartLoader(VALUE_SPINNER_LOADER, null, this);
 		if (unitName != null)
 		{
 			baseUnitPickerButton_.setText(unitName);
@@ -887,7 +905,13 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	@Override
 	public Loader<Cursor> onCreateLoader(int loaderId, Bundle args)
 	{
-		Log.d(TAG + "-Loader", "onCreateLoader baseUnitId="+baseUnitId_);
+		if (loaderId != VALUE_SPINNER_LOADER)
+		{
+			Log.w(TAG, "LoaderId not match VALUE_SPINNER_LOADER");
+			return null;
+		}
+		
+		Log.v(TAG + "-Loader", "onCreateLoader baseUnitId="+baseUnitId_);
 		
 		Loader<Cursor> loader=
 		    new SQLiteCursorLoader(this.getActivity(), dbHelper_, 
@@ -903,7 +927,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		baseValueSpinnerAdapter_.changeCursor(cursor);
 		if (cursor.getCount()>0)
 	    {
-			Log.d(TAG + "-Loader", "onLoadFinished set switch to spinner & restore position="+spinnerPositionToRestore_);
+			Log.v(TAG + "-Loader", "onLoadFinished set switch to spinner & restore position="+spinnerPositionToRestore_);
 
 			//switch to the spinner
 			if (baseValueSwitcher_.getNextView() == baseValueSpinner_)
@@ -919,7 +943,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	    }
 		else
 		{
-			Log.d(TAG + "-Loader", "onLoadFinished set switch to editor");
+			Log.v(TAG + "-Loader", "onLoadFinished set switch to editor");
 			
 			//switch to the editor
 			if (baseValueSwitcher_.getNextView() == baseValueEditor_)

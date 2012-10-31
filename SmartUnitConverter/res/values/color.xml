@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="category_fg">#258AAF</color>
+    <color name="light_gray">#DDDDDD</color>
+    <color name="light_red">#FFDDDD</color>
+</resources>

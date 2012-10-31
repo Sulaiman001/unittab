@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="dh.sunicon"
-    android:versionCode="2"
-    android:versionName="1.0.1" >
+    android:versionCode="3"
+    android:versionName="1.1.0" >
 
     <uses-sdk
         android:minSdkVersion="9"
@@ -19,9 +19,20 @@
         </activity>
         <activity
             android:name=".UnitPicker"
-            android:windowSoftInputMode="stateVisible"
-            android:label="@string/title_activity_unit_picker">
-            <!--  android:theme="@style/NoTitleDialog"  -->  
+            android:label="@string/title_activity_unit_picker"
+            android:windowSoftInputMode="stateVisible" >
+			<meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="dh.sunicon.MainActivity" />
+            <!-- android:theme="@style/NoTitleDialog" -->
+        </activity>
+        <activity
+            android:name=".UnitPicker2"
+            android:label="@string/title_activity_unit_picker2" 
+            android:windowSoftInputMode="stateHidden">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="dh.sunicon.MainActivity" />
         </activity>
     </application>
 

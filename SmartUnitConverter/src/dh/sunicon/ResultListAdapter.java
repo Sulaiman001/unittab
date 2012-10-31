@@ -289,6 +289,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			}
 			fillDataTask_ = new FillDataTask();
 			fillDataTask_.execute(categoryId_, baseUnitId_);
+			
+			invokeGuiUpdateAfterCalculation();
 		}
 		else
 		{
@@ -348,35 +350,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 					}
 				}
 				
-				/* wait the calculations finished then update the list View */
-				awaitCalculationThread_.execute(new Runnable()
-				{
-					@Override
-					public void run()
-					{
-						awaitCalculation();
-						if (owner_.getActivity() == null)
-						{
-							return;
-						}
-						owner_.getActivity().runOnUiThread(new Runnable()
-						{
-							@Override
-							public void run()
-							{
-								try
-								{
-									notifyDataSetChanged();
-									((ConverterFragment)owner_).setComputationStateFinished(true);
-								}
-								catch (Exception ex)
-								{
-									Log.w(TAG, ex);
-								}
-							}
-						});
-					}
-				});
+				invokeGuiUpdateAfterCalculation();
 			}
 			else
 			{
@@ -389,6 +363,39 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		{
 			throw new IllegalAccessException("setBaseValue() must be called from UI Thread. To be sure that data_ will not be changed during the computing");
 		}
+	}
+
+	/* wait the calculations finished then update the list View */
+	public void invokeGuiUpdateAfterCalculation()
+	{
+		awaitCalculationThread_.execute(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				awaitCalculation();
+				if (owner_.getActivity() == null)
+				{
+					return;
+				}
+				owner_.getActivity().runOnUiThread(new Runnable()
+				{
+					@Override
+					public void run()
+					{
+						try
+						{
+							notifyDataSetChanged();
+							((ConverterFragment)owner_).setComputationStateFinished(true);
+						}
+						catch (Exception ex)
+						{
+							Log.w(TAG, ex);
+						}
+					}
+				});
+			}
+		});
 	}
 	
 	/**
@@ -512,7 +519,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 								query("unit", new String[]{"id", "name", "shortName"}, 
 									"enabled=1 AND categoryId=? AND id<>?", 
 									new String[] {Long.toString(categoryId), Long.toString(baseUnitId)}, 
-									null, null, "name");
+									null, null, "lower(name)");
 				
 				int idColumnIndex = cur.getColumnIndex("id");
 				int nameColumnIndex = cur.getColumnIndex("name");

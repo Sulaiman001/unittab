@@ -50,7 +50,7 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 	/**
 	 * Cursor contains 200 rows max 
 	 */
-	static final String LIMIT_ORDER_QUERY_PART = " ORDER BY unitName, unitShortName LIMIT 200";
+	static final String LIMIT_ORDER_QUERY_PART = " ORDER BY lower(unitName) ASC";
 	
 	private final LayoutInflater inflater_;
 	private final DatabaseHelper dbHelper_;

@@ -137,4 +137,18 @@ public class MainActivity extends FragmentActivity implements
 			
 		}
 	}
+	
+	@Override
+    protected void onDestroy()
+    {
+    	super.onDestroy();
+    	try
+    	{
+    		dbHelper_.close();
+    	}
+    	catch (Exception ex)
+    	{
+    		Log.w(TAG, ex);
+    	}
+    }
 }
