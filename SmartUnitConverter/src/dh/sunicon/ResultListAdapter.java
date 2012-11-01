@@ -259,6 +259,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		{
 			if (categoryId == categoryId_ && baseUnitId == baseUnitId_)
 			{
+				((ConverterFragment)owner_).setComputationStateFinished(true);
 				return; //nothing changed
 			}
 			
@@ -340,14 +341,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				
 				for (int i = 0; i<count; i++)
 				{
-					if (baseValueEnumId>0 && Double.isNaN(baseValue))
-					{
-						data_.get(i).setBaseValueEnum(baseValueEnumId);
-					}
-					else
-					{
-						data_.get(i).setBaseValue(baseValue_);
-					}
+					data_.get(i).setBaseValue(baseValue_, baseValueEnumId_);
 				}
 				
 				invokeGuiUpdateAfterCalculation();
@@ -376,6 +370,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				awaitCalculation();
 				if (owner_.getActivity() == null)
 				{
+					Log.d(TAG, "invokeGuiUpdateAfterCalculation has not been called");
 					return;
 				}
 				owner_.getActivity().runOnUiThread(new Runnable()
@@ -530,29 +525,14 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				
 				while (cur.moveToNext() && !isCancelled()) 
 				{
-					RowData co;
-					if (baseValueEnumId < 0)
-					{
-						co = new RowData(
-									ResultListAdapter.this, categoryId, 
-									baseUnitId,
-									cur.getLong(idColumnIndex),
-									cur.getString(nameColumnIndex),
-									cur.getString(shortNameColumnIndex),
-									baseValue
-								);
-					}
-					else
-					{
-						co = new RowData(
-								ResultListAdapter.this, categoryId, 
-								baseUnitId,
-								cur.getLong(idColumnIndex),
-								cur.getString(nameColumnIndex),
-								cur.getString(shortNameColumnIndex),
-								baseValueEnumId
-							);
-					}
+					RowData co = new RowData(
+							ResultListAdapter.this, categoryId, 
+							baseUnitId,
+							cur.getLong(idColumnIndex),
+							cur.getString(nameColumnIndex),
+							cur.getString(shortNameColumnIndex),
+							baseValue, baseValueEnumId
+						);
 					resu.add(co);
 				}
 	
@@ -709,14 +689,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 						final int count = l.size();
 						for (int i = 0; i<count; i++)
 						{
-							if (baseValueEnumId_<0)
-							{
-								l.get(i).setBaseValue(baseValue_);
-							}
-							else
-							{
-								l.get(i).setBaseValueEnum(baseValueEnumId_);
-							}
+							l.get(i).setBaseValue(baseValue_, baseValueEnumId_);
 						}
 					}
 					awaitCalculation();
@@ -754,7 +727,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 						
 						if (matched)
 						{
-							row.setBaseValue(baseValue_);
+							row.setBaseValue(baseValue_, baseValueEnumId_);
 							l.add(row);
 						}
 					}

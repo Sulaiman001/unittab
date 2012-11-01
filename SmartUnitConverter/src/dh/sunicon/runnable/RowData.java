@@ -58,17 +58,10 @@ public final class RowData implements Runnable
 	}
 	
 	public RowData(ResultListAdapter resultListAdapter, long categoryId, long baseUnitId, long targetUnitId, String targetUnitName,
-			String targetUnitShortName, double baseValue)
+			String targetUnitShortName, double baseValue, long baseValueEnumId)
 	{
 		this(resultListAdapter, categoryId, baseUnitId, targetUnitId, targetUnitName, targetUnitShortName);
-		setBaseValue(baseValue);
-	}
-	
-	public RowData(ResultListAdapter resultListAdapter, long categoryId, long baseUnitId, long targetUnitId, String targetUnitName,
-			String targetUnitShortName, long baseValueEnumId)
-	{
-		this(resultListAdapter, categoryId, baseUnitId, targetUnitId, targetUnitName, targetUnitShortName);
-		setBaseValueEnum(baseValueEnumId);
+		setBaseValue(baseValue, baseValueEnumId);
 	}
 	
 	public RowData(ResultListAdapter resultListAdapter, JSONObject json) throws JSONException
@@ -214,11 +207,12 @@ public final class RowData implements Runnable
 	 * each call of this method should use a different latch
 	 * @param baseValue
 	 */
-	public void setBaseValue(double baseValue)
+	public void setBaseValue(double baseValue, long enumId)
 	{
-		if (baseValue_!=null && baseValue_.equals(baseValue) && !Double.isNaN(targetValue_))
+		if ((baseValue_!=null && baseValue_.equals(baseValue) && !Double.isNaN(targetValue_))
+			&& (baseValueEnumId_>0 && baseValueEnumId_ == enumId && targetEnumValue_ != null))
 		{
-			//no need to invoke calculation, the current targetValue_ is just right 
+			//no need to invoke calculation, the current targetValue_  and targetEnumValue_ is just right
 			return;
 		}
 		
@@ -228,17 +222,6 @@ public final class RowData implements Runnable
 			targetValue_ = Double.NaN;
 		}
 		
-		invokeCalculation();
-	}	
-	
-	public void setBaseValueEnum(long enumId)
-	{
-		if (baseValueEnumId_ == enumId && targetEnumValue_ != null)
-		{
-			//no need to invoke calculation, the current targetEnumValue_ is just right 
-			return;
-		}
-		
 		synchronized (baseValueEnumId_)
 		{
 			baseValueEnumId_ = enumId;
@@ -246,7 +229,7 @@ public final class RowData implements Runnable
 		}
 		
 		invokeCalculation();
-	}
+	}	
 	
 	/**
 	 * Cancel old calculation, start a new one

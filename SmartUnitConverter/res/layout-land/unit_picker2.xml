@@ -23,7 +23,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Filter category"
+            android:imeOptions="actionDone"
+            android:inputType="textNoSuggestions|textFilter"
             android:padding="5dp"
+            android:singleLine="true"
             android:textAppearance="?android:attr/textAppearanceMedium" >
 
             <requestFocus />
@@ -56,7 +59,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Filter unit"
+            android:imeOptions="actionDone"
+            android:inputType="textNoSuggestions|textFilter"
             android:padding="5dp"
+            android:singleLine="true"
             android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <ListView

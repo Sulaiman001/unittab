@@ -8,7 +8,7 @@ public class DatabaseHelper extends SQLiteAssetHelper
 {
 
 	private static final String DATABASE_NAME = "SmartUnitConverter.db";
-	private static final int DATABASE_VERSION = 9;
+	private static final int DATABASE_VERSION = 10;
 
 	// private LruCache<Long, BaseEntity> entityCache;
 
