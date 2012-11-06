@@ -22,6 +22,6 @@
         android:paddingLeft="10dip"
         android:text="Miles Per inches United nanometer"
         android:textAppearance="?android:attr/textAppearanceMedium"
-        android:textColor="#258AAF" />
+        android:textColor="@color/category_fg" />
 
 </dh.sunicon.workarounds.CheckableLinearLayout>

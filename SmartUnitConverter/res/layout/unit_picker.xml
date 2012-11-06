@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:paddingLeft="5dp"
-    android:paddingRight="5dp">
+    android:paddingRight="5dp" >
 
     <TextView
         android:layout_width="fill_parent"
@@ -18,15 +18,13 @@
         android:layout_height="wrap_content"
         android:hint="eg: &apos;lit fuel&apos; or &apos;dista km&apos;..."
         android:imeOptions="actionDone"
-        android:padding="5dp"
-        android:inputType="textNoSuggestions|textFilter" />
+        android:inputType="textNoSuggestions|textFilter"
+        android:padding="5dp" />
 
     <ListView
         android:id="@android:id/list"
         android:layout_width="fill_parent"
-        android:layout_height="fill_parent" 
-        android:paddingTop="5dp"
-        >
-    </ListView>
+        android:layout_height="fill_parent"
+        android:paddingTop="5dp" />
 
 </LinearLayout>

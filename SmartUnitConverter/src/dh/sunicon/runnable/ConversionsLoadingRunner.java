@@ -178,29 +178,33 @@ public final class ConversionsLoadingRunner implements Runnable
 		Cursor cur = dbHelper_.getReadableDatabase().rawQuery(
 						SELECT_CONVERSION_QUERY,
 						new String[] { Long.toString(categoryId_) });
-
-		final int idCi = cur.getColumnIndex("id");
-		final int baseCi = cur.getColumnIndex("base");
-		final int targetCi = cur.getColumnIndex("target");
-		final int fxCi = cur.getColumnIndex("fx");
-		final int formulaCi = cur.getColumnIndex("formula");
-		final int reversedFormulaCi = cur.getColumnIndex("reversedFormula");
-		
-		conversions_ = new ArrayList<Conversion>();
-		
-		while (cur.moveToNext() && !cancelled_)
+		try
 		{
-			Conversion c = new Conversion(dbHelper_, 
-					cur.getLong(idCi),
-					cur.getLong(baseCi), 
-					cur.getLong(targetCi), 
-					cur.getDouble(fxCi), 
-					cur.getString(formulaCi), 
-					cur.getString(reversedFormulaCi));
-			conversions_.add(c);
+			final int idCi = cur.getColumnIndex("id");
+			final int baseCi = cur.getColumnIndex("base");
+			final int targetCi = cur.getColumnIndex("target");
+			final int fxCi = cur.getColumnIndex("fx");
+			final int formulaCi = cur.getColumnIndex("formula");
+			final int reversedFormulaCi = cur.getColumnIndex("reversedFormula");
+			
+			conversions_ = new ArrayList<Conversion>();
+			
+			while (cur.moveToNext() && !cancelled_)
+			{
+				Conversion c = new Conversion(dbHelper_, 
+						cur.getLong(idCi),
+						cur.getLong(baseCi), 
+						cur.getLong(targetCi), 
+						cur.getDouble(fxCi), 
+						cur.getString(formulaCi), 
+						cur.getString(reversedFormulaCi));
+				conversions_.add(c);
+			}
 		}
-		
-		cur.close();
+		finally
+		{
+			cur.close();
+		}
 	}
 	
 	private void readCorrespondings()
@@ -208,23 +212,26 @@ public final class ConversionsLoadingRunner implements Runnable
 		Cursor cur = dbHelper_.getReadableDatabase().rawQuery(
 						SELECT_CORRESPONDING_QUERY,
 						new String[] { Long.toString(categoryId_) });
-
-		final int idCi = cur.getColumnIndex("id");
-		final int enumId1Ci = cur.getColumnIndex("enumId1");
-		final int enumId2Ci = cur.getColumnIndex("enumId2");
-		
-		correspondings_ = new ArrayList<Corresponding>();
-		
-		while (cur.moveToNext() && !cancelled_)
+		try
 		{
-			Corresponding c = new Corresponding(dbHelper_, 
-					cur.getLong(idCi),
-					cur.getLong(enumId1Ci), 
-					cur.getLong(enumId2Ci));
-			correspondings_.add(c);
+			final int idCi = cur.getColumnIndex("id");
+			final int enumId1Ci = cur.getColumnIndex("enumId1");
+			final int enumId2Ci = cur.getColumnIndex("enumId2");
+			
+			correspondings_ = new ArrayList<Corresponding>();
+			
+			while (cur.moveToNext() && !cancelled_)
+			{
+				Corresponding c = new Corresponding(dbHelper_, 
+						cur.getLong(idCi),
+						cur.getLong(enumId1Ci), 
+						cur.getLong(enumId2Ci));
+				correspondings_.add(c);
+			}
 		}
-		
-		cur.close();
+		finally {
+			cur.close();
+		}
 	}
 	
 	private void readEnumValues()
@@ -232,24 +239,28 @@ public final class ConversionsLoadingRunner implements Runnable
 		Cursor cur = dbHelper_.getReadableDatabase().rawQuery(
 				SELECT_ENUMVALUE_QUERY,
 				new String[] { Long.toString(categoryId_) });
-
-		final int idCi = cur.getColumnIndex("id");
-		final int unitIdCi = cur.getColumnIndex("unitId");
-		final int valueCi = cur.getColumnIndex("value");
-		
-		enumValues_ = new HashMap<Long, EnumValue>();
-		
-		while (cur.moveToNext() && !cancelled_)
+		try
 		{
-			long enumId = cur.getLong(idCi); 
-			EnumValue ev = new EnumValue(dbHelper_, 
-					cur.getLong(unitIdCi),
-					enumId, 
-					cur.getString(valueCi));
-			enumValues_.put(enumId, ev);
+			final int idCi = cur.getColumnIndex("id");
+			final int unitIdCi = cur.getColumnIndex("unitId");
+			final int valueCi = cur.getColumnIndex("value");
+			
+			enumValues_ = new HashMap<Long, EnumValue>();
+			
+			while (cur.moveToNext() && !cancelled_)
+			{
+				long enumId = cur.getLong(idCi); 
+				EnumValue ev = new EnumValue(dbHelper_, 
+						cur.getLong(unitIdCi),
+						enumId, 
+						cur.getString(valueCi));
+				enumValues_.put(enumId, ev);
+			}
 		}
-		
-		cur.close();
+		finally
+		{
+			cur.close();
+		}
 	}
 	
 }

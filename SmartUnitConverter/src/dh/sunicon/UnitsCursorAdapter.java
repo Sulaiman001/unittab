@@ -107,13 +107,6 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 		// your autocomplete list
 		
 		String unitName = cursor.getString(cursor.getColumnIndex("unitName"));
-//		String categoryName = cursor.getString(cursor.getColumnIndex("categoryName"));
-//		long unitId = cursor.getLong(cursor.getColumnIndex("_id"));
-//		long categoryId = cursor.getLong(cursor.getColumnIndex("categoryId"));
-//		
-//		return categoryName+'\n'+unitName+'\n'
-//				+categoryId+'\n'+unitId;
-	
 		return unitName;
 	}
 	

@@ -505,7 +505,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		baseUnitPickerButton_.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				ConverterFragment.this.getActivity().startActivityForResult(new Intent(ConverterFragment.this.getActivity(), UnitPicker.class), UNIT_PICKER_REQUEST);
+				//ConverterFragment.this.getActivity().startActivityForResult(new Intent(ConverterFragment.this.getActivity(), UnitPicker.class), UNIT_PICKER_REQUEST);
+				ConverterFragment.this.getActivity().startActivityForResult(new Intent(ConverterFragment.this.getActivity(), UnitPicker3.class), UNIT_PICKER_REQUEST);
 			}
 		});
 	}

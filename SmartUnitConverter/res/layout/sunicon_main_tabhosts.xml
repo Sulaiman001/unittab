@@ -17,9 +17,13 @@
             <TabWidget
                 android:id="@android:id/tabs"
                 android:layout_width="match_parent"
-                android:layout_height="32dip"
-                android:gravity="bottom"
-                android:orientation="horizontal" />
+                android:layout_height="wrap_content"
+                android:padding="0dp"
+                android:layout_margin="0dp"
+                android:orientation="horizontal"
+                android:divider="@drawable/tab_divider"
+                android:dividerPadding="3dp"
+                />
 
             <FrameLayout
                 android:id="@android:id/tabcontent"
@@ -27,12 +31,12 @@
                 android:layout_height="match_parent" >
 
                 <dh.sunicon.workarounds.TabPatchView
-                    android:id="@+android:id/converterTab"
+                    android:id="@+id/converterTab"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
 
                 <dh.sunicon.workarounds.TabPatchView
-                    android:id="@+android:id/explorerTab"
+                    android:id="@+id/explorerTab"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
             </FrameLayout>

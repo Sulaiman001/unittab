@@ -1,0 +1,68 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingLeft="5dp"
+    android:paddingRight="5dp" >
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/backButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:background="@drawable/edittext_active"
+            android:padding="10dip"
+            android:text="Back"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+        <ToggleButton
+            android:id="@+id/listToggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:background="@drawable/edittext_active"
+            android:padding="10dip"
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textOff="List"
+            android:textOn="Tree" />
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Enter (part of) category name and/or (part of) unit name"
+        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+    <EditText
+        android:id="@+id/filterEdit"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:hint="eg: &apos;lit fuel&apos; or &apos;dista km&apos;..."
+        android:imeOptions="actionDone"
+        android:inputType="textNoSuggestions|textFilter"
+        android:padding="5dp" />
+
+    <ViewSwitcher
+        android:id="@+id/listSwitcher"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="5dp" >
+
+        <ExpandableListView
+            android:id="@+id/treeList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ListView
+            android:id="@+id/flatList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </ViewSwitcher>
+
+</LinearLayout>

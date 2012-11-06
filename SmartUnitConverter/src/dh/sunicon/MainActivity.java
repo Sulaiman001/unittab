@@ -5,11 +5,13 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.FragmentManager;
 import android.util.Log;
+import android.view.View;
 import android.widget.TabHost;
 import android.widget.TabHost.TabSpec;
+import android.widget.TextView;
 import dh.sunicon.datamodel.DatabaseHelper;
 
 public class MainActivity extends FragmentActivity implements
@@ -33,15 +35,16 @@ public class MainActivity extends FragmentActivity implements
 		/* init tabHost */
 		
 		tabHost_ = (TabHost) findViewById(android.R.id.tabhost);
+		//tabHost_.getTabWidget().setDividerDrawable(R.drawable.tab_divider);
 		tabHost_.setup();
-		
+
 		final String conversionTag = Integer.toString(R.id.converterTab);
 		final String conversionIndicator = "Converter"; // TODO: multi language
-		final TabSpec converterTabSpec = tabHost_.newTabSpec(conversionTag).setIndicator(conversionIndicator).setContent(R.id.converterTab);
+		final TabSpec converterTabSpec = tabHost_.newTabSpec(conversionTag).setIndicator(createTabLabelView(conversionIndicator)).setContent(R.id.converterTab);
 		
 		final String explorerTag = Integer.toString(R.id.explorerTab);
 		final String explorerIndicator = "Explorer"; // TODO: multi language
-		final TabSpec explorerTabSpec = tabHost_.newTabSpec(explorerTag).setIndicator(explorerIndicator).setContent(R.id.explorerTab);
+		final TabSpec explorerTabSpec = tabHost_.newTabSpec(explorerTag).setIndicator(createTabLabelView(explorerIndicator)).setContent(R.id.explorerTab);
 
 		tabHost_.addTab(converterTabSpec);
 		tabHost_.addTab(explorerTabSpec);
@@ -49,6 +52,16 @@ public class MainActivity extends FragmentActivity implements
 		onTabChanged(conversionTag);
 		
 		tabHost_.setOnTabChangedListener(this);
+	}
+	
+	private View createTabLabelView(String textIndicator)
+	{
+		View indicatorView = getLayoutInflater().inflate(R.layout.tab_label_indicator, null);
+		TextView label = (TextView)indicatorView.findViewById(R.id.label);
+		label.setText(textIndicator);
+//		TextView indicatorView = (TextView)getLayoutInflater().inflate(R.layout.tab_label_indicator, null);
+//		indicatorView.setText(textIndicator);
+		return indicatorView;
 	}
 	
 	@Override
