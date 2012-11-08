@@ -113,6 +113,7 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 	private final int DELAY_RUN_QUERY = 500;
 	private Object lockLastConstraint_ = new Object();
 	private String lastConstraint_;
+	//private Cursor lastHistoryCursor_;
 	
 	@Override
 	public Cursor runQueryOnBackgroundThread(CharSequence constraint)
@@ -156,7 +157,22 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 			
 			if (TextUtils.isEmpty(constraint))
 			{
-				return getInitialCursor(dbHelper_, true);
+				Cursor historyCursor = dbHelper_.getReadableDatabase().rawQuery(SELECT_HISTORY,  null);
+				int historyCursorSize = historyCursor.getCount();
+				if (historyCursorSize > 0) 
+				{
+					Log.v(TAG, "Return history");
+					return historyCursor;
+				}
+				else
+				{
+					//history is empty
+					historyCursor.close();
+					
+					Log.v(TAG, "Return top 60 unit");
+					String topUnitQuery = SELECT_QUERY_PART + WHERE1_QUERY_PART + LIMIT_ORDER_QUERY_PART;
+					return dbHelper_.getReadableDatabase().rawQuery(topUnitQuery,  null);
+				}
 			}
 			
 			// build the query by combining queryPartSelect + queryPartWhere1 (or 2) + queryPartLimit
@@ -197,45 +213,7 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 		}
 	}
 	
-	public static Cursor getInitialCursor(DatabaseHelper dbHelper, boolean isHistoryEnable)
-	{
-		if (isHistoryEnable)
-		{
-			if (dbHelper == null)
-			{
-				return null;
-			}
-			Cursor cur = dbHelper.getReadableDatabase().rawQuery(SELECT_HISTORY,  null);
-			int cursorSize = cur.getCount();
-			Log.v(TAG, "Initial cursor Size = "+cursorSize);
-			if (cursorSize > 0) 
-			{
-				Log.v(TAG, "Return history");
-				return cur;
-			}
-			else
-			{
-				//history is empty
-				cur.close();
-				return selectTop60Units(dbHelper);
-			}
-		}
-		else
-		{
-			return selectTop60Units(dbHelper);
-		}
-	}
-	
-	/**
-	 * return cursor of the first 60 units
-	 */
-	private static Cursor selectTop60Units(DatabaseHelper dbHelper)
-	{
-		Log.v(TAG, "Return top 60 unit");
-		String topUnitQuery = SELECT_QUERY_PART + WHERE1_QUERY_PART + LIMIT_ORDER_QUERY_PART;
-		return dbHelper.getReadableDatabase().rawQuery(topUnitQuery,  null);
-	}
-	
+
 	/**
 	 * The children view place holder and data of a suggestion row
 	 */
