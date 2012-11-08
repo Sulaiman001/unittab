@@ -564,7 +564,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				//reset filter
 				if (filter_ != null)
 				{
-					filter_.resetFilterData();
+					filter_.dumpFilterData();
 				}
 				
 				if (result == null || result.size() == 0)
@@ -785,17 +785,17 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		/**
 		 * Must be called each time the result list (data_) is re-populate
 		 */
-		public void resetFilterData()
+		public void dumpFilterData()
 		{
 			if (fullData_ == null)
 			{
 				return;
 			}
-			// dump the data row in order to replace
+			// dump the data row before replacing it
 			int n = fullData_.size();
 			for (int i = 0; i < n; i++)
 			{
-				fullData_.get(i).cancelCalculation();
+				fullData_.get(i).dumpIt();
 			}
 			fullData_ = null;
 		}

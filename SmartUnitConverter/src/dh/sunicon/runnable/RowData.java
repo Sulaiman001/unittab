@@ -253,9 +253,9 @@ public final class RowData implements Runnable
 	
 	/**
 	 * Add more security layer to make sure that the calculation will stop, it shoud be called before we dump this RowData
-	 * Once this methode is called, this object row data cannot be re-used to perform calculation
+	 * Warning: Once this methode is called, this object row data cannot be re-used to perform calculation
 	 */
-	public void cancelCalculation()
+	public void dumpIt()
 	{
 		cancelCalculation_ = true;
 	}
