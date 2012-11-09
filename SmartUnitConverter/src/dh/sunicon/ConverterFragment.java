@@ -648,7 +648,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 				{
 					updateInProgressPanel.setVisibility(View.GONE);
 				
-					if (result == UpdatingResult.DATA_CHANGED) {
+					if (result == UpdatingResult.SUCCESS) {
 						//re-calculate resultList after updating currency rate. Warning, donnot process update again
 						resultListAdapter_.reComputeAll();
 					}

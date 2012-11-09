@@ -7,8 +7,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import dh.sunicon.MainActivity;
+
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -29,6 +33,10 @@ import android.util.Log;
 public class CurrencyUpdater
 {
 	private static final String TAG = CurrencyUpdater.class.getName();
+	
+	private static int OPT_ALL_NETWORK = 0;
+	private static int OPT_WIFI_ONLY = 1;
+	private static int OPT_NEVER = 2;
 	
 	private final Activity context_;
 	private final SharedPreferences preferences_;
@@ -62,8 +70,11 @@ public class CurrencyUpdater
 	
 	private boolean allowProcess(long currencyUnitId) {
 	
+		if (getCurrencyUpdaterOption() == OPT_NEVER)
+			return false;
+		
 		if (isExpiry(currencyUnitId))
-			return true;
+			return true;		
 		
 		//not expiry
 
@@ -119,46 +130,68 @@ public class CurrencyUpdater
 		
 		class CallableWithParam implements Callable<UpdatingResult>
 		{
-			private final long currencyUnitId_;
-			private final CurrencyImporter currencyImporter_;
+			private final long currencyUnitId__;
+			private final CurrencyImporter currencyImporter__;
 			
 			public CallableWithParam(long currencyUnitId, CurrencyImporter currencyImporter) {
-				currencyUnitId_ = currencyUnitId;
-				currencyImporter_ = currencyImporter;
+				currencyUnitId__ = currencyUnitId;
+				currencyImporter__ = currencyImporter;
 			}
 			
 			@Override
 			public UpdatingResult call() throws Exception
 			{
-				try
-				{
-					currencyUnitIdOnProcess_ = currencyUnitId_;
+				
+				class RunnableWithParam implements Runnable {
 					
-					final UpdatingResult ret = currencyImporter_.importOnBackground(currencyUnitId_);
+					private UpdatingResult ret___;
 					
-					if (ret != UpdatingResult.FAILED && !currencyImporter_.isDumped())
-						saveLastTimeProcess(currencyUnitId_);
-					
-					if (currencyImporter_ == CurrencyUpdater.this.currencyImporter_) //if the currencyImporter has not been changed evens it is dumped
+					public RunnableWithParam(UpdatingResult ret)
 					{
-						mainThread_.post(new Runnable()
-						{
-							@Override
-							public void run()
-							{
-								try
-								{
-									if (onUpdateFinished_!=null)
-										onUpdateFinished_.onUpdateFinished(CurrencyUpdater.this, ret);
-								}
-								catch (Exception ex){
-									Log.wtf(TAG, ex);
-								}
-							}
-						});
+						ret___ = ret;
 					}
 					
-					currencyUnitIdOnProcess_ = -1;
+					@Override
+					public void run()
+					{
+						try
+						{
+							if (onUpdateFinished_!=null)
+								onUpdateFinished_.onUpdateFinished(CurrencyUpdater.this, ret___);
+						}
+						catch (Exception ex){
+							Log.wtf(TAG, ex);
+						}
+					}
+				}
+				
+				try
+				{
+					currencyUnitIdOnProcess_ = currencyUnitId__;
+					
+					NetworkInfo networkInfo = ((MainActivity)context_).getNetworkInfo();
+					
+					UpdatingResult ret = UpdatingResult.FAILED;
+					if (networkInfo!=null && networkInfo.isConnected()) //if we have network connected
+					{
+						if (getCurrencyUpdaterOption() != OPT_WIFI_ONLY || 
+								networkInfo.getType()==ConnectivityManager.TYPE_WIFI) //if the preferences is WIFI_ONLY and current network is really wifi
+						{
+							ret = currencyImporter__.importOnBackground(currencyUnitId__);
+						}
+					}
+					
+					if (ret == UpdatingResult.SUCCESS && !currencyImporter__.isDumped())
+						saveLastTimeProcess(currencyUnitId__);
+					
+					//if this is the last called proccess (the last currencyImporter)
+					//it might not neccessary because the currencyUpdater processed on single thread (updatingThread_)
+					//(this methode is called one after other)
+					if (currencyImporter__ == CurrencyUpdater.this.currencyImporter_)   
+					{
+						currencyUnitIdOnProcess_ = -1;
+						mainThread_.post(new RunnableWithParam(ret));
+					}
 					
 					return ret;
 				}
@@ -229,8 +262,12 @@ public class CurrencyUpdater
 	{
 		return currencyUnitIdOnProcess_;
 	}
+	
+	private int getCurrencyUpdaterOption() {
+		return preferences_.getInt("CurrencyUpdaterOption", OPT_ALL_NETWORK);
+	}
 
-	public enum UpdatingResult {FAILED, DATA_CHANGED, DATA_UNCHANGED}
+	public enum UpdatingResult {FAILED, SUCCESS}
 	
 	public interface OnUpdateFinishedListener {
 		void onUpdateFinished(CurrencyUpdater sender, UpdatingResult result);
