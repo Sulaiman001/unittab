@@ -1,3 +1,5 @@
+select * from unit where shortName="VND";
+
 
 select categoryId, count(id) as c from unit 
 group by categoryid

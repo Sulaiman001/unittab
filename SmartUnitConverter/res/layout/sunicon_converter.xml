@@ -12,10 +12,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" >
 
-        <TextView />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
         <TextView
             android:id="@+id/categoryLabel"
+            android:layout_width="wrap_content"
             android:layout_span="2"
             android:text="Heat Transfer Coefficient"
             android:textColor="@color/category_fg"
@@ -111,6 +114,26 @@
             android:text="X"
             android:width="10dp" />
     </TableRow>
+
+    <LinearLayout
+        android:id="@+id/updateInProgressPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:visibility="gone" >
+
+        <ProgressBar
+            android:id="@+id/progressBar1"
+            style="?android:attr/progressBarStyleSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Updating currency rate. Touch to skip..." >
+        </TextView>
+    </LinearLayout>
 
     <ViewSwitcher
         android:id="@+id/resultListSwitcher"

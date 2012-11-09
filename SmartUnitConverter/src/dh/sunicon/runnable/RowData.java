@@ -3,7 +3,9 @@ package dh.sunicon.runnable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeoutException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,7 +36,7 @@ public final class RowData implements Runnable
 	private final String targetUnitShortName_;
 	private final String keyword_;
 	
-	/* change on baseValue_ and value_ must be synchronized */
+	/* change on baseValue_ and targetValue_ must be synchronized */
 	private Double baseValue_ = Double.NaN;
 	private double targetValue_ = Double.NaN;
 	private EnumValue targetEnumValue_ = null; 
@@ -260,6 +262,10 @@ public final class RowData implements Runnable
 		cancelCalculation_ = true;
 	}
 	
+	public boolean isDumped() {
+		return cancelCalculation_;
+	}
+	
 	/**
 	 * Compute the value
 	 */
@@ -268,6 +274,10 @@ public final class RowData implements Runnable
 	{
 		try
 		{
+			if (isDumped()) {
+				throw new UnsupportedOperationException();
+			}
+			
 			if (baseValue_ != null && !baseValue_.isNaN()) //normal case: km/h..
 			{
 				/* copy the current baseValue_ to original Value */
@@ -355,8 +365,10 @@ public final class RowData implements Runnable
 	
 	/**
 	 * Convert the "36" of "clothing size woman france" to "XX-Small" of "clothing size woman US"; 
+	 * @throws TimeoutException 
+	 * @throws ExecutionException 
 	 */
-	EnumValue computeTargetValue(long baseValueEnumId, long baseUnitId, long targetUnitId) throws IllegalAccessException, InterruptedException
+	EnumValue computeTargetValue(long baseValueEnumId, long baseUnitId, long targetUnitId) throws IllegalAccessException, InterruptedException, ExecutionException, TimeoutException
 	{
 		if (cancelCalculation_ || baseValueEnumId == -1)
 		{
@@ -368,7 +380,8 @@ public final class RowData implements Runnable
 
 		if (correspondings == null || enumValues == null)
 		{
-			Log.w(TAG, String.format("Cancel convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d. Because correspondings or enumValues tables is null", baseValueEnumId, baseUnitId, targetUnitId));
+			Log.v(TAG, String.format("Cancel convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d. Because correspondings or enumValues tables is null", baseValueEnumId, baseUnitId, targetUnitId));
+			return null;
 		}
 		
 		int correspondingsCount = correspondings.size();
@@ -427,8 +440,10 @@ public final class RowData implements Runnable
 	 * 
 	 * @throws InterruptedException 
 	 * @throws IllegalAccessException 
+	 * @throws TimeoutException 
+	 * @throws ExecutionException 
 	 */
-	double computeTargetValue(double baseValue, long baseUnitId, long targetUnitId) throws IllegalAccessException, InterruptedException
+	double computeTargetValue(double baseValue, long baseUnitId, long targetUnitId) throws IllegalAccessException, InterruptedException, ExecutionException, TimeoutException
 	{
 		if (cancelCalculation_ || Double.isNaN(baseValue))
 		{
@@ -439,13 +454,21 @@ public final class RowData implements Runnable
 		
 		if (conversions == null)
 		{
-			Log.w(TAG, String.format("Cancel convert %f from baseUnitId=%d to targetUnitId=%d. Because conversions table is Null", baseValue, baseUnitId, targetUnitId));
+			Log.v(TAG, String.format("Cancel convert %f from baseUnitId=%d to targetUnitId=%d. Because conversions table is Null", baseValue, baseUnitId, targetUnitId));
 			return Double.NaN;
 		}
 		
 		Log.v(TAG, String.format("Start convert %f from baseUnitId=%d to targetUnitId=%d", baseValue, baseUnitId, targetUnitId));
 		
-		int conversionsCount = conversions.size();
+		/* The trivial case, if there is a direct connection between baseUnitId and targetUnitId. To give a more accurate result for currency converter */
+		
+		for (Conversion conv : conversions)
+		{
+			if (conv.getBaseUnitId() == baseUnitId && conv.getTargetUnitId() == targetUnitId)
+			{
+				return conv.convert(baseValue, baseUnitId);
+			}
+		}
 		
 		/* use BFS to find the shortest path from the baseUnitId to the targetUnitId on the Converions graph */
 		
@@ -471,10 +494,8 @@ public final class RowData implements Runnable
 			
 			//find all neighbors which are not visited
 			
-			for (int i=0; i<conversionsCount; i++)
+			for (Conversion conv : conversions)
 			{
-				Conversion conv = conversions.get(i);
-				
 				if (conv.isIncidentEdgeOf(visitingUnit))
 				{
 					long neighborUnit = conv.getOtherUnitId(visitingUnit);
@@ -573,6 +594,10 @@ public final class RowData implements Runnable
 		
 		return resu.toString();
 	}
-	
+
+	public void clearTargetValue() {
+		targetValue_ = Double.NaN;
+		targetEnumValue_ = null; 
+	}
 	
 }

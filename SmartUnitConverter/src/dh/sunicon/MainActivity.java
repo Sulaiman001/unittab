@@ -1,5 +1,7 @@
 package dh.sunicon;
 
+import java.util.Random;
+
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -164,4 +166,24 @@ public class MainActivity extends FragmentActivity implements
     		Log.w(TAG, ex);
     	}
     }
+	
+	/**
+	 * Simulate a thread of long operation
+	 * @param minSecond
+	 * @param maxSecond
+	 */
+	public static void simulateLongOperation(int minSecond, int maxSecond)
+	{
+		Random rand = new Random(System.currentTimeMillis());
+		long timeToSleep = (rand.nextInt(maxSecond-minSecond)+minSecond)*1000;
+		
+		try
+		{
+			Thread.sleep(timeToSleep);
+		}
+		catch (InterruptedException e)
+		{
+			Log.w("SimulationQuery", e);
+		}
+	}
 }

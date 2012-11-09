@@ -9,6 +9,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -56,6 +57,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	 */
 	private final ExecutorService conversionsLoadingThread_ = Executors
 			.newSingleThreadExecutor();
+	private Future<?> conversionsLoadingFuture_;
 	private ConversionsLoadingRunner conversionsLoadingRunner_ = null;
 	private ConverterFragment owner_;
 	private long categoryId_;
@@ -271,12 +273,17 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			baseUnitId_ = baseUnitId;
 			
 			//read all conversion of the category
+			
+			
+			/* replace old conversionsLoadingRunner_ by a new one. No need to lock conversionsLoadingRunner_ because this code runs on main thread */
 			if (conversionsLoadingRunner_ != null)
 			{
-				conversionsLoadingRunner_.cancel();
+				conversionsLoadingRunner_.dumpIt();
 			}
-			conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, categoryId_);
-			conversionsLoadingThread_.execute(conversionsLoadingRunner_);
+			conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, categoryId_, baseUnitId_, owner_.getCurrencyUpdater());
+			
+			
+			conversionsLoadingFuture_ = conversionsLoadingThread_.submit(conversionsLoadingRunner_);
 			
 			synchronized (lock_)
 			{
@@ -359,6 +366,18 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		}
 	}
 
+	public void invokeReComputation() {
+		
+		//Warning, donnot process update currency rate here
+		
+		//disable the CurrencyUpdater
+
+		//redo setBaseUnit to update Conversions
+		//redo setBaseValue to re-calculate
+
+		//enable CurrencyUpdater
+	}
+	
 	/* wait the calculations finished then update the list View */
 	public void invokeGuiUpdateAfterCalculation()
 	{
@@ -451,33 +470,34 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		return calculationPoolThread_;
 	}
 	
-	public ArrayList<Conversion> getConversions() throws IllegalAccessException, InterruptedException
+	public ArrayList<Conversion> getConversions() throws InterruptedException, ExecutionException, TimeoutException, IllegalAccessException
 	{
 		waitConversionLoadingRunner();
 		return conversionsLoadingRunner_.getConversions();
 	}
 
-	public ArrayList<Corresponding> getCorrespondings() throws IllegalAccessException, InterruptedException
+	public ArrayList<Corresponding> getCorrespondings() throws InterruptedException, ExecutionException, TimeoutException, IllegalAccessException
 	{
 		waitConversionLoadingRunner();
 		return conversionsLoadingRunner_.getCorrespondings();
 	}
 	
-	public HashMap<Long, EnumValue> getEnumValues() throws IllegalAccessException, InterruptedException
+	public HashMap<Long, EnumValue> getEnumValues() throws InterruptedException, ExecutionException, TimeoutException, IllegalAccessException
 	{
 		waitConversionLoadingRunner();
 		return conversionsLoadingRunner_.getEnumValues();
 	}
 	
-	private void waitConversionLoadingRunner() throws IllegalAccessException, InterruptedException
+	private void waitConversionLoadingRunner() throws InterruptedException, ExecutionException, TimeoutException, IllegalAccessException
 	{
 		if (conversionsLoadingRunner_==null)
 		{
-			throw new IllegalAccessException("The conversion loading has not been started. Base Unit was not set");
+			throw new UnsupportedOperationException("The conversion loading has not been started. Base Unit was not set");
 		}
 		if (!conversionsLoadingRunner_.isFinished())
 		{
-			conversionsLoadingRunner_.waitToFinish(10, TimeUnit.SECONDS);
+			conversionsLoadingFuture_.get(10, TimeUnit.SECONDS);
+			//conversionsLoadingRunner_.waitToFinish(10, TimeUnit.SECONDS);
 		}
 	}
 

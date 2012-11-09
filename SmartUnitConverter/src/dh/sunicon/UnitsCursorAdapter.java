@@ -113,7 +113,6 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 	private final int DELAY_RUN_QUERY = 500;
 	private Object lockLastConstraint_ = new Object();
 	private String lastConstraint_;
-	//private Cursor lastHistoryCursor_;
 	
 	@Override
 	public Cursor runQueryOnBackgroundThread(CharSequence constraint)
@@ -270,7 +269,5 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 		{
 			return unitLabel_;
 		}
-		
-		
 	}
 }

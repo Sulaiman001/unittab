@@ -1,6 +1,5 @@
 package dh.sunicon;
 
-import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -40,6 +39,10 @@ import android.widget.ViewSwitcher;
 
 import com.commonsware.cwac.loaderex.acl.SQLiteCursorLoader;
 
+import dh.sunicon.currency.CurrencyUpdater;
+import dh.sunicon.currency.CurrencyUpdater.BeforeUpdateStartedListener;
+import dh.sunicon.currency.CurrencyUpdater.OnUpdateFinishedListener;
+import dh.sunicon.currency.CurrencyUpdater.UpdatingResult;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.runnable.RowData;
 
@@ -61,8 +64,9 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 
 	private ResultListAdapter resultListAdapter_;
 	private SimpleCursorAdapter baseValueSpinnerAdapter_;
-	private int spinnerPositionToRestore_ = -1;
+	private CurrencyUpdater currencyUpdater_;
 	
+	private int spinnerPositionToRestore_ = -1;
 	private long baseUnitId_ = -1;
 	private long categoryId_ = -1;
 	
@@ -115,6 +119,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			initTargetUnitFilterEditor();
 			initResultList();
 			initResultListShowHideAnimation();
+			initCurrencyUpdater();
 			clearBaseUnit(false);
 			
 			if (savedInstanceState != null)
@@ -607,6 +612,41 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		registerForContextMenu(getListView());
 	}
 
+	private void initCurrencyUpdater() 
+	{
+		final View updateInProgressPanel = getView().findViewById(R.id.updateInProgressPanel);
+		currencyUpdater_ = new CurrencyUpdater(this.getActivity());
+		currencyUpdater_.setBeforeUpdateStarted_(new BeforeUpdateStartedListener()
+		{
+			@Override
+			public void beforeUpdateStarted(CurrencyUpdater sender)
+			{
+				updateInProgressPanel.setVisibility(View.VISIBLE);
+			}
+		});
+		currencyUpdater_.setOnUpdateFinished(new OnUpdateFinishedListener()
+		{
+			@Override
+			public void onUpdateFinished(CurrencyUpdater sender, UpdatingResult result)
+			{
+				updateInProgressPanel.setVisibility(View.GONE);
+				
+				if (result == UpdatingResult.DATA_CHANGED) {
+					//re-calculate resultList after updating currency rate. Warning, donnot process update again
+					resultListAdapter_.invokeReComputation();
+				}
+			}
+		});
+		updateInProgressPanel.setOnClickListener(new OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				currencyUpdater_.cancel();
+			}
+		});
+	}
+	
 	private void initResultListShowHideAnimation()
 	{
 //		ObjectAnimator fadeinAnim = (ObjectAnimator) AnimatorInflater.loadAnimator(this, R.animator.fadein);
@@ -745,58 +785,6 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		}
 	}
 	
-//	/**
-//	 * wait the spinner finish loading
-//	 * @param position
-//	 * @throws InterruptedException 
-//	 */
-//	private void setBaseValueSpinnerSelection(final int position) throws InterruptedException
-//	{
-//		if (!isActivityRunning_)
-//		{
-//			return;
-//		}
-//		Thread.sleep(500); //make sure that the spinner is populating
-//		
-//		if (spinnerLoadingLatch_!= null) 
-//		{
-//			//the spinner is not finish populating
-//			
-//			ExecutorService waitingThread = Executors.newSingleThreadExecutor();
-//			waitingThread.execute(new Runnable()
-//			{
-//				@Override
-//				public void run()
-//				{
-//					try
-//					{
-//						spinnerLoadingLatch_.await(5, TimeUnit.SECONDS);
-//					}
-//					catch (InterruptedException e)
-//					{
-//						Log.w(TAG, e);
-//					}
-//					if (ConverterFragment.this.getActivity() == null)
-//					{
-//						return;
-//					}
-//					ConverterFragment.this.getActivity().runOnUiThread(new Runnable()
-//					{
-//						@Override
-//						public void run()
-//						{
-//							baseValueSpinner_.setSelection(position);
-//						}
-//					});
-//				}
-//			});
-//		}
-//		else
-//		{
-//			baseValueSpinner_.setSelection(position);
-//		}
-//	}
-	
 	private void setBaseValue(CharSequence s) throws IllegalAccessException
 	{
 		if (TextUtils.isEmpty(s))
@@ -814,64 +802,26 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		return dbHelper_;
 	}
 	
-	/**
-	 * Simulate a thread of long operation
-	 * @param minSecond
-	 * @param maxSecond
-	 */
-	public static void simulateLongOperation(int minSecond, int maxSecond)
-	{
-		Random rand = new Random(System.currentTimeMillis());
-		long timeToSleep = (rand.nextInt(maxSecond-minSecond)+minSecond)*1000;
-		
-		try
-		{
-			Thread.sleep(timeToSleep);
-		}
-		catch (InterruptedException e)
-		{
-			Log.w("SimulationQuery", e);
-		}
-	}
-
-//	private void restoreSpinnerSelection()
-//	{
-//		if (baseValueSpinner_.getTag()!=null)
-//		{
-//			baseValueSpinner_.setSelection((Integer)(baseValueSpinner_.getTag()));
-//			baseValueSpinner_.setTag(null);
-//		}
-//	}
-
-//	private boolean keyMakeTextChanged(int keyCode)
-//	{
-//		return (7<=keyCode && keyCode<=17) || (29<=keyCode && keyCode<=56)
-//				|| (67<=keyCode && keyCode<=77) || (144<=keyCode && keyCode<=163)
-//				|| keyCode == KeyEvent.KEYCODE_DEL || keyCode == KeyEvent.KEYCODE_FORWARD_DEL;
-//	}
-	
-	private int eventsSuspendingLevel = 0;
-	
+	private int eventsSuspendingLevel_ = 0;
 	private boolean isEventsSuspending()
 	{
-		return eventsSuspendingLevel > 0;
+		return eventsSuspendingLevel_ > 0;
 	}	
 	private void suspendEvents()
 	{
-		if (eventsSuspendingLevel < 0)
+		if (eventsSuspendingLevel_ < 0)
 		{
-			eventsSuspendingLevel = 0;
+			eventsSuspendingLevel_ = 0;
 		}
-		eventsSuspendingLevel++;
+		eventsSuspendingLevel_++;
 	}
-	
 	private void resumeEvents()
 	{
-		if (eventsSuspendingLevel<=0)
+		if (eventsSuspendingLevel_<=0)
 		{
 			return;
 		}
-		eventsSuspendingLevel--;
+		eventsSuspendingLevel_--;
 	}
 	
 	public void setComputationStateFinished(boolean finished)
@@ -880,7 +830,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		{
 			if (finished)
 			{
-				Log.d(TAG, "switch to result list");
+				Log.v(TAG, "switch to result list");
 				if (resultListSwitcher_.getNextView() == getListView())
 				{
 					resultListSwitcher_.showNext();
@@ -888,7 +838,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			}
 			else
 			{
-				Log.d(TAG, "switch to progress bar");
+				Log.v(TAG, "switch to progress bar");
 				if (resultListSwitcher_.getNextView() != getListView())
 				{
 					resultListSwitcher_.showNext();
@@ -959,5 +909,9 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	{
 		baseValueSpinnerAdapter_.changeCursor(null);
 	}
-	
+
+	public CurrencyUpdater getCurrencyUpdater()
+	{
+		return currencyUpdater_;
+	}
 }

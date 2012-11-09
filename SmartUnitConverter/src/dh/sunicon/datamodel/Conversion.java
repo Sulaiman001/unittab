@@ -56,7 +56,7 @@ public class Conversion extends BaseEntity
 		return base_;
 	}
 
-	public long getTarget()
+	public long getTargetUnitId()
 	{
 		return target_;
 	}
@@ -83,7 +83,7 @@ public class Conversion extends BaseEntity
 
 	public Unit getTargetUnit()
 	{
-		return Unit.findById(this.getDbHelper(), this.getTarget());
+		return Unit.findById(this.getDbHelper(), this.getTargetUnitId());
 	}
 
 	/**

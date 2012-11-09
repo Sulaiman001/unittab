@@ -337,6 +337,21 @@ public class UnitPicker3 extends FragmentActivity {
 //		
 //		filterEdit_.requestFocus();
 //	}
+
+//	@Override
+//	public void finish()
+//	{
+//		try
+//    	{
+//    		Log.d(TAG, "Close database of UnitPicker3");
+//    		dbHelper_.close();
+//    	}
+//    	catch (Exception ex)
+//    	{
+//    		Log.w(TAG, ex);
+//    	}
+//		super.finish();
+//	}
 	
 	@Override
     protected void onDestroy()

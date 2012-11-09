@@ -4,9 +4,12 @@ import java.util.HashMap;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 public class Unit extends BaseEntity
 {
+	public static final String TAG = Unit.class.getName();
+	
 	private long categoryId;
 	private String name;
 	private String shortName; // optional
@@ -41,15 +44,19 @@ public class Unit extends BaseEntity
 		SQLiteDatabase db = dbHelper.getReadableDatabase();
 		Cursor cur = db.query("unit", null, "id=?",
 				new String[] { Long.toString(id) }, null, null, null, null);
-
 		Unit resu = null;
-
-		if (cur.moveToNext())
+		try
 		{
-			resu = parseCursor(dbHelper, cur);
+			if (cur.moveToNext())
+				resu = parseCursor(dbHelper, cur);
 		}
-
-		cur.close();
+		catch (Exception ex) {
+			Log.wtf(TAG, ex);
+			return null;
+		}
+		finally {
+			cur.close();
+		}
 		return resu;
 	}
 

@@ -2,18 +2,18 @@ package dh.sunicon.runnable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import android.database.Cursor;
 import android.util.Log;
+import dh.sunicon.currency.CurrencyUpdater;
 import dh.sunicon.datamodel.Conversion;
 import dh.sunicon.datamodel.Corresponding;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.datamodel.EnumValue;
+import dh.sunicon.datamodel.Unit;
 
 /**
  * Load the Conversions or Correspondings + EnumValues of a category 
@@ -34,29 +34,34 @@ public final class ConversionsLoadingRunner implements Runnable
 
 	private final DatabaseHelper dbHelper_;
 	private final long categoryId_;
+	private final long baseUnitId_;
 	
 	private boolean cancelled_ = false;
 	private boolean finished_;
-	private CountDownLatch countDownLatch_ = new CountDownLatch(1);
+	//private CountDownLatch countDownLatch_ = new CountDownLatch(1);
 	
 	private ArrayList<Conversion> conversions_;
 	private ArrayList<Corresponding> correspondings_;
 	private HashMap<Long, EnumValue> enumValues_;
+	private CurrencyUpdater currencyUpdater_;
 	
-	public ConversionsLoadingRunner(DatabaseHelper dbHelper, long categoryId)
+	public ConversionsLoadingRunner(DatabaseHelper dbHelper, long categoryId, long baseUnitId, CurrencyUpdater currencyUpdater)
 	{
 		dbHelper_ = dbHelper;
 		categoryId_ = categoryId;
+		baseUnitId_ = baseUnitId;
+		currencyUpdater_ = currencyUpdater;
 		finished_ = false;
-		countDownLatch_ = new CountDownLatch(1);
+		//countDownLatch_ = new CountDownLatch(1);
 	}
 	
 	public ConversionsLoadingRunner(DatabaseHelper dbHelper, JSONObject savedState) throws JSONException
 	{
 		dbHelper_ = dbHelper;
 		categoryId_ = savedState.getLong("categoryId");
+		baseUnitId_ = savedState.getLong("baseUnitId");
 		finished_ = false;
-		countDownLatch_ = new CountDownLatch(1);
+		//countDownLatch_ = new CountDownLatch(1);
 //		if (!finished_)
 //		{
 //			countDownLatch_ = new CountDownLatch(1);
@@ -73,6 +78,7 @@ public final class ConversionsLoadingRunner implements Runnable
 		JSONObject json = new JSONObject();
 		
 		json.put("categoryId", categoryId_);
+		json.put("baseUnitId", baseUnitId_);
 //		json.put("finished", finished_);
 //
 //		if (!finished_) {
@@ -114,9 +120,16 @@ public final class ConversionsLoadingRunner implements Runnable
 		return enumValues_;
 	}
 
-	public void cancel()
+	/**
+	 * Soft-destroy this object, never use it again after calling this methode.
+	 */
+	public void dumpIt()
 	{
 		cancelled_ = true;
+	}
+	
+	public boolean isDumped() {
+		return cancelled_;
 	}
 	
 	public boolean isFinished()
@@ -124,17 +137,30 @@ public final class ConversionsLoadingRunner implements Runnable
 		return finished_;
 	}
 	
-	public void waitToFinish(long timeout, TimeUnit timeUnit) throws InterruptedException
-	{
-		countDownLatch_.await(timeout, timeUnit);
-	}
+//	public void waitToFinish(long timeout, TimeUnit timeUnit) throws InterruptedException
+//	{
+//		countDownLatch_.await(timeout, timeUnit);
+//	}
 
 	@Override
 	public void run()
 	{
 		try
 		{	
-			Log.d(TAG, "Begin loading conversions / correspondings for Category "+categoryId_);
+			if (isDumped()) {
+				throw new UnsupportedOperationException();
+			}
+			
+			if (categoryId_ == CURRENCY_CATEGORY) 
+			{
+				if (!cancelled_)
+				{
+					readCurrencyConversions();
+				}
+				return;
+			}
+
+			Log.v(TAG, "Begin loading conversions / correspondings for Category "+categoryId_);
 			
 			if (!cancelled_)
 			{
@@ -169,7 +195,7 @@ public final class ConversionsLoadingRunner implements Runnable
 		{
 			finished_ = true;
 			//notify other thread that this ones is finished
-			countDownLatch_.countDown();
+			//countDownLatch_.countDown();
 		}
 	}
 	
@@ -261,6 +287,63 @@ public final class ConversionsLoadingRunner implements Runnable
 		{
 			cur.close();
 		}
+	}
+	
+	private final static long CURRENCY_CATEGORY = 11;
+	private final static long USD_UNIT = 1413;
+	
+	private void readCurrencyConversions()
+	{
+		//Log.d(TAG, "Begin loading currencies conversions of the currency unitId = "+baseUnitId_);
+
+		Log.d("CURR", "readCurrencyConversions BEGIN baseUnitId = "+baseUnitId_);
+		
+		Unit unit = Unit.findById(dbHelper_, baseUnitId_);
+		
+		if (currencyUpdater_!=null) {
+			currencyUpdater_.process(unit.getShortName());
+		}
+		
+		//Get the conversions from baseUnitId_ or from USD
+		
+		Cursor cur = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(baseUnitId_)});
+		if (cur.getCount()==0 && baseUnitId_ != USD_UNIT)
+		{
+			cur.close();
+			cur = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(USD_UNIT)});
+		}
+		
+		//Load conversions to local variable (RAM)
+		
+		try
+		{
+			final int idCi = cur.getColumnIndex("id");
+			final int baseCi = cur.getColumnIndex("base");
+			final int targetCi = cur.getColumnIndex("target");
+			final int fxCi = cur.getColumnIndex("fx");
+			final int formulaCi = cur.getColumnIndex("formula");
+			final int reversedFormulaCi = cur.getColumnIndex("reversedFormula");
+			
+			conversions_ = new ArrayList<Conversion>();
+			
+			while (cur.moveToNext() && !cancelled_)
+			{
+				Conversion c = new Conversion(dbHelper_, 
+						cur.getLong(idCi),
+						cur.getLong(baseCi), 
+						cur.getLong(targetCi), 
+						cur.getDouble(fxCi), 
+						cur.getString(formulaCi), 
+						cur.getString(reversedFormulaCi));
+				conversions_.add(c);
+			}
+		}
+		finally
+		{
+			cur.close();
+		}
+		
+		Log.d("CURR", "readCurrencyConversions END baseUnitId = "+baseUnitId_);
 	}
 	
 }
