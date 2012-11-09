@@ -823,7 +823,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	{
 		if (TextUtils.isEmpty(s))
 		{
-			//getResultListAdapter().setBaseValue(Double.NaN, -1);
+			getResultListAdapter().setBaseValue(Double.NaN, -1);
 		}
 		else
 		{

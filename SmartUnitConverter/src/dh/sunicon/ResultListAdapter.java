@@ -67,36 +67,6 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	private TargetUnitFilter filter_;
 	private FillDataTask fillDataTask_;
 	
-
-//	Timer notifyDataSetChangedTimer_ = null;
-//	
-//	@Override
-//	public void notifyDataSetChanged()
-//	{
-//		((MainActivity)context_).setResultListVisible(false);
-//		if (notifyDataSetChangedTimer_!=null) 
-//		{
-//			notifyDataSetChangedTimer_.cancel(); //cancel the old onTextChange event
-//		}
-//		notifyDataSetChangedTimer_ = new Timer();
-//		notifyDataSetChangedTimer_.schedule(new TimerTask()
-//		{
-//			@Override
-//			public void run()
-//			{
-//				((MainActivity)context_).runOnUiThread(new Runnable()
-//				{
-//					@Override
-//					public void run()
-//					{
-//						ResultListAdapter.super.notifyDataSetChanged();
-//						((MainActivity)context_).setResultListVisible(true);
-//					}
-//				});
-//			}
-//		}, 300);  
-//	}
-	
 	/**
 	 * write lock on data_. any write operation on data_ must be synch on this lock_ 
 	 */
@@ -149,6 +119,9 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 					);
 				}
 			}
+		}
+		else {
+			invokeFillData();
 		}
 	}
 	
@@ -282,11 +255,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		
 		/*fill the list with related target unit (of the same category)*/
 		
-		if (fillDataTask_ != null)
-			fillDataTask_.cancel(false);
-		fillDataTask_ = new FillDataTask();
-		fillDataTask_.execute(categoryId_, baseUnitId_);
-		
+		invokeFillData();
 		invokeGuiUpdateAfterCalculation();
 	}
 	
@@ -343,10 +312,13 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		
 		/* re-calculate target value */
 
-		for (RowData rowdata : data_)
+		if (data_!= null)
 		{
-			rowdata.clearTargetValue(); //reset target value
-			rowdata.setBaseValue(baseValue_, baseValueEnumId_); //recalcule target value
+			for (RowData rowdata : data_)
+			{
+				rowdata.clearTargetValue(); //reset target value
+				rowdata.setBaseValue(baseValue_, baseValueEnumId_); //recalcule target value
+			}
 		}
 		
 		if (filter_!=null)
@@ -482,6 +454,14 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	public DatabaseHelper getDbHelper()
 	{
 		return dbHelper_;
+	}
+	
+	private void invokeFillData()
+	{
+		if (fillDataTask_ != null)
+			fillDataTask_.cancel(false);
+		fillDataTask_ = new FillDataTask();
+		fillDataTask_.execute(categoryId_, baseUnitId_);
 	}
 	
 	/*
@@ -767,9 +747,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		public void reComputeAll()
 		{
 			if (fullData_ == null)
-			{
 				return;
-			}
+			
 			for (RowData r : fullData_)
 			{
 				r.clearTargetValue();
@@ -783,9 +762,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		public void dumpFilterData()
 		{
 			if (fullData_ == null)
-			{
 				return;
-			}
+			
 			// dump the data row before replacing it
 			for (RowData r : fullData_)
 			{
