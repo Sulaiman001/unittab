@@ -4,10 +4,12 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
+
 import android.app.Activity;
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.util.Log;
 import dh.sunicon.MainActivity;
 import dh.sunicon.currency.CurrencyUpdater.UpdatingResult;
@@ -80,6 +82,19 @@ public class CurrencyImporter
 		return null;
 	}
 
+	public static InputStream getInputStreamFromUrl2(String url) {
+		InputStream content = null;
+		try {
+			HttpGet httpGet = new HttpGet(url);
+			HttpClient httpclient = new DefaultHttpClient();
+			// Execute HTTP Get Request
+			HttpResponse response = httpclient.execute(httpGet);
+			content = response.getEntity().getContent();
+                } catch (Exception e) {
+			//handle the exception !
+		}
+		return content;
+}
 	
 	/**
 	 * update 160+ currencies with base USD

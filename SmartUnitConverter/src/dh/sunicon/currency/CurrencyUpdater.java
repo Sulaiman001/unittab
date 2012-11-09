@@ -138,59 +138,51 @@ public class CurrencyUpdater
 				currencyImporter__ = currencyImporter;
 			}
 			
+			/**
+			 * Check NetWork connectivity which must be appropriated with Preferences option 
+			 * before start importing
+			 */
+			private UpdatingResult checkOptionAndImport()
+			{
+				UpdatingResult ret = UpdatingResult.FAILED;
+				NetworkInfo networkInfo = ((MainActivity)context_).getNetworkInfo();
+				if (networkInfo!=null && networkInfo.isConnected()) //if we have network connected
+				{
+					if (getCurrencyUpdaterOption() != OPT_WIFI_ONLY || 
+							networkInfo.getType()==ConnectivityManager.TYPE_WIFI) //if the preferences is WIFI_ONLY and current network is really wifi
+					{
+						ret = currencyImporter__.importOnBackground(currencyUnitId__);
+					}
+				}
+				return ret;
+			}
+			
 			@Override
 			public UpdatingResult call() throws Exception
 			{
-				
-				class RunnableWithParam implements Runnable {
-					
-					private UpdatingResult ret___;
-					
-					public RunnableWithParam(UpdatingResult ret)
-					{
-						ret___ = ret;
-					}
-					
-					@Override
-					public void run()
-					{
-						try
-						{
-							if (onUpdateFinished_!=null)
-								onUpdateFinished_.onUpdateFinished(CurrencyUpdater.this, ret___);
-						}
-						catch (Exception ex){
-							Log.wtf(TAG, ex);
-						}
-					}
-				}
-				
 				try
 				{
 					currencyUnitIdOnProcess_ = currencyUnitId__;
 					
-					NetworkInfo networkInfo = ((MainActivity)context_).getNetworkInfo();
-					
-					UpdatingResult ret = UpdatingResult.FAILED;
-					if (networkInfo!=null && networkInfo.isConnected()) //if we have network connected
-					{
-						if (getCurrencyUpdaterOption() != OPT_WIFI_ONLY || 
-								networkInfo.getType()==ConnectivityManager.TYPE_WIFI) //if the preferences is WIFI_ONLY and current network is really wifi
-						{
-							ret = currencyImporter__.importOnBackground(currencyUnitId__);
-						}
-					}
+					final UpdatingResult ret = checkOptionAndImport();
 					
 					if (ret == UpdatingResult.SUCCESS && !currencyImporter__.isDumped())
 						saveLastTimeProcess(currencyUnitId__);
 					
 					//if this is the last called proccess (the last currencyImporter)
 					//it might not neccessary because the currencyUpdater processed on single thread (updatingThread_)
-					//(this methode is called one after other)
 					if (currencyImporter__ == CurrencyUpdater.this.currencyImporter_)   
 					{
 						currencyUnitIdOnProcess_ = -1;
-						mainThread_.post(new RunnableWithParam(ret));
+						mainThread_.post(new Runnable()
+						{
+							@Override
+							public void run()
+							{
+								if (onUpdateFinished_!=null)
+									onUpdateFinished_.onUpdateFinished(CurrencyUpdater.this, ret);
+							}
+						});
 					}
 					
 					return ret;
@@ -202,7 +194,6 @@ public class CurrencyUpdater
 				}
 			}
 		}
-		
 		
 		//dump old currencyImporter to cancel old update which is currently running on the updatingThread (if there is one)
 		if (currencyImporter_ != null) {
@@ -216,9 +207,11 @@ public class CurrencyUpdater
 	
 	public void cancel() {
 		if (currencyImporter_ != null)
+		{
 			currencyImporter_.dumpIt();
+			currencyImporter_ = null;
+		}
 	}
-	
 	
 	private void saveLastTimeProcess(long currencyUnitId) {
 		try
