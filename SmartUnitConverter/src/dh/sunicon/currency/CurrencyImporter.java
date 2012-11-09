@@ -18,12 +18,12 @@ public class CurrencyImporter
 		context_ = context;
 	}
 
-	public UpdatingResult importOnBackground(String currencyCode)
+	public UpdatingResult importOnBackground(long currencyUnitId)
 	{
 		if (isDumped())
 			throw new UnsupportedOperationException();
 
-		Log.d("CURR", "importOnBackground BEGIN "+currencyCode);
+		Log.d("CURR", "importOnBackground BEGIN "+currencyUnitId);
 		
 		// TODO
 
@@ -31,7 +31,7 @@ public class CurrencyImporter
 		{
 			if (requestCancellation_)
 			{
-				Log.d("CURR", "importOnBackground CANCEL "+currencyCode);
+				Log.d("CURR", "importOnBackground CANCEL "+currencyUnitId);
 				return UpdatingResult.FAILED;
 			}
 			try
@@ -44,9 +44,9 @@ public class CurrencyImporter
 			}
 		}
 
-		Log.d("CURR", "importOnBackground END "+currencyCode);
+		Log.d("CURR", "importOnBackground END "+currencyUnitId);
 		
-		return UpdatingResult.DATA_UNCHANGED;
+		return UpdatingResult.DATA_CHANGED;
 	}
 
 	public void dumpIt()

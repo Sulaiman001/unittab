@@ -49,6 +49,7 @@ import dh.sunicon.runnable.RowData;
 public class ConverterFragment extends ListFragment implements LoaderCallbacks<Cursor>
 {
 	static final String TAG = ConverterFragment.class.getName();
+	public static final long CURRENCY_CATEGORY = 11;
 	static final int VALUE_SPINNER_LOADER = 0;
 	private DatabaseHelper dbHelper_;
 	private TextView categoryLabel_;
@@ -195,8 +196,6 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			//restore baseValueSpinnerItemPosition
 			spinnerPositionToRestore_ = savedState.getInt("baseValueSpinnerItemPosition");
 			getLoaderManager().initLoader(VALUE_SPINNER_LOADER, null, this); //should be called in onActivityCreated
-//			baseValueSpinnerAdapter_.getFilter().filter(Long.toString(baseUnitId_));
-//			setBaseValueSpinnerSelection(savedState.getInt("baseValueSpinnerItemPosition"));
 			if (savedState.getBoolean("spinnerVisible") && baseValueSwitcher_.getNextView() == baseValueSpinner_)
 			{
 				baseValueSwitcher_.showNext();
@@ -206,6 +205,9 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			JSONObject jsonResultListAdapter = new JSONObject(savedState.getString("resultListAdapter"));
 			resultListAdapter_ = new ResultListAdapter(this, jsonResultListAdapter);
 			setListAdapter(resultListAdapter_);
+
+			//restore CurrencyUpdater
+			currencyUpdater_.process(savedState.getLong("currencyUnitIdOnLoading"));
 			
 			Log.i(TAG + "-SR", "Restore Spinner selection "+savedState.getInt("baseValueSpinnerItemPosition"));
 		}
@@ -235,6 +237,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			outState.putBoolean("targetUnitFilterEditorEnable", targetUnitFilterEditor_.isEnabled());
 			outState.putString("resultListAdapter", resultListAdapter_.serialize().toString());
 			outState.putBoolean("spinnerVisible", baseValueSwitcher_.getNextView() == baseValueEditor_);
+			outState.putLong("currencyUnitIdOnLoading", currencyUpdater_.getCurrencyUnitIdOnLoading());
 		}
 		catch (Exception ex)
 		{
@@ -265,6 +268,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	public void onStop()
 	{
 		super.onStop();
+		currencyUpdater_.cancel();
 		isActivityRunning_ = false;
 	}
 	
@@ -468,7 +472,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 					}
 					
 					//Log.d(TAG, "spinner changes position = "+position);
-					getResultListAdapter().setBaseValue(Double.NaN, id);
+					if (id>0)
+						getResultListAdapter().setBaseValue(Double.NaN, id);
 				}
 				catch (Exception ex)
 				{
@@ -481,17 +486,17 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			{
 				try
 				{
-					if (isEventsSuspending())
-					{
-						return;
-					}
-					
-					if (!isActivityRunning_ || getResultListAdapter() == null)
-					{
-						return;
-					}
-					
-					getResultListAdapter().setBaseValue(Double.NaN, (long)-1);
+//					if (isEventsSuspending())
+//					{
+//						return;
+//					}
+//					
+//					if (!isActivityRunning_ || getResultListAdapter() == null)
+//					{
+//						return;
+//					}
+//					
+//					getResultListAdapter().setBaseValue(Double.NaN, (long)-1);
 				}
 				catch (Exception ex)
 				{
@@ -615,13 +620,23 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	private void initCurrencyUpdater() 
 	{
 		final View updateInProgressPanel = getView().findViewById(R.id.updateInProgressPanel);
+		final TextView currencyLoadingLabel = (TextView) getView().findViewById(R.id.currencyLoadingLabel); //TODO only for debug => remove it
+		
 		currencyUpdater_ = new CurrencyUpdater(this.getActivity());
 		currencyUpdater_.setBeforeUpdateStarted_(new BeforeUpdateStartedListener()
 		{
 			@Override
-			public void beforeUpdateStarted(CurrencyUpdater sender)
+			public void beforeUpdateStarted(CurrencyUpdater sender, long currencyUnitId)
 			{
-				updateInProgressPanel.setVisibility(View.VISIBLE);
+				try
+				{
+					currencyLoadingLabel.setText("Updating currency rate. Touch to skip... ("+currencyUnitId+")");
+					updateInProgressPanel.setVisibility(View.VISIBLE);
+				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex);
+				}	
 			}
 		});
 		currencyUpdater_.setOnUpdateFinished(new OnUpdateFinishedListener()
@@ -629,12 +644,19 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			@Override
 			public void onUpdateFinished(CurrencyUpdater sender, UpdatingResult result)
 			{
-				updateInProgressPanel.setVisibility(View.GONE);
+				try
+				{
+					updateInProgressPanel.setVisibility(View.GONE);
 				
-				if (result == UpdatingResult.DATA_CHANGED) {
-					//re-calculate resultList after updating currency rate. Warning, donnot process update again
-					resultListAdapter_.invokeReComputation();
+					if (result == UpdatingResult.DATA_CHANGED) {
+						//re-calculate resultList after updating currency rate. Warning, donnot process update again
+						resultListAdapter_.reComputeAll();
+					}
 				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex);
+				}	
 			}
 		});
 		updateInProgressPanel.setOnClickListener(new OnClickListener()
@@ -642,7 +664,14 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			@Override
 			public void onClick(View v)
 			{
-				currencyUpdater_.cancel();
+				try
+				{
+					currencyUpdater_.cancel();
+				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex);
+				}	
 			}
 		});
 	}
@@ -764,6 +793,11 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		}	
 		
 		getResultListAdapter().setBaseUnitId(categoryId_, baseUnitId_);
+		
+		currencyUpdater_.cancel(); //cancel previous
+		if (categoryId_ == CURRENCY_CATEGORY) {
+			currencyUpdater_.process(baseUnitId_);
+		}
 	}
 	
 	private void clearBaseUnit(boolean keepTextOnBaseUnitEditor)
@@ -789,7 +823,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	{
 		if (TextUtils.isEmpty(s))
 		{
-			getResultListAdapter().setBaseValue(Double.NaN, -1);
+			//getResultListAdapter().setBaseValue(Double.NaN, -1);
 		}
 		else
 		{

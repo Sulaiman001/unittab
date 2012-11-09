@@ -8,15 +8,14 @@ import org.json.JSONObject;
 
 import android.database.Cursor;
 import android.util.Log;
-import dh.sunicon.currency.CurrencyUpdater;
+import dh.sunicon.ConverterFragment;
 import dh.sunicon.datamodel.Conversion;
 import dh.sunicon.datamodel.Corresponding;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.datamodel.EnumValue;
-import dh.sunicon.datamodel.Unit;
 
 /**
- * Load the Conversions or Correspondings + EnumValues of a category 
+ * Load the Conversions or Correspondings + EnumValues of a category, Once an instance is dump, it cannot be used again 
  */
 public final class ConversionsLoadingRunner implements Runnable
 {
@@ -37,21 +36,17 @@ public final class ConversionsLoadingRunner implements Runnable
 	private final long baseUnitId_;
 	
 	private boolean cancelled_ = false;
-	private boolean finished_;
 	//private CountDownLatch countDownLatch_ = new CountDownLatch(1);
 	
 	private ArrayList<Conversion> conversions_;
 	private ArrayList<Corresponding> correspondings_;
 	private HashMap<Long, EnumValue> enumValues_;
-	private CurrencyUpdater currencyUpdater_;
 	
-	public ConversionsLoadingRunner(DatabaseHelper dbHelper, long categoryId, long baseUnitId, CurrencyUpdater currencyUpdater)
+	public ConversionsLoadingRunner(DatabaseHelper dbHelper, long categoryId, long baseUnitId)
 	{
 		dbHelper_ = dbHelper;
 		categoryId_ = categoryId;
 		baseUnitId_ = baseUnitId;
-		currencyUpdater_ = currencyUpdater;
-		finished_ = false;
 		//countDownLatch_ = new CountDownLatch(1);
 	}
 	
@@ -60,7 +55,6 @@ public final class ConversionsLoadingRunner implements Runnable
 		dbHelper_ = dbHelper;
 		categoryId_ = savedState.getLong("categoryId");
 		baseUnitId_ = savedState.getLong("baseUnitId");
-		finished_ = false;
 		//countDownLatch_ = new CountDownLatch(1);
 //		if (!finished_)
 //		{
@@ -132,11 +126,6 @@ public final class ConversionsLoadingRunner implements Runnable
 		return cancelled_;
 	}
 	
-	public boolean isFinished()
-	{
-		return finished_;
-	}
-	
 //	public void waitToFinish(long timeout, TimeUnit timeUnit) throws InterruptedException
 //	{
 //		countDownLatch_.await(timeout, timeUnit);
@@ -146,61 +135,43 @@ public final class ConversionsLoadingRunner implements Runnable
 	public void run()
 	{
 		try
-		{	
+		{
 			if (isDumped()) {
 				throw new UnsupportedOperationException();
 			}
 			
-			if (categoryId_ == CURRENCY_CATEGORY) 
+			Log.v(TAG, "Start loading conversions / correspondings for Category "+categoryId_);
+			
+			if (categoryId_ == ConverterFragment.CURRENCY_CATEGORY) 
 			{
-				if (!cancelled_)
-				{
-					readCurrencyConversions();
-				}
+				readCurrencyConversions();
 				return;
 			}
-
-			Log.v(TAG, "Begin loading conversions / correspondings for Category "+categoryId_);
 			
-			if (!cancelled_)
-			{
-				readConversions();
-			}
-			
-			if (!cancelled_)
-			{
-				readCorrespondings();
-			}
-			
-			if (!cancelled_)
-			{
-				readEnumValues();
-			}
+			readConversions();
+			readCorrespondings();
+			readEnumValues();
 			
 			if (cancelled_)
 			{
 				conversions_ = null;
-				Log.d(TAG, "Canceled loading conversions / correspondings for Category "+categoryId_);
+				Log.v(TAG, "Canceled loading conversions / correspondings for Category "+categoryId_);
 			}
 			else
 			{
-				Log.d(TAG, "Finish loading conversions / correspondings for Category "+categoryId_);
+				Log.v(TAG, "Finish loading conversions / correspondings for Category "+categoryId_);
 			}
 		}
 		catch (Exception ex)
 		{
 			Log.w(TAG, ex);
 		}
-		finally
-		{
-			finished_ = true;
-			//notify other thread that this ones is finished
-			//countDownLatch_.countDown();
-		}
 	}
 	
 	private void readConversions()
 	{
+		if (cancelled_) return;
+		
 		Cursor cur = dbHelper_.getReadableDatabase().rawQuery(
 						SELECT_CONVERSION_QUERY,
 						new String[] { Long.toString(categoryId_) });
@@ -235,6 +206,8 @@ public final class ConversionsLoadingRunner implements Runnable
 	
 	private void readCorrespondings()
 	{
+		if (cancelled_) return;
+		
 		Cursor cur = dbHelper_.getReadableDatabase().rawQuery(
 						SELECT_CORRESPONDING_QUERY,
 						new String[] { Long.toString(categoryId_) });
@@ -262,6 +235,8 @@ public final class ConversionsLoadingRunner implements Runnable
 	
 	private void readEnumValues()
 	{
+		if (cancelled_) return;
+		
 		Cursor cur = dbHelper_.getReadableDatabase().rawQuery(
 				SELECT_ENUMVALUE_QUERY,
 				new String[] { Long.toString(categoryId_) });
@@ -289,20 +264,15 @@ public final class ConversionsLoadingRunner implements Runnable
 		}
 	}
 	
-	private final static long CURRENCY_CATEGORY = 11;
 	private final static long USD_UNIT = 1413;
 	
 	private void readCurrencyConversions()
 	{
+		if (cancelled_) return;
+		
 		//Log.d(TAG, "Begin loading currencies conversions of the currency unitId = "+baseUnitId_);
 
 		Log.d("CURR", "readCurrencyConversions BEGIN baseUnitId = "+baseUnitId_);
-		
-		Unit unit = Unit.findById(dbHelper_, baseUnitId_);
-		
-		if (currencyUpdater_!=null) {
-			currencyUpdater_.process(unit.getShortName());
-		}
 		
 		//Get the conversions from baseUnitId_ or from USD
 		

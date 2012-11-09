@@ -121,15 +121,14 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			baseValue_ = Double.NaN;
 		}
 		baseValueEnumId_ = jsonSavedState.getLong("baseValueEnumId");
-		
-		if (jsonSavedState.has("filter")){
+	
+		if (jsonSavedState.has("filter"))
 			filter_ = new TargetUnitFilter(this, jsonSavedState.getJSONArray("filter"));
-		}
 		
 		if (jsonSavedState.has("conversionsLoadingRunner"))
 		{
 			conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, jsonSavedState.getJSONObject("conversionsLoadingRunner"));
-			conversionsLoadingThread_.execute(conversionsLoadingRunner_);
+			conversionsLoadingFuture_ = conversionsLoadingThread_.submit(conversionsLoadingRunner_);
 		}
 		
 		if (jsonSavedState.has("data"))
@@ -164,14 +163,11 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		json.put("baseValueEnumId", baseValueEnumId_);
 		
 		if (conversionsLoadingRunner_!=null)
-		{
 			json.put("conversionsLoadingRunner", conversionsLoadingRunner_.serialize());
-		}
-		
+	
 		if (filter_ != null)
-		{
 			json.put("filter", filter_.serialize());
-		}
+		
 		if (data_!=null) {
 			JSONArray jsonRowData = new JSONArray();
 			for (RowData r : data_){
@@ -246,9 +242,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	public Filter getFilter()
 	{
 		if (filter_ == null)
-		{
 			filter_ = new TargetUnitFilter();
-		}
 		return filter_;
 	}
 	
@@ -257,53 +251,43 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	 */
 	public void setBaseUnitId(long categoryId, long baseUnitId) throws IllegalAccessException
 	{
-		if (onGuiThread())
-		{
-			if (categoryId == categoryId_ && baseUnitId == baseUnitId_)
-			{
-				((ConverterFragment)owner_).setComputationStateFinished(true);
-				return; //nothing changed
-			}
-			
-			Log.d(TAG, String.format("setBaseUnit category = %d baseUnit = %d", categoryId, baseUnitId));
-		
-			((ConverterFragment)owner_).setComputationStateFinished(false);
-			
-			categoryId_ = categoryId;
-			baseUnitId_ = baseUnitId;
-			
-			//read all conversion of the category
-			
-			
-			/* replace old conversionsLoadingRunner_ by a new one. No need to lock conversionsLoadingRunner_ because this code runs on main thread */
-			if (conversionsLoadingRunner_ != null)
-			{
-				conversionsLoadingRunner_.dumpIt();
-			}
-			conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, categoryId_, baseUnitId_, owner_.getCurrencyUpdater());
-			
-			
-			conversionsLoadingFuture_ = conversionsLoadingThread_.submit(conversionsLoadingRunner_);
-			
-			synchronized (lock_)
-			{
-				data_ = null;
-			}
-			
-			//fill the list with related target unit (of the same category)
-			if (fillDataTask_ != null)
-			{
-				fillDataTask_.cancel(false);
-			}
-			fillDataTask_ = new FillDataTask();
-			fillDataTask_.execute(categoryId_, baseUnitId_);
-			
-			invokeGuiUpdateAfterCalculation();
-		}
-		else
-		{
+		if (!onGuiThread())
 			throw new IllegalAccessException("this methode must be called from UI Thread.");
+		
+		if (categoryId == categoryId_ && baseUnitId == baseUnitId_)
+		{
+			((ConverterFragment)owner_).setComputationStateFinished(true);
+			return; //nothing changed
 		}
+		
+		Log.d(TAG, String.format("setBaseUnit category = %d baseUnit = %d", categoryId, baseUnitId));
+	
+		((ConverterFragment)owner_).setComputationStateFinished(false);
+		
+		categoryId_ = categoryId;
+		baseUnitId_ = baseUnitId;
+		
+		/*read all conversion of the category*/
+		
+		/* replace old conversionsLoadingRunner_ by a new one. No need to lock conversionsLoadingRunner_ because this code runs on main thread */
+		if (conversionsLoadingRunner_ != null)
+			conversionsLoadingRunner_.dumpIt();
+		conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, categoryId_, baseUnitId_);
+		conversionsLoadingFuture_ = conversionsLoadingThread_.submit(conversionsLoadingRunner_);
+		
+		synchronized (lock_)
+		{
+			data_ = null;
+		}
+		
+		/*fill the list with related target unit (of the same category)*/
+		
+		if (fillDataTask_ != null)
+			fillDataTask_.cancel(false);
+		fillDataTask_ = new FillDataTask();
+		fillDataTask_.execute(categoryId_, baseUnitId_);
+		
+		invokeGuiUpdateAfterCalculation();
 	}
 	
 	/**
@@ -312,70 +296,63 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	 */
 	public void setBaseValue(double baseValue, long baseValueEnumId) throws IllegalAccessException
 	{
-		if (onGuiThread())
+		if (!onGuiThread())
+			throw new IllegalAccessException("setBaseValue() must be called from UI Thread. To be sure that data_ will not be changed during the computing");
+		
+		if (baseValue != baseValue_ || baseValueEnumId != baseValueEnumId_)
 		{
-			if (baseValue != baseValue_ || baseValueEnumId != baseValueEnumId_)
-			{
-				Log.i(TAG, String.format("setBaseValue = %f, %d", baseValue, baseValueEnumId));
-				
-				baseValue_ = baseValue;
-				baseValueEnumId_ = baseValueEnumId;
-				
-//				/* set all the value to "-" */
-//				if (filter_!=null)
-//				{
-//					filter_.clearAllTargetValues();
-//				}
-//				
-				if (data_ == null || data_.size() == 0)
-				{
-					Log.d(TAG, "RowData list is empty");
-					((ConverterFragment)owner_).setComputationStateFinished(true);
-					return;
-				}
-//				
-//				int count = data_.size();
-//				
-//				for (int i = 0; i<count; i++)
-//				{
-//					data_.get(i).clearTargetValue();
-//				}
-//				notifyDataSetChanged();
-				
-				int count = data_.size();
-				
-				/* calculate all value */
-				
-				for (int i = 0; i<count; i++)
-				{
-					data_.get(i).setBaseValue(baseValue_, baseValueEnumId_);
-				}
-				
-				invokeGuiUpdateAfterCalculation();
-			}
-			else
-			{
-				Log.w(TAG, "Ignore calculation because the baseValue has not been changed");
-				((ConverterFragment)owner_).setComputationStateFinished(true);
-			}
+			Log.i(TAG, String.format("setBaseValue = %f, %d", baseValue, baseValueEnumId));
 			
+			baseValue_ = baseValue;
+			baseValueEnumId_ = baseValueEnumId;
+			
+			if (data_ == null || data_.size() == 0)
+			{
+				Log.d(TAG, "RowData list is empty");
+				((ConverterFragment)owner_).setComputationStateFinished(true);
+				return;
+			}
+
+			/* calculate all value */
+			
+			for (RowData rowdata : data_)
+				rowdata.setBaseValue(baseValue_, baseValueEnumId_);
+			
+			invokeGuiUpdateAfterCalculation();
 		}
 		else
 		{
-			throw new IllegalAccessException("setBaseValue() must be called from UI Thread. To be sure that data_ will not be changed during the computing");
+			Log.w(TAG, "Ignore calculation because the baseValue has not been changed");
+			((ConverterFragment)owner_).setComputationStateFinished(true);
 		}
 	}
 
-	public void invokeReComputation() {
-		
-		//Warning, donnot process update currency rate here
-		
-		//disable the CurrencyUpdater
+	public void reComputeAll() throws IllegalAccessException {
 
-		//redo setBaseUnit to update Conversions
-		//redo setBaseValue to re-calculate
+		if (!onGuiThread())
+			throw new IllegalAccessException("reComputeAll() must be called from UI Thread");
+		
+		((ConverterFragment)owner_).setComputationStateFinished(false);
+		
+		/* refresh Conversions. No need to lock conversionsLoadingRunner_ because this code runs on main thread */
+		
+		if (conversionsLoadingRunner_ != null)
+			conversionsLoadingRunner_.dumpIt();
+		conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, categoryId_, baseUnitId_);
+		conversionsLoadingFuture_ = conversionsLoadingThread_.submit(conversionsLoadingRunner_);
+		
+		/* re-calculate target value */
 
-		//enable CurrencyUpdater
+		for (RowData rowdata : data_)
+		{
+			rowdata.clearTargetValue(); //reset target value
+			rowdata.setBaseValue(baseValue_, baseValueEnumId_); //recalcule target value
+		}
+		
+		if (filter_!=null)
+			filter_.reComputeAll();
+		
+		invokeGuiUpdateAfterCalculation();
 	}
 	
 	/* wait the calculations finished then update the list View */
@@ -490,15 +467,11 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	
 	private void waitConversionLoadingRunner() throws InterruptedException, ExecutionException, TimeoutException, IllegalAccessException
 	{
-		if (conversionsLoadingRunner_==null)
+		if (conversionsLoadingFuture_==null)
 		{
 			throw new UnsupportedOperationException("The conversion loading has not been started. Base Unit was not set");
 		}
-		if (!conversionsLoadingRunner_.isFinished())
-		{
-			conversionsLoadingFuture_.get(10, TimeUnit.SECONDS);
-			//conversionsLoadingRunner_.waitToFinish(10, TimeUnit.SECONDS);
-		}
+		conversionsLoadingFuture_.get(10, TimeUnit.SECONDS);
 	}
 
 	public boolean onGuiThread()
@@ -539,9 +512,6 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				int idColumnIndex = cur.getColumnIndex("id");
 				int nameColumnIndex = cur.getColumnIndex("name");
 				int shortNameColumnIndex = cur.getColumnIndex("shortName");
-				double baseValue = baseValue_;
-				long baseValueEnumId = baseValueEnumId_;
-				
 				
 				while (cur.moveToNext() && !isCancelled()) 
 				{
@@ -551,7 +521,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 							cur.getLong(idColumnIndex),
 							cur.getString(nameColumnIndex),
 							cur.getString(shortNameColumnIndex),
-							baseValue, baseValueEnumId
+							baseValue_, baseValueEnumId_
 						);
 					resu.add(co);
 				}
@@ -583,9 +553,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				
 				//reset filter
 				if (filter_ != null)
-				{
 					filter_.dumpFilterData();
-				}
 				
 				if (result == null || result.size() == 0)
 				{
@@ -595,9 +563,16 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				{
 					Log.d(TAG, String.format("Finished fill data for category %d, found %d units", categoryId_, result.size()));
 					notifyDataSetChanged();
-					ResultListAdapter.this.setBaseValue(baseValue_, baseValueEnumId_); //redo the calculation
+					
+					//make a initial calculation
+					for (RowData rowdata : data_)
+					{
+						rowdata.clearTargetValue(); //reset target value
+						rowdata.setBaseValue(baseValue_, baseValueEnumId_); //recalcule target value
+					}
+					
+					invokeGuiUpdateAfterCalculation();
 				}
-				((ConverterFragment)owner_).setComputationStateFinished(true);
 			}
 			catch (Exception e)
 			{
@@ -706,13 +681,11 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 					synchronized (lock_) 
 					{
 						l = new ArrayList<RowData>(fullData_);
-						final int count = l.size();
-						for (int i = 0; i<count; i++)
+						for (RowData r : l)
 						{
-							l.get(i).setBaseValue(baseValue_, baseValueEnumId_);
+							r.setBaseValue(baseValue_, baseValueEnumId_);
 						}
 					}
-					awaitCalculation();
 				}
 				else
 				{
@@ -755,6 +728,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				
 				resu.values = l;
 				resu.count = l.size();
+				
+				awaitCalculation();
 				return resu;
 			}
 			catch (Exception ex)
@@ -789,18 +764,18 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			}
 		}
 		
-//		public void clearAllTargetValues()
-//		{
-//			if (fullData_ == null)
-//			{
-//				return;
-//			}
-//			int count = fullData_.size();
-//			for (int i = 0; i<count; i++)
-//			{
-//				fullData_.get(i).clearTargetValue();
-//			}
-//		}
+		public void reComputeAll()
+		{
+			if (fullData_ == null)
+			{
+				return;
+			}
+			for (RowData r : fullData_)
+			{
+				r.clearTargetValue();
+				r.setBaseValue(baseValue_, baseValueEnumId_);
+			}
+		}
 		
 		/**
 		 * Must be called each time the result list (data_) is re-populate
@@ -812,10 +787,9 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				return;
 			}
 			// dump the data row before replacing it
-			int n = fullData_.size();
-			for (int i = 0; i < n; i++)
+			for (RowData r : fullData_)
 			{
-				fullData_.get(i).dumpIt();
+				r.dumpIt();
 			}
 			fullData_ = null;
 		}

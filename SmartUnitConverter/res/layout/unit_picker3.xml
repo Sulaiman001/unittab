@@ -9,22 +9,26 @@
     <RelativeLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal" >
+        android:orientation="horizontal" 
+        android:paddingTop="2dp"
+        >
 
         <Button
             android:id="@+id/backButton"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="36dp"
             android:layout_alignParentLeft="true"
             android:background="@drawable/edittext_active"
-            android:padding="10dip"
+            android:padding="10dp"
+            android:gravity="bottom"
             android:text="Back"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
         <ToggleButton
             android:id="@+id/listToggle"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="36dp"
+            android:gravity="bottom"
             android:layout_alignParentRight="true"
             android:background="@drawable/edittext_active"
             android:padding="10dip"

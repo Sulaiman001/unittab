@@ -1,6 +1,5 @@
 package dh.sunicon.currency;
 
-import java.security.InvalidParameterException;
 import java.sql.Timestamp;
 import java.util.Calendar;
 import java.util.concurrent.Callable;
@@ -11,7 +10,7 @@ import java.util.concurrent.Future;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Handler;
-import android.text.TextUtils;
+import android.os.Looper;
 import android.util.Log;
 
 /**
@@ -38,38 +37,32 @@ public class CurrencyUpdater
 	private final ExecutorService updatingThread_;
 	private Future<UpdatingResult> lastProcessingResult_;
 	private CurrencyImporter currencyImporter_;
-	private Object lockCurrencyImporter_ = new Object();
-	private boolean enabled_ = true;
+	private long currencyUnitIdOnProcess_ = -1;
 	
 	public CurrencyUpdater(Activity context){
 		context_ = context;
 		preferences_ = context_.getPreferences(Activity.MODE_PRIVATE);
-		timeToLive_ = preferences_.getLong("CurrencyRateExpiryDuration", 1000);
+		timeToLive_ = preferences_.getLong("CurrencyRateExpiryDuration", 500);
 		updatingThread_ = Executors.newSingleThreadExecutor();
 		mainThread_ = new Handler();
 	}
 	
-	public long getLastUpdate(String currencyCode) {
-		return preferences_.getLong("LastUpdate-"+currencyCode, 0);
+	public long getLastUpdate(long currencyUnitId) {
+		return preferences_.getLong("LastUpdateCurrency-"+currencyUnitId, 0);
 	}
 	
 	public long getTimeToLive() {
 		return timeToLive_;
 	}
 	
-	public boolean isExpiry(String currencyCode) {
+	public boolean isExpiry(long currencyUnitId) {
 		long now = getNow();
-		return (now - getLastUpdate(currencyCode)) > timeToLive_;
+		return (now - getLastUpdate(currencyUnitId)) > timeToLive_;
 	}
-
 	
-	private boolean allowProcess(String currencyCode) {
-		
-		if (!enabled_) {
-			return false;
-		}
-		
-		if (isExpiry(currencyCode))
+	private boolean allowProcess(long currencyUnitId) {
+	
+		if (isExpiry(currencyUnitId))
 			return true;
 		
 		//not expiry
@@ -101,39 +94,36 @@ public class CurrencyUpdater
 		return false;
 	}
 	
-	public void process(final String currencyCode) {
+	/**
+	 * Must be call on the Main Thread
+	 * @param currencyUnitId
+	 * @throws IllegalAccessException 
+	 */
+	public void process(final long currencyUnitId) throws IllegalAccessException {
 		
-		if (TextUtils.isEmpty(currencyCode))
-			throw new InvalidParameterException("CurrencyCode must not NULL");
-		
-		if (!allowProcess(currencyCode))
+		if (Looper.getMainLooper().getThread() != Thread.currentThread())
+		{
+			throw new IllegalAccessException("This methode must be called from UI Thread.");
+		}
+
+		if (currencyUnitId<0)
 			return;
 		
-		Log.d("CURR", "Process BEGIN "+currencyCode);
+		if (!allowProcess(currencyUnitId))
+			return;
 		
-		mainThread_.post(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				try
-				{
-					if (beforeUpdateStarted_!=null)
-						beforeUpdateStarted_.beforeUpdateStarted(CurrencyUpdater.this);
-				}
-				catch (Exception ex){
-					Log.wtf(TAG, ex);
-				}
-			}
-		});
+		Log.d("CURR", "Process BEGIN "+currencyUnitId);
+		
+		if (beforeUpdateStarted_!=null)
+			beforeUpdateStarted_.beforeUpdateStarted(CurrencyUpdater.this, currencyUnitId);
 		
 		class CallableWithParam implements Callable<UpdatingResult>
 		{
-			private final String currencyCode_;
+			private final long currencyUnitId_;
 			private final CurrencyImporter currencyImporter_;
 			
-			public CallableWithParam(String currencyCode, CurrencyImporter currencyImporter) {
-				currencyCode_ = currencyCode;
+			public CallableWithParam(long currencyUnitId, CurrencyImporter currencyImporter) {
+				currencyUnitId_ = currencyUnitId;
 				currencyImporter_ = currencyImporter;
 			}
 			
@@ -142,10 +132,12 @@ public class CurrencyUpdater
 			{
 				try
 				{
-					final UpdatingResult ret = currencyImporter_.importOnBackground(currencyCode_);
+					currencyUnitIdOnProcess_ = currencyUnitId_;
+					
+					final UpdatingResult ret = currencyImporter_.importOnBackground(currencyUnitId_);
 					
 					if (ret != UpdatingResult.FAILED && !currencyImporter_.isDumped())
-						saveLastTimeProcess(currencyCode_);
+						saveLastTimeProcess(currencyUnitId_);
 					
 					if (currencyImporter_ == CurrencyUpdater.this.currencyImporter_) //if the currencyImporter has not been changed evens it is dumped
 					{
@@ -166,6 +158,8 @@ public class CurrencyUpdater
 						});
 					}
 					
+					currencyUnitIdOnProcess_ = -1;
+					
 					return ret;
 				}
 				catch (Exception ex)
@@ -176,29 +170,15 @@ public class CurrencyUpdater
 			}
 		}
 		
-		/* 
-		 * each call of this method will cancel old currencyImporter and create a new one
-		 * to make sure that the previous process call will not invoke onUpdateFinished  .
-		 * Need a lock here because this code can be call from more than one thread
-		 */
-		synchronized (lockCurrencyImporter_)
-		{
-			CurrencyImporter oldCurrencyImporter = currencyImporter_;
-			currencyImporter_ = new CurrencyImporter(context_);
-			lastProcessingResult_ = updatingThread_.submit(new CallableWithParam(currencyCode, currencyImporter_));
-			
-			if (oldCurrencyImporter != null) {
-				try
-				{
-					oldCurrencyImporter.dumpIt();
-				}
-				catch (Exception ex) {
-					Log.w(TAG, ex.getMessage());
-				}
-			}
-		}
 		
-		Log.d("CURR", "Process END "+currencyCode);
+		//dump old currencyImporter to cancel old update which is currently running on the updatingThread (if there is one)
+		if (currencyImporter_ != null) {
+			currencyImporter_.dumpIt();
+		}
+		currencyImporter_ = new CurrencyImporter(context_);
+		lastProcessingResult_ = updatingThread_.submit(new CallableWithParam(currencyUnitId, currencyImporter_));
+				
+		Log.d("CURR", "Process END "+currencyUnitId);
 	}
 	
 	public void cancel() {
@@ -207,16 +187,16 @@ public class CurrencyUpdater
 	}
 	
 	
-	private void saveLastTimeProcess(String currencyCode) {
+	private void saveLastTimeProcess(long currencyUnitId) {
 		try
 		{
 			long now = getNow();
 			
 			SharedPreferences.Editor editor = preferences_.edit();
-			editor.putLong("LastUpdate-"+currencyCode, now);
+			editor.putLong("LastUpdateCurrency-"+currencyUnitId, now);
 			editor.commit();
 			
-			Log.d(TAG, "Save LastUpdate-"+currencyCode+" "+new Timestamp(now)); //TODO remove it
+			Log.d(TAG, "Save LastUpdate-"+currencyUnitId+" "+new Timestamp(now)); //TODO remove it
 		}
 		catch (Exception ex)
 		{
@@ -241,15 +221,13 @@ public class CurrencyUpdater
 	public void setBeforeUpdateStarted_(BeforeUpdateStartedListener listener) {
 		beforeUpdateStarted_ = listener;
 	}
-	
-	public boolean isEnabled()
-	{
-		return enabled_;
-	}
 
-	public void setEnabled(boolean enabled)
+	/**
+	 * return -1 if no currency is loading
+	 */
+	public long getCurrencyUnitIdOnLoading()
 	{
-		enabled_ = enabled;
+		return currencyUnitIdOnProcess_;
 	}
 
 	public enum UpdatingResult {FAILED, DATA_CHANGED, DATA_UNCHANGED}
@@ -259,6 +237,6 @@ public class CurrencyUpdater
 	}
 	
 	public interface BeforeUpdateStartedListener {
-		void beforeUpdateStarted(CurrencyUpdater sender);
+		void beforeUpdateStarted(CurrencyUpdater sender, long currencyUnitId);
 	}
 }
