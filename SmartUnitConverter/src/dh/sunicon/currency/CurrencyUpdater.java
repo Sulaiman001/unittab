@@ -184,6 +184,8 @@ public class CurrencyUpdater
 					
 					final ImportationReport ret = checkOptionAndImport();
 					
+					Log.v("CURR", "checkOptionAndImport finish");
+					
 					if (ret.successUpdateAll() && !currencyImporter__.isDumped())
 						saveLastTimeProcess(currencyUnitId__);
 					
@@ -233,7 +235,6 @@ public class CurrencyUpdater
 		if (currencyImporter_ != null)
 		{
 			currencyImporter_.dumpIt();
-			currencyImporter_ = null;
 		}
 	}
 	

@@ -5,6 +5,8 @@ import android.util.Log;
 import dh.sunicon.MainActivity;
 import dh.sunicon.currency.ImportationReport.MessageType;
 import dh.sunicon.datamodel.DatabaseHelper;
+import dh.sunicon.datamodel.Unit;
+import dh.sunicon.runnable.ConversionsLoadingRunner;
 
 /**
  * Implement the cancellable aspect of the updater
@@ -30,15 +32,19 @@ public class RatesImportersManager
 			throw new UnsupportedOperationException();
 		}
 		
+		Log.d("CURR", "importOnBackground BEGIN "+currencyUnitId);
 		ImportationReport report = new ImportationReport();
 		try
 		{
-			Log.d("CURR", "importOnBackground BEGIN "+currencyUnitId);
-			
-			Thread.sleep(5000);
-			
 			importFromYahoo(report);
 			
+			//TODO debug
+//			for (int i=0; i<10; i++) {
+//				if (isDumped())
+//					break;
+//				Thread.sleep(500);
+//			}
+//			
 			//importFromTMC(currencyUnitId, report);
 		}
 		catch (Exception ex)
@@ -47,6 +53,7 @@ public class RatesImportersManager
 			Log.w(TAG, ex);
 		}
 		
+		Log.d("CURR", "importOnBackground END "+currencyUnitId);
 		return report;
 	}
 	
@@ -55,17 +62,18 @@ public class RatesImportersManager
 		if (yahooImporter_!=null) {
 			yahooImporter_.dumpIt();
 		}
-		yahooImporter_ = new YahooRatesImporter(dbHelper_, report);
-		yahooImporter_.importRates("http://finance.yahoo.com/webservice/v1/symbols/allcurrencies/quote");
+		Unit usdCurrency = Unit.findById(dbHelper_, Unit.USD_UNIT);
+		yahooImporter_ = new YahooRatesImporter(dbHelper_, usdCurrency, report);
+		yahooImporter_.importRates("http://finances.yahoo.com/webservice/v1/symbols/allcurrencies/quotes");
 	}
 	
-	void importFromTMC(long currencyUnitId, ImportationReport report)
+	void importFromTMC(Unit baseCurrency, ImportationReport report)
 	{
-		if (tmcImporter_!=null) {
-			tmcImporter_.dumpIt();
-		}
-		tmcImporter_ = new TmcRatesImporter(dbHelper_, currencyUnitId, report);
-	
+//		if (tmcImporter_!=null) {
+//			tmcImporter_.dumpIt();
+//		}
+//		tmcImporter_ = new TmcRatesImporter(dbHelper_, currencyUnitId, report);
+//	
 		//TODO
 	}
 

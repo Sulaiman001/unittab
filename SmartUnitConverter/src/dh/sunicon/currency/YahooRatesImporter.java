@@ -2,13 +2,14 @@ package dh.sunicon.currency;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.InvalidParameterException;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import android.util.Xml;
 import dh.sunicon.datamodel.DatabaseHelper;
-import dh.sunicon.runnable.ConversionsLoadingRunner;
+import dh.sunicon.datamodel.Unit;
 
 /**
  * update 160+ currencies with base USD
@@ -18,14 +19,12 @@ public class YahooRatesImporter extends RatesImporter
 	//private static final String TAG = YahooRatesImporter.class.getName();
 	private static final String ns = null;
 
-	public YahooRatesImporter(DatabaseHelper dbHelper, long baseCurrencyUnitId, ImportationReport report)
+	public YahooRatesImporter(DatabaseHelper dbHelper, Unit baseCurrency, ImportationReport report)
 	{
-		super(dbHelper, baseCurrencyUnitId, report);
-	}
-	
-	public YahooRatesImporter(DatabaseHelper dbHelper, ImportationReport report)
-	{
-		super(dbHelper, ConversionsLoadingRunner.USD_UNIT, report);
+		super(dbHelper, baseCurrency, report);
+		if (baseCurrency.getId()!=Unit.USD_UNIT) {
+			throw new InvalidParameterException();
+		}
 	}
 	
 	protected void importFrom(InputStream inputStream) throws IOException, XmlPullParserException 

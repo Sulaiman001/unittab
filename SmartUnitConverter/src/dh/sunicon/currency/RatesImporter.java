@@ -16,6 +16,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import android.util.Log;
 import dh.sunicon.currency.ImportationReport.MessageType;
 import dh.sunicon.datamodel.DatabaseHelper;
+import dh.sunicon.datamodel.Unit;
 
 /**
  * update 160+ currencies with base USD
@@ -27,13 +28,13 @@ public abstract class RatesImporter
 	private HttpGet httpGet_;
 	private HttpURLConnection httpConnection_;
 	private DatabaseHelper dbHelper_;
-	private long baseCurrencyUnitId_;
+	private Unit baseCurrency_;
 	protected ImportationReport report_;
 	
-	public RatesImporter(DatabaseHelper dbHelper, long baseCurrencyUnitId, ImportationReport report)
+	public RatesImporter(DatabaseHelper dbHelper, Unit baseCurrency, ImportationReport report)
 	{
 		dbHelper_ = dbHelper;
-		baseCurrencyUnitId_ = baseCurrencyUnitId;
+		baseCurrency_ = baseCurrency;
 		report_ = report;
 	}
 	
@@ -75,17 +76,16 @@ public abstract class RatesImporter
 		try
 		{
 			//TODO
-			Log.i(TAG, currencyCode + " "+rate);
-			
+			Log.v("CURR", currencyCode + " "+rate);
+			baseCurrency_.insertOrUpdateCurrency(currencyCode, Double.parseDouble(rate));
 			report_.setDatabaseChanged(true);
 			return true;
 		}
 		catch (Exception ex)
 		{
-			String msg = String.format("[%s %d] Failed to set '%s' rate to '%s': %s", //TODO multi-language
-						getImporterName(), baseCurrencyUnitId_, currencyCode, rate, ex.getMessage()
+			String msg = String.format("[%s %s] Failed to set '%s' rate to '%s': %s", //TODO multi-language
+						getImporterName(), baseCurrency_.getShortName(), currencyCode, rate, ex.getMessage()
 					);
-			
 			report_.add(report_.new ReportEntry(MessageType.WARNING, msg));
 			Log.w(TAG, msg);
 			return false;
@@ -122,7 +122,7 @@ public abstract class RatesImporter
 	
 	/* Toolset */
 	
-	private InputStream getStreamFromUrl(String address) throws IOException {
+	private InputStream getStreamFromUrl2(String address) throws IOException {
 		URL url = new URL(address);
 		httpConnection_ = (HttpURLConnection)url.openConnection();
 		int responseCode = httpConnection_.getResponseCode();
@@ -132,7 +132,7 @@ public abstract class RatesImporter
 			throw new IllegalStateException("Failed to connect to "+address+": "+ httpConnection_.getResponseMessage()+" ("+ responseCode+")");
 	}
 
-	private InputStream getInputStreamFromUrl2(String address) throws IllegalStateException, IOException
+	private InputStream getStreamFromUrl(String address) throws IllegalStateException, IOException
 	{
 		httpGet_ = new HttpGet(address);
 		HttpClient httpclient = new DefaultHttpClient();

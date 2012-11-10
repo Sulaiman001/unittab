@@ -1,4 +1,16 @@
+SELECT conversion.* 
+FROM conversion INNER JOIN unit ON conversion.target = unit.id
+WHERE unit.categoryId = 11 AND unit.shortName="VND"
+;
+
+select * from conversion where base = 1400;
+
+insert into conversion(base, target, fx) values (1400,1401, 6);
+
+
 select * from unit where shortName="VND";
+
+update or insert 
 
 
 select categoryId, count(id) as c from unit 

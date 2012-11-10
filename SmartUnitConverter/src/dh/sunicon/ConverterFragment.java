@@ -45,13 +45,13 @@ import dh.sunicon.currency.CurrencyUpdater.BeforeUpdateStartedListener;
 import dh.sunicon.currency.CurrencyUpdater.OnUpdateFinishedListener;
 import dh.sunicon.currency.ImportationReport;
 import dh.sunicon.currency.ImportationReport.MessageType;
+import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.runnable.RowData;
 
 public class ConverterFragment extends ListFragment implements LoaderCallbacks<Cursor>
 {
 	static final String TAG = ConverterFragment.class.getName();
-	public static final long CURRENCY_CATEGORY = 11;
 	static final int VALUE_SPINNER_LOADER = 0;
 	private DatabaseHelper dbHelper_;
 	private TextView categoryLabel_;
@@ -672,6 +672,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 					updateCurrencyNotificationBar();
 					
 					if (report.isDatabaseChanged()) {
+						Log.v("CURR", "reComputeAll");
 						//re-calculate resultList after updating currency rate. Warning, donnot process update again
 						resultListAdapter_.reComputeAll();
 					}
@@ -723,6 +724,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	 */
 	private void updateCurrencyNotificationBar()
 	{
+		Log.i("CURR", "updateCurrencyNotificationBar");
+		
 		ImportationReport report = (ImportationReport) updateInProgressPanel_.getTag();
 		
 		if (report == null) {
@@ -880,7 +883,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		getResultListAdapter().setBaseUnitId(categoryId_, baseUnitId_);
 		
 		currencyUpdater_.cancel(); //cancel previous
-		if (categoryId_ == CURRENCY_CATEGORY) {
+		if (categoryId_ == Category.CURRENCY_CATEGORY) {
 			currencyUpdater_.process(baseUnitId_);
 		}
 		else {

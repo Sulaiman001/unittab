@@ -2,6 +2,7 @@ package dh.sunicon.datamodel;
 
 import java.util.HashMap;
 
+import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
@@ -9,6 +10,8 @@ import android.util.Log;
 public class Unit extends BaseEntity
 {
 	public static final String TAG = Unit.class.getName();
+	public final static long USD_UNIT = 1413;
+	
 	
 	private long categoryId;
 	private String name;
@@ -91,14 +94,17 @@ public class Unit extends BaseEntity
 		String unitIdStr = Long.toString(this.getId());
 		Cursor cur = db.query("conversion", null, "base=? OR target=?",
 				new String[] { unitIdStr, unitIdStr }, null, null, null, null);
-
-		while (cur.moveToNext())
+		try
 		{
-			Conversion u = Conversion.parseCursor(this.getDbHelper(), cur);
-			this.conversions.put(u.getId(), u);
+			while (cur.moveToNext())
+			{
+				Conversion u = Conversion.parseCursor(this.getDbHelper(), cur);
+				this.conversions.put(u.getId(), u);
+			}
 		}
-
-		cur.close();
+		finally {
+			cur.close();
+		}
 
 		return this.conversions;
 	}
@@ -108,7 +114,7 @@ public class Unit extends BaseEntity
 		Conversion resu = null;
 
 		SQLiteDatabase db = this.getDbHelper().getReadableDatabase();
-
+		
 		String unitIdStr = Long.toString(this.getId());
 		String otherUnitIdStr = Long.toString(otherUnitId);
 
@@ -116,13 +122,80 @@ public class Unit extends BaseEntity
 				"(base=? AND target=?) OR (base=? AND target=?)", new String[] {
 						unitIdStr, otherUnitIdStr, otherUnitIdStr, unitIdStr },
 				null, null, null, null);
-
-		if (cur.moveToNext())
+		try
 		{
-			resu = Conversion.parseCursor(this.getDbHelper(), cur);
+			if (cur.moveToNext())
+			{
+				resu = Conversion.parseCursor(this.getDbHelper(), cur);
+			}
 		}
-
-		cur.close();
+		finally
+		{
+			cur.close();
+		}
 		return resu;
+	}
+	
+	public boolean insertOrUpdateCurrency(String targetCurrencyShortName, double rate)
+	{
+		if (categoryId!=Category.CURRENCY_CATEGORY) {
+			throw new UnsupportedOperationException();
+		}
+		
+		//get targetCurrency
+		Unit targetCurrency = null;
+		{
+			Cursor cur = getDbHelper().getReadableDatabase().query("unit", null,
+					"categoryId=11 AND shortName=?", new String[] {
+						targetCurrencyShortName },
+					null, null, null, null);
+			try
+			{
+				if (cur.moveToNext())
+				{
+					targetCurrency = Unit.parseCursor(getDbHelper(), cur);
+				}
+			}
+			finally
+			{
+				cur.close();
+			}
+		}
+		
+		if (targetCurrency == null)
+			return false;
+		
+		//check if the conversion exits
+		boolean conversionExist = false;
+		{
+			Cursor cur = getDbHelper().getReadableDatabase().query("conversion", null,
+					"base=? AND target=?", 
+					new String[] {Long.toString(getId()), Long.toString(targetCurrency.getId()) },
+					null, null, null, null);
+			try {
+				conversionExist = cur.getCount()>0;
+			}
+			finally
+			{
+				cur.close();
+			}
+		}
+		
+		//make insert or update
+		if (conversionExist) { //make update
+			ContentValues contentValues = new ContentValues();
+			contentValues.put("fx", rate);
+			getDbHelper().getWritableDatabase().update("conversion", contentValues, "base=? and target=?", 
+					new String[] {Long.toString(getId()), Long.toString(targetCurrency.getId()) });
+		}
+		else { //make insert
+			ContentValues contentValues = new ContentValues();
+			contentValues.put("fx", rate);
+			contentValues.put("base", getId());
+			contentValues.put("target", targetCurrency.getId());
+			getDbHelper().getWritableDatabase().insert("conversion", null, contentValues);
+		}
+		
+		return true;
 	}
 }

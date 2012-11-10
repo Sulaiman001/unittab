@@ -7,6 +7,8 @@ import android.database.sqlite.SQLiteDatabase;
 
 public class Category extends BaseEntity {
 
+	public static final long CURRENCY_CATEGORY = 11;
+	
 	private String name;
 
 	public Category(DatabaseHelper dbHelper, long id, String name) {
@@ -24,15 +26,18 @@ public class Category extends BaseEntity {
 				new String[] { Long.toString(id) }, null, null, null, null);
 
 		Category resu = null;
-
-		if (cur.moveToNext()) {
-			resu = new Category(dbHelper,
-						cur.getLong(cur.getColumnIndex("id")),
-						cur.getString(cur.getColumnIndex("name"))
-					);
+		try
+		{
+			if (cur.moveToNext()) {
+				resu = new Category(dbHelper,
+							cur.getLong(cur.getColumnIndex("id")),
+							cur.getString(cur.getColumnIndex("name"))
+						);
+			}
 		}
-
-		cur.close();
+		finally {
+			cur.close();
+		}
 		return resu;
 	}
 
@@ -43,13 +48,16 @@ public class Category extends BaseEntity {
 		Cursor cur = db.query("unit", null, "categoryId=?",
 						new String[] { Long.toString(this.getId()) }, null, null,
 						null, null);
-		
-		while (cur.moveToNext()) {
-			Unit u = Unit.parseCursor(this.getDbHelper(), cur);
-			resu.put(u.getId(), u);
+		try
+		{
+			while (cur.moveToNext()) {
+				Unit u = Unit.parseCursor(this.getDbHelper(), cur);
+				resu.put(u.getId(), u);
+			}
 		}
-
-		cur.close();
+		finally {
+			cur.close();
+		}
 		
 		return resu;
 	}

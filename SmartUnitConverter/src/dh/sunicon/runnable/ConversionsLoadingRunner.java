@@ -8,11 +8,12 @@ import org.json.JSONObject;
 
 import android.database.Cursor;
 import android.util.Log;
-import dh.sunicon.ConverterFragment;
+import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.Conversion;
 import dh.sunicon.datamodel.Corresponding;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.datamodel.EnumValue;
+import dh.sunicon.datamodel.Unit;
 
 /**
  * Load the Conversions or Correspondings + EnumValues of a category, Once an instance is dump, it cannot be used again 
@@ -142,7 +143,7 @@ public final class ConversionsLoadingRunner implements Runnable
 			
 			Log.v(TAG, "Start loading conversions / correspondings for Category "+categoryId_);
 			
-			if (categoryId_ == ConverterFragment.CURRENCY_CATEGORY) 
+			if (categoryId_ == Category.CURRENCY_CATEGORY) 
 			{
 				readCurrencyConversions();
 				return;
@@ -175,28 +176,11 @@ public final class ConversionsLoadingRunner implements Runnable
 		Cursor cur = dbHelper_.getReadableDatabase().rawQuery(
 						SELECT_CONVERSION_QUERY,
 						new String[] { Long.toString(categoryId_) });
+		
+		conversions_ = new ArrayList<Conversion>();
 		try
 		{
-			final int idCi = cur.getColumnIndex("id");
-			final int baseCi = cur.getColumnIndex("base");
-			final int targetCi = cur.getColumnIndex("target");
-			final int fxCi = cur.getColumnIndex("fx");
-			final int formulaCi = cur.getColumnIndex("formula");
-			final int reversedFormulaCi = cur.getColumnIndex("reversedFormula");
-			
-			conversions_ = new ArrayList<Conversion>();
-			
-			while (cur.moveToNext() && !cancelled_)
-			{
-				Conversion c = new Conversion(dbHelper_, 
-						cur.getLong(idCi),
-						cur.getLong(baseCi), 
-						cur.getLong(targetCi), 
-						cur.getDouble(fxCi), 
-						cur.getString(formulaCi), 
-						cur.getString(reversedFormulaCi));
-				conversions_.add(c);
-			}
+			readConversionFromCursor(cur);
 		}
 		finally
 		{
@@ -264,8 +248,6 @@ public final class ConversionsLoadingRunner implements Runnable
 		}
 	}
 	
-	public final static long USD_UNIT = 1413;
-	
 	private void readCurrencyConversions()
 	{
 		if (cancelled_) return;
@@ -274,46 +256,56 @@ public final class ConversionsLoadingRunner implements Runnable
 
 		Log.d("CURR", "readCurrencyConversions BEGIN baseUnitId = "+baseUnitId_);
 		
-		//Get the conversions from baseUnitId_ or from USD
-		
-		Cursor cur = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(baseUnitId_)});
-		if (cur.getCount()==0 && baseUnitId_ != USD_UNIT)
-		{
-			cur.close();
-			cur = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(USD_UNIT)});
-		}
+		conversions_ = new ArrayList<Conversion>();
 		
 		//Load conversions to local variable (RAM)
 		
+		//Get the conversions from baseUnitId_
+		
+		Cursor cur1 = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(baseUnitId_)});
 		try
 		{
-			final int idCi = cur.getColumnIndex("id");
-			final int baseCi = cur.getColumnIndex("base");
-			final int targetCi = cur.getColumnIndex("target");
-			final int fxCi = cur.getColumnIndex("fx");
-			final int formulaCi = cur.getColumnIndex("formula");
-			final int reversedFormulaCi = cur.getColumnIndex("reversedFormula");
-			
-			conversions_ = new ArrayList<Conversion>();
-			
-			while (cur.moveToNext() && !cancelled_)
-			{
-				Conversion c = new Conversion(dbHelper_, 
-						cur.getLong(idCi),
-						cur.getLong(baseCi), 
-						cur.getLong(targetCi), 
-						cur.getDouble(fxCi), 
-						cur.getString(formulaCi), 
-						cur.getString(reversedFormulaCi));
-				conversions_.add(c);
-			}
+			readConversionFromCursor(cur1);
 		}
 		finally
 		{
-			cur.close();
+			cur1.close();
+		}
+		
+		//Get the conversions from USD
+		Cursor cur2 = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(Unit.USD_UNIT)});
+		try
+		{
+			readConversionFromCursor(cur2);
+		}
+		finally
+		{
+			cur2.close();
 		}
 		
 		Log.d("CURR", "readCurrencyConversions END baseUnitId = "+baseUnitId_);
+	}
+	
+	private void readConversionFromCursor(Cursor cur)
+	{
+		final int idCi = cur.getColumnIndex("id");
+		final int baseCi = cur.getColumnIndex("base");
+		final int targetCi = cur.getColumnIndex("target");
+		final int fxCi = cur.getColumnIndex("fx");
+		final int formulaCi = cur.getColumnIndex("formula");
+		final int reversedFormulaCi = cur.getColumnIndex("reversedFormula");
+		
+		while (cur.moveToNext() && !cancelled_)
+		{
+			Conversion c = new Conversion(dbHelper_, 
+					cur.getLong(idCi),
+					cur.getLong(baseCi), 
+					cur.getLong(targetCi), 
+					cur.getDouble(fxCi), 
+					cur.getString(formulaCi), 
+					cur.getString(reversedFormulaCi));
+			conversions_.add(c);
+		}
 	}
 	
 }
