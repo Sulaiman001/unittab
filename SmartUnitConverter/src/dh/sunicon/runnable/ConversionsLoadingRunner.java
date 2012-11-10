@@ -264,7 +264,7 @@ public final class ConversionsLoadingRunner implements Runnable
 		}
 	}
 	
-	private final static long USD_UNIT = 1413;
+	public final static long USD_UNIT = 1413;
 	
 	private void readCurrencyConversions()
 	{

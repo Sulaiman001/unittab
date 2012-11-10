@@ -44,7 +44,7 @@ public class CurrencyUpdater
 	private final Handler mainThread_;
 	private final ExecutorService updatingThread_;
 	private Future<UpdatingResult> lastProcessingResult_;
-	private CurrencyImporter currencyImporter_;
+	private RatesImportersManager currencyImporter_;
 	private long currencyUnitIdOnProcess_ = -1;
 	
 	public CurrencyUpdater(Activity context){
@@ -131,9 +131,9 @@ public class CurrencyUpdater
 		class CallableWithParam implements Callable<UpdatingResult>
 		{
 			private final long currencyUnitId__;
-			private final CurrencyImporter currencyImporter__;
+			private final RatesImportersManager currencyImporter__;
 			
-			public CallableWithParam(long currencyUnitId, CurrencyImporter currencyImporter) {
+			public CallableWithParam(long currencyUnitId, RatesImportersManager currencyImporter) {
 				currencyUnitId__ = currencyUnitId;
 				currencyImporter__ = currencyImporter;
 			}
@@ -199,7 +199,7 @@ public class CurrencyUpdater
 		if (currencyImporter_ != null) {
 			currencyImporter_.dumpIt();
 		}
-		currencyImporter_ = new CurrencyImporter(context_);
+		currencyImporter_ = new RatesImportersManager(context_);
 		lastProcessingResult_ = updatingThread_.submit(new CallableWithParam(currencyUnitId, currencyImporter_));
 				
 		Log.d("CURR", "Process END "+currencyUnitId);
