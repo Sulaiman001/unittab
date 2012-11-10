@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.UnknownServiceException;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.ParseException;
@@ -14,9 +13,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import dh.sunicon.datamodel.DatabaseHelper;
-
 import android.util.Log;
+import dh.sunicon.currency.ImportationReport.MessageType;
+import dh.sunicon.datamodel.DatabaseHelper;
 
 /**
  * update 160+ currencies with base USD
@@ -29,31 +28,47 @@ public abstract class RatesImporter
 	private HttpURLConnection httpConnection_;
 	private DatabaseHelper dbHelper_;
 	private long baseCurrencyUnitId_;
+	protected ImportationReport report_;
 	
-	public RatesImporter(DatabaseHelper dbHelper, long baseCurrencyUnitId)
+	public RatesImporter(DatabaseHelper dbHelper, long baseCurrencyUnitId, ImportationReport report)
 	{
 		dbHelper_ = dbHelper;
 		baseCurrencyUnitId_ = baseCurrencyUnitId;
+		report_ = report;
 	}
 	
-	public boolean importRates(String url) {
+	public void importRates(String url) {
 		if (isDumped()) {
 			throw new UnsupportedOperationException();
 		}
+		
+		InputStream inputStream = null;
+		
 		try
 		{
-			InputStream inputStream = getStreamFromUrl(url);
-			return importFrom(inputStream);
+			inputStream = getStreamFromUrl(url);
 		}
 		catch (Exception ex)
 		{
-			Log.w(TAG, ex);
+			report_.add(report_.new ReportEntry(MessageType.ERROR, 
+					"Network problem.",  //TODO multi-language
+					Log.getStackTraceString(ex)));
 		}
-		return false;
+		
+		try
+		{
+			importFrom(inputStream);
+		}
+		catch (Exception ex)
+		{
+			report_.add(report_.new ReportEntry(MessageType.ERROR, 
+					"Update failed.",  //TODO multi-language
+					Log.getStackTraceString(ex)));
+		}
 	}
 	
-	protected abstract boolean importFrom(InputStream inputStream) throws IOException, XmlPullParserException;
-	 
+	protected abstract void importFrom(InputStream inputStream) throws IOException, XmlPullParserException;
+	protected abstract String getImporterName();
 	
 	protected boolean updateDatabase(String currencyCode, String rate) {
 		
@@ -61,18 +76,26 @@ public abstract class RatesImporter
 		{
 			//TODO
 			Log.i(TAG, currencyCode + " "+rate);
+			
+			report_.setDatabaseChanged(true);
 			return true;
 		}
 		catch (Exception ex)
 		{
-			Log.w(TAG, ex);
+			String msg = String.format("[%s %d] Failed to set '%s' rate to '%s': %s", //TODO multi-language
+						getImporterName(), baseCurrencyUnitId_, currencyCode, rate, ex.getMessage()
+					);
+			
+			report_.add(report_.new ReportEntry(MessageType.WARNING, msg));
+			Log.w(TAG, msg);
+			return false;
 		}
-		return false;
 	}
 	
 	public void dumpIt()
 	{
 		requestCancellation_ = true;
+		report_.setCancel(true);
 		if (httpGet_!=null) {
 			try {
 				httpGet_.abort();
@@ -100,13 +123,13 @@ public abstract class RatesImporter
 	/* Toolset */
 	
 	private InputStream getStreamFromUrl(String address) throws IOException {
-			URL url = new URL(address);
-			httpConnection_ = (HttpURLConnection)url.openConnection();
-			int responseCode = httpConnection_.getResponseCode();
-			if (responseCode == HttpURLConnection.HTTP_OK)
-				return httpConnection_.getInputStream();
-			else
-				throw new IllegalStateException("Failed to connect to "+address+": "+ httpConnection_.getResponseMessage()+" ("+ responseCode+")");
+		URL url = new URL(address);
+		httpConnection_ = (HttpURLConnection)url.openConnection();
+		int responseCode = httpConnection_.getResponseCode();
+		if (responseCode == HttpURLConnection.HTTP_OK)
+			return httpConnection_.getInputStream();
+		else
+			throw new IllegalStateException("Failed to connect to "+address+": "+ httpConnection_.getResponseMessage()+" ("+ responseCode+")");
 	}
 
 	private InputStream getInputStreamFromUrl2(String address) throws IllegalStateException, IOException

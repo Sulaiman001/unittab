@@ -6,24 +6,29 @@ import java.io.InputStream;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import android.util.Log;
 import android.util.Xml;
 import dh.sunicon.datamodel.DatabaseHelper;
+import dh.sunicon.runnable.ConversionsLoadingRunner;
 
 /**
  * update 160+ currencies with base USD
  */
 public class TmcRatesImporter extends RatesImporter
 {	
-	private static final String TAG = TmcRatesImporter.class.getName();
+	//private static final String TAG = YahooRatesImporter.class.getName();
 	private static final String ns = null;
 
-	public TmcRatesImporter(DatabaseHelper dbHelper, long baseCurrencyUnitId)
+	public TmcRatesImporter(DatabaseHelper dbHelper, long baseCurrencyUnitId, ImportationReport report)
 	{
-		super(dbHelper, baseCurrencyUnitId);
+		super(dbHelper, baseCurrencyUnitId, report);
 	}
 	
-	protected boolean importFrom(InputStream inputStream) throws IOException, XmlPullParserException 
+	public TmcRatesImporter(DatabaseHelper dbHelper, ImportationReport report)
+	{
+		super(dbHelper, ConversionsLoadingRunner.USD_UNIT, report);
+	}
+	
+	protected void importFrom(InputStream inputStream) throws IOException, XmlPullParserException 
 	{
 		try
 		{
@@ -36,7 +41,8 @@ public class TmcRatesImporter extends RatesImporter
             parser.require(XmlPullParser.START_TAG, ns, "meta"); //check meet the START_TAG <meta>
             skip(parser); //skip node <meta>..</meta>
             parser.nextTag();
-            return readResources(parser);
+            
+            readResources(parser);
 		}
 		finally {
 			inputStream.close();
@@ -47,7 +53,7 @@ public class TmcRatesImporter extends RatesImporter
 	{
 	    parser.require(XmlPullParser.START_TAG, ns, "resources");
 	    
-	    while (parser.next() != XmlPullParser.END_TAG) {
+	    while (parser.next() != XmlPullParser.END_TAG && !isDumped()) {
 	        if (parser.getEventType() != XmlPullParser.START_TAG) {
 	            continue;
 	        }
@@ -87,7 +93,7 @@ public class TmcRatesImporter extends RatesImporter
 	        }
 	    }
 	    
-	    Log.i(TAG, currencyCode + " "+rateStr);
+	    updateDatabase(currencyCode, rateStr);
 	}
 
 	private String readField(XmlPullParser parser) throws XmlPullParserException, IOException
@@ -103,6 +109,12 @@ public class TmcRatesImporter extends RatesImporter
 	 * return KRW
 	 */
 	private String extractCurrencyCode(String rawCode) {
-		return rawCode.substring(0,2);
+		return rawCode.substring(0,3);
+	}
+
+	@Override
+	protected String getImporterName()
+	{
+		return "TMC";
 	}
 }

@@ -3,4 +3,5 @@
     <color name="category_fg">#FF258AAF</color>
     <color name="light_gray">#88DDDDDD</color>
     <color name="light_red">#FFDDDD</color>
+    <color name="light_yellow">#FFFFDD</color>
 </resources>

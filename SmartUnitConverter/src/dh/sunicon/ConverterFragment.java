@@ -10,6 +10,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -42,7 +43,8 @@ import com.commonsware.cwac.loaderex.acl.SQLiteCursorLoader;
 import dh.sunicon.currency.CurrencyUpdater;
 import dh.sunicon.currency.CurrencyUpdater.BeforeUpdateStartedListener;
 import dh.sunicon.currency.CurrencyUpdater.OnUpdateFinishedListener;
-import dh.sunicon.currency.CurrencyUpdater.UpdatingResult;
+import dh.sunicon.currency.ImportationReport;
+import dh.sunicon.currency.ImportationReport.MessageType;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.runnable.RowData;
 
@@ -66,6 +68,9 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	private ResultListAdapter resultListAdapter_;
 	private SimpleCursorAdapter baseValueSpinnerAdapter_;
 	private CurrencyUpdater currencyUpdater_;
+	
+	private View updateInProgressPanel_;
+	private TextView currencyLoadingLabel_;
 	
 	private int spinnerPositionToRestore_ = -1;
 	private long baseUnitId_ = -1;
@@ -207,7 +212,17 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			setListAdapter(resultListAdapter_);
 
 			//restore CurrencyUpdater
-			currencyUpdater_.process(savedState.getLong("currencyUnitIdOnLoading"));
+			long currencyUnitIdOnLoading = savedState.getLong("currencyUnitIdOnLoading"); 
+			
+			if (currencyUnitIdOnLoading>0) {
+				currencyUpdater_.process(currencyUnitIdOnLoading);
+			}
+			else {
+				JSONObject jsonReport = new JSONObject(savedState.getString("importationReport"));
+				ImportationReport report = new ImportationReport(jsonReport); 
+				updateInProgressPanel_.setTag(report);
+				updateCurrencyNotificationBar();
+			}
 			
 			Log.i(TAG + "-SR", "Restore Spinner selection "+savedState.getInt("baseValueSpinnerItemPosition"));
 		}
@@ -238,6 +253,10 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			outState.putString("resultListAdapter", resultListAdapter_.serialize().toString());
 			outState.putBoolean("spinnerVisible", baseValueSwitcher_.getNextView() == baseValueEditor_);
 			outState.putLong("currencyUnitIdOnLoading", currencyUpdater_.getCurrencyUnitIdOnLoading());
+			
+			if (updateInProgressPanel_.getTag()!=null) {
+				outState.putString("importationReport", ((ImportationReport) updateInProgressPanel_.getTag()).serialize().toString());
+			}
 		}
 		catch (Exception ex)
 		{
@@ -619,8 +638,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 
 	private void initCurrencyUpdater() 
 	{
-		final View updateInProgressPanel = getView().findViewById(R.id.updateInProgressPanel);
-		final TextView currencyLoadingLabel = (TextView) getView().findViewById(R.id.currencyLoadingLabel); //TODO only for debug => remove it
+		updateInProgressPanel_ = getView().findViewById(R.id.updateInProgressPanel);
+		currencyLoadingLabel_ = (TextView) getView().findViewById(R.id.currencyLoadingLabel); //TODO only for debug => remove it
 		
 		currencyUpdater_ = new CurrencyUpdater(this.getActivity());
 		currencyUpdater_.setBeforeUpdateStarted_(new BeforeUpdateStartedListener()
@@ -630,8 +649,11 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			{
 				try
 				{
-					currencyLoadingLabel.setText("Updating currency rate. Touch to skip... ("+currencyUnitId+")");
-					updateInProgressPanel.setVisibility(View.VISIBLE);
+					updateInProgressPanel_.setTag(null);
+					
+					setCurrencyNotification(View.VISIBLE, 
+							Color.WHITE,
+							"Updating currency rate. Touch to skip... ("+currencyUnitId+")"); //TODO Multi-language
 				}
 				catch (Exception ex)
 				{
@@ -642,13 +664,14 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		currencyUpdater_.setOnUpdateFinished(new OnUpdateFinishedListener()
 		{
 			@Override
-			public void onUpdateFinished(CurrencyUpdater sender, UpdatingResult result)
+			public void onUpdateFinished(CurrencyUpdater sender, ImportationReport report)
 			{
 				try
 				{
-					updateInProgressPanel.setVisibility(View.GONE);
-				
-					if (result == UpdatingResult.SUCCESS) {
+					updateInProgressPanel_.setTag(report);
+					updateCurrencyNotificationBar();
+					
+					if (report.isDatabaseChanged()) {
 						//re-calculate resultList after updating currency rate. Warning, donnot process update again
 						resultListAdapter_.reComputeAll();
 					}
@@ -659,14 +682,33 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 				}	
 			}
 		});
-		updateInProgressPanel.setOnClickListener(new OnClickListener()
+		updateInProgressPanel_.setOnClickListener(new OnClickListener()
 		{
 			@Override
 			public void onClick(View v)
 			{
 				try
 				{
-					currencyUpdater_.cancel();
+					if (!isActivityRunning_) return;
+					
+					ImportationReport report = (ImportationReport) updateInProgressPanel_.getTag();
+					
+					if (report == null) {
+						currencyUpdater_.cancel(); //skip
+					}
+					else {
+						//TODO
+						
+						//show Report
+						ReportDialogFragment dialog = new ReportDialogFragment();
+						dialog.show(getActivity().getSupportFragmentManager(),report.getContentMessage());
+						
+						//TODO get the callback from dialog 
+//						if (categoryId_ == CURRENCY_CATEGORY) {
+//							currencyUpdater_.cancel(); //cancel previous
+//							currencyUpdater_.process(baseUnitId_);
+//						}
+					}
 				}
 				catch (Exception ex)
 				{
@@ -674,6 +716,49 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 				}	
 			}
 		});
+	}
+	
+	/**
+	 * update base on updateInProgressPanel_.getTag
+	 */
+	private void updateCurrencyNotificationBar()
+	{
+		ImportationReport report = (ImportationReport) updateInProgressPanel_.getTag();
+		
+		if (report == null) {
+			return;
+		}
+		
+		MessageType type = report.getType();
+		
+		int bgr = Color.WHITE;
+		String label = report.getDisplayMessage();
+		switch (type) {
+			case ERROR: 
+				bgr = getResources().getColor(R.color.light_red);
+				break;
+			case WARNING: 
+				bgr = getResources().getColor(R.color.light_yellow);
+				break;
+			default: 
+		}
+		
+		setCurrencyNotification(bgr, label);
+		
+		if (type == MessageType.INFO || report.isCancel()) {
+			updateInProgressPanel_.setVisibility(View.GONE);
+		}
+	}
+	private void setCurrencyNotification(int visibility, int bgr, String label)
+	{
+		updateInProgressPanel_.setVisibility(visibility);
+		updateInProgressPanel_.setBackgroundColor(bgr);
+		currencyLoadingLabel_.setText(label);
+	}
+	private void setCurrencyNotification(int bgr, String label)
+	{
+		updateInProgressPanel_.setBackgroundColor(bgr);
+		currencyLoadingLabel_.setText(label);
 	}
 	
 	private void initResultListShowHideAnimation()
@@ -797,6 +882,10 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		currencyUpdater_.cancel(); //cancel previous
 		if (categoryId_ == CURRENCY_CATEGORY) {
 			currencyUpdater_.process(baseUnitId_);
+		}
+		else {
+			updateInProgressPanel_.setTag(null);
+			updateInProgressPanel_.setVisibility(View.GONE);
 		}
 	}
 	

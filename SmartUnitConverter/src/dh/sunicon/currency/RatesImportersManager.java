@@ -3,7 +3,7 @@ package dh.sunicon.currency;
 import android.app.Activity;
 import android.util.Log;
 import dh.sunicon.MainActivity;
-import dh.sunicon.currency.CurrencyUpdater.UpdatingResult;
+import dh.sunicon.currency.ImportationReport.MessageType;
 import dh.sunicon.datamodel.DatabaseHelper;
 
 /**
@@ -24,53 +24,49 @@ public class RatesImportersManager
 		dbHelper_ = ((MainActivity)context_).getDatabaseHelper();
 	}
 
-	public UpdatingResult importOnBackground(long currencyUnitId)
+	public ImportationReport importOnBackground(long currencyUnitId)
 	{
-		if (isDumped())
+		if (isDumped()) {
 			throw new UnsupportedOperationException();
+		}
+		
+		ImportationReport report = new ImportationReport();
 		try
 		{
 			Log.d("CURR", "importOnBackground BEGIN "+currencyUnitId);
-
-			/* Get update from yahoo first */
 			
-			boolean successYahoo = importFromYahoo();
+			Thread.sleep(5000);
 			
-			/* Get update from themoneyconverter.com */
+			importFromYahoo(report);
 			
-			boolean successTMC = importFromTMC(currencyUnitId);
-			
-			if (successYahoo || successTMC)
-				return UpdatingResult.SUCCESS;
-			else
-				return UpdatingResult.FAILED;
+			//importFromTMC(currencyUnitId, report);
 		}
 		catch (Exception ex)
 		{
+			report.add(report.new ReportEntry(MessageType.ERROR, "Update failed.", Log.getStackTraceString(ex)));
 			Log.w(TAG, ex);
-			return UpdatingResult.FAILED;
 		}
+		
+		return report;
 	}
 	
-	boolean importFromYahoo()
+	void importFromYahoo(ImportationReport report)
 	{
 		if (yahooImporter_!=null) {
 			yahooImporter_.dumpIt();
 		}
-		yahooImporter_ = new YahooRatesImporter(dbHelper_);
-		return yahooImporter_.importRates("http://finance.yahoo.com/webservice/v1/symbols/allcurrencies/quote");
+		yahooImporter_ = new YahooRatesImporter(dbHelper_, report);
+		yahooImporter_.importRates("http://finance.yahoo.com/webservice/v1/symbols/allcurrencies/quote");
 	}
 	
-	boolean importFromTMC(long currencyUnitId)
+	void importFromTMC(long currencyUnitId, ImportationReport report)
 	{
 		if (tmcImporter_!=null) {
 			tmcImporter_.dumpIt();
 		}
-		tmcImporter_ = new TmcRatesImporter(dbHelper_, currencyUnitId);
+		tmcImporter_ = new TmcRatesImporter(dbHelper_, currencyUnitId, report);
 	
 		//TODO
-		
-		return false;
 	}
 
 	public void dumpIt()

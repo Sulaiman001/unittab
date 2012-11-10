@@ -15,20 +15,20 @@ import dh.sunicon.runnable.ConversionsLoadingRunner;
  */
 public class YahooRatesImporter extends RatesImporter
 {	
-	private static final String TAG = YahooRatesImporter.class.getName();
+	//private static final String TAG = YahooRatesImporter.class.getName();
 	private static final String ns = null;
 
-	public YahooRatesImporter(DatabaseHelper dbHelper, long baseCurrencyUnitId)
+	public YahooRatesImporter(DatabaseHelper dbHelper, long baseCurrencyUnitId, ImportationReport report)
 	{
-		super(dbHelper, baseCurrencyUnitId);
+		super(dbHelper, baseCurrencyUnitId, report);
 	}
 	
-	public YahooRatesImporter(DatabaseHelper dbHelper)
+	public YahooRatesImporter(DatabaseHelper dbHelper, ImportationReport report)
 	{
-		super(dbHelper, ConversionsLoadingRunner.USD_UNIT);
+		super(dbHelper, ConversionsLoadingRunner.USD_UNIT, report);
 	}
 	
-	protected boolean importFrom(InputStream inputStream) throws IOException, XmlPullParserException 
+	protected void importFrom(InputStream inputStream) throws IOException, XmlPullParserException 
 	{
 		try
 		{
@@ -41,14 +41,14 @@ public class YahooRatesImporter extends RatesImporter
             parser.require(XmlPullParser.START_TAG, ns, "meta"); //check meet the START_TAG <meta>
             skip(parser); //skip node <meta>..</meta>
             parser.nextTag();
-            return readResources(parser);
+            readResources(parser);
 		}
 		finally {
 			inputStream.close();
 		}
 	}
 	
-	private boolean readResources(XmlPullParser parser) throws XmlPullParserException, IOException 
+	private void readResources(XmlPullParser parser) throws XmlPullParserException, IOException 
 	{
 	    parser.require(XmlPullParser.START_TAG, ns, "resources");
 	    
@@ -64,7 +64,6 @@ public class YahooRatesImporter extends RatesImporter
 	            skip(parser);
 	        }
 	    }  
-	    return true;
 	}
 	
 	private void readRateEntry(XmlPullParser parser) throws XmlPullParserException, IOException
@@ -109,5 +108,11 @@ public class YahooRatesImporter extends RatesImporter
 	 */
 	private String extractCurrencyCode(String rawCode) {
 		return rawCode.substring(0,3);
+	}
+
+	@Override
+	protected String getImporterName()
+	{
+		return "Yahoo";
 	}
 }

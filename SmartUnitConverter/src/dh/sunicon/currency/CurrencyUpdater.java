@@ -7,8 +7,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import dh.sunicon.MainActivity;
-
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
@@ -16,6 +14,8 @@ import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import dh.sunicon.MainActivity;
+import dh.sunicon.currency.ImportationReport.MessageType;
 
 /**
  * CurrencyUdpdater has a TimeToLive = 1 hour for example, that means after 1 hours from the LastUpdate
@@ -43,7 +43,7 @@ public class CurrencyUpdater
 	private long timeToLive_;
 	private final Handler mainThread_;
 	private final ExecutorService updatingThread_;
-	private Future<UpdatingResult> lastProcessingResult_;
+	private Future<ImportationReport> lastProcessingFuture_;
 	private RatesImportersManager currencyImporter_;
 	private long currencyUnitIdOnProcess_ = -1;
 	
@@ -70,37 +70,36 @@ public class CurrencyUpdater
 	
 	private boolean allowProcess(long currencyUnitId) {
 	
-		if (getCurrencyUpdaterOption() == OPT_NEVER)
-			return false;
+		final int currencyUpdaterOption = getCurrencyUpdaterOption(); 
 		
+		if (currencyUpdaterOption == OPT_NEVER)
+			return false;
+	
 		if (isExpiry(currencyUnitId))
 			return true;		
 		
-		//not expiry
-
-		if (lastProcessingResult_ == null)
-			return true;
-
-		//lastProcessingResult returned something
+		/* not expiry */
 		
-		if (lastProcessingResult_.isCancelled())
-			return true;
-		
-		if (lastProcessingResult_.isDone()) { //lastProcessingResult_ is terminated normally 
-			try
-			{
-				UpdatingResult lastUpdatingResult = lastProcessingResult_.get();
-				if (lastUpdatingResult == UpdatingResult.FAILED) //but it is a FAILED
-					return true;
-			}
-			catch (Exception ex)
-			{
-				Log.w(TAG, ex.getMessage());
-				return false;
+		if (lastProcessingFuture_ != null) {
+			
+			//but lastProcessingResult failed
+			
+			if (lastProcessingFuture_.isCancelled())
+				return true;
+			
+			if (lastProcessingFuture_.isDone()) { //lastProcessingResult_ is terminated normally 
+				try
+				{
+					ImportationReport lastRatesImporterReport = lastProcessingFuture_.get();
+					if (!lastRatesImporterReport.successUpdateAll()) //but it is a FAILED
+						return true;
+				}
+				catch (Exception ex)
+				{
+					Log.wtf(TAG, ex);
+				}
 			}
 		}
-		
-		//if the updater is still processing or it is not expiry  
 		
 		return false;
 	}
@@ -128,7 +127,7 @@ public class CurrencyUpdater
 		if (beforeUpdateStarted_!=null)
 			beforeUpdateStarted_.beforeUpdateStarted(CurrencyUpdater.this, currencyUnitId);
 		
-		class CallableWithParam implements Callable<UpdatingResult>
+		class CallableWithParam implements Callable<ImportationReport>
 		{
 			private final long currencyUnitId__;
 			private final RatesImportersManager currencyImporter__;
@@ -142,31 +141,50 @@ public class CurrencyUpdater
 			 * Check NetWork connectivity which must be appropriated with Preferences option 
 			 * before start importing
 			 */
-			private UpdatingResult checkOptionAndImport()
+			private ImportationReport checkOptionAndImport()
 			{
-				UpdatingResult ret = UpdatingResult.FAILED;
-				NetworkInfo networkInfo = ((MainActivity)context_).getNetworkInfo();
-				if (networkInfo!=null && networkInfo.isConnected()) //if we have network connected
+				try
 				{
-					if (getCurrencyUpdaterOption() != OPT_WIFI_ONLY || 
-							networkInfo.getType()==ConnectivityManager.TYPE_WIFI) //if the preferences is WIFI_ONLY and current network is really wifi
-					{
-						ret = currencyImporter__.importOnBackground(currencyUnitId__);
+					final int currencyUpdaterOption = getCurrencyUpdaterOption();
+					
+					NetworkInfo networkInfo = ((MainActivity)context_).getNetworkInfo();
+					if (networkInfo==null || !networkInfo.isConnected()) { 
+						//no network connection
+						ImportationReport ret = new ImportationReport();
+						ret.add(ret.new ReportEntry(MessageType.ERROR, "Network not avaiable.")); //TODO mutli-language
+						return ret;
+					} 
+					
+					if (currencyUpdaterOption == OPT_WIFI_ONLY) {
+						if (networkInfo.getType()!=ConnectivityManager.TYPE_WIFI) {
+							//only update on wifi
+							ImportationReport ret = new ImportationReport();
+							ret.add(ret.new ReportEntry(MessageType.WARNING, "Allow update on WIFI only.")); //TODO mutli-language
+							return ret;
+						}
 					}
+					
+					return currencyImporter__.importOnBackground(currencyUnitId__);
 				}
-				return ret;
+				catch (Exception ex)
+				{
+					ImportationReport ret = new ImportationReport();
+					ret.add(ret.new ReportEntry(MessageType.ERROR, "Udpate Failed: "+ex.getMessage(), Log.getStackTraceString(ex))); //TODO mutli-language
+					Log.w(TAG, ex);
+					return ret;
+				}
 			}
 			
 			@Override
-			public UpdatingResult call() throws Exception
+			public ImportationReport call() throws Exception
 			{
 				try
 				{
 					currencyUnitIdOnProcess_ = currencyUnitId__;
 					
-					final UpdatingResult ret = checkOptionAndImport();
+					final ImportationReport ret = checkOptionAndImport();
 					
-					if (ret == UpdatingResult.SUCCESS && !currencyImporter__.isDumped())
+					if (ret.successUpdateAll() && !currencyImporter__.isDumped())
 						saveLastTimeProcess(currencyUnitId__);
 					
 					//if this is the last called proccess (the last currencyImporter)
@@ -179,8 +197,14 @@ public class CurrencyUpdater
 							@Override
 							public void run()
 							{
-								if (onUpdateFinished_!=null)
-									onUpdateFinished_.onUpdateFinished(CurrencyUpdater.this, ret);
+								try {
+									if (onUpdateFinished_!=null)
+										onUpdateFinished_.onUpdateFinished(CurrencyUpdater.this, ret);
+								}
+								catch (Exception ex)
+								{
+									Log.wtf(TAG, ex);
+								}
 							}
 						});
 					}
@@ -190,8 +214,8 @@ public class CurrencyUpdater
 				catch (Exception ex)
 				{
 					Log.wtf(TAG, ex);
-					return UpdatingResult.FAILED;
 				}
+				return null;
 			}
 		}
 		
@@ -200,7 +224,7 @@ public class CurrencyUpdater
 			currencyImporter_.dumpIt();
 		}
 		currencyImporter_ = new RatesImportersManager(context_);
-		lastProcessingResult_ = updatingThread_.submit(new CallableWithParam(currencyUnitId, currencyImporter_));
+		lastProcessingFuture_ = updatingThread_.submit(new CallableWithParam(currencyUnitId, currencyImporter_));
 				
 		Log.d("CURR", "Process END "+currencyUnitId);
 	}
@@ -260,10 +284,8 @@ public class CurrencyUpdater
 		return preferences_.getInt("CurrencyUpdaterOption", OPT_ALL_NETWORK);
 	}
 
-	public enum UpdatingResult {FAILED, SUCCESS}
-	
 	public interface OnUpdateFinishedListener {
-		void onUpdateFinished(CurrencyUpdater sender, UpdatingResult result);
+		void onUpdateFinished(CurrencyUpdater sender, ImportationReport result);
 	}
 	
 	public interface BeforeUpdateStartedListener {
