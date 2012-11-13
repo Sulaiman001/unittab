@@ -50,7 +50,7 @@ public abstract class SimpleUpdatingAgent extends UpdatingAgent
 		catch (Exception ex)
 		{
 			report_.add(report_.new ReportEntry(MessageType.ERROR, 
-					"Update failed.",  //TODO multi-language
+					"Update failed: "+ex.getMessage(),  //TODO multi-language
 					Log.getStackTraceString(ex)));
 			return false;
 		}

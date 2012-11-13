@@ -63,6 +63,7 @@ public class CurrencyUpdater
 		}
 		
 		if (currencyUnitId == getCurrencyUnitIdOnLoading()) { //the currencyUnitId is already in processing
+			Log.d("CURR", "process of "+currencyUnitId+" is happen");
 			return;
 		}
 		

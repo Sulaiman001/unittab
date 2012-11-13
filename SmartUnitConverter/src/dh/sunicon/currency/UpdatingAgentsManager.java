@@ -88,7 +88,7 @@ public class UpdatingAgentsManager
 		}
 		catch (Exception ex)
 		{
-			report.add(report.new ReportEntry(MessageType.ERROR, "Update failed.", Log.getStackTraceString(ex)));
+			report.add(report.new ReportEntry(MessageType.ERROR, "Update failed: "+ex.getMessage(), Log.getStackTraceString(ex)));
 			Log.w(TAG, ex);
 		}
 		finally {
