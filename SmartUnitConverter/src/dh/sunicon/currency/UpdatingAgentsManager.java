@@ -11,6 +11,7 @@ import dh.sunicon.currency.UpdatingReport.MessageType;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.datamodel.Depot;
 import dh.sunicon.datamodel.Unit;
+import dh.sunicon.workarounds.MyApplication;
 
 /**
  * Implement the cancellable aspect of the updater
@@ -42,11 +43,13 @@ public class UpdatingAgentsManager
 		UpdatingAgent tmcAgent = new TmcAgent(context_, baseCurrency, report);
 		agents_.addLast(tmcAgent);
 		
-		//always update USD_UNIT base to fill rate which has rates = 0 (eg: 1 VND = 0.00 EUR)
-//		TODO unlock comment
-//		Unit usdCurrency = Unit.findById(dbHelper_, Unit.USD_UNIT);
-//		UpdatingAgent yahooUsdAgent = new YahooUsdAgent(context_, usdCurrency, report);
-//		agents_.addLast(yahooUsdAgent);
+		if (!MyApplication.DEBUG_MODE) { //if not in debug mode i'm going easy to minimize error
+			
+			//Go easy: always update USD_UNIT base to fill rate which has rates = 0 (eg: 1 VND = 0.00 EUR)
+			Unit usdCurrency = Unit.findById(dbHelper_, Unit.USD_UNIT);
+			UpdatingAgent yahooUsdAgent = new YahooUsdAgent(context_, usdCurrency, report);
+			agents_.addLast(yahooUsdAgent);
+		}
 	}
 
 	public synchronized UpdatingReport importOnBackground(long currencyUnitId)
@@ -59,7 +62,7 @@ public class UpdatingAgentsManager
 		
 		if (!isExpiry(currencyUnitId)) {
 			report.add(report.new ReportEntry(MessageType.INFO, "Exchange rates data is still up to date (not yet expiried).")); //TODO multi-language 
-			report.setCancel(true);
+			report.forceSuccessAll();
 			return report;
 		}
 		
@@ -79,17 +82,9 @@ public class UpdatingAgentsManager
 				agent.process();
 			}
 			
-			if (report.successUpdateMostly()) {
+			if (report.isSuccessAll()) {
 				saveLastUpdate(currencyUnitId);
 			}
-			
-			//TODO debug
-//			for (int i=0; i<10; i++) {
-//				if (isDumped())
-//					break;
-//				Thread.sleep(500);
-//			}
-
 		}
 		catch (Exception ex)
 		{
@@ -149,13 +144,15 @@ public class UpdatingAgentsManager
 	
 	public void dumpIt() {
 		requestCancellation_ = true;
-		
-		for (UpdatingAgent agent : agents_) {
-			try {
-				agent.dumpIt();
-			}
-			catch (Exception ex) {
-				Log.w(TAG, ex.getMessage());
+		if (agents_!=null) 
+		{
+			for (UpdatingAgent agent : agents_) {
+				try {
+					agent.dumpIt();
+				}
+				catch (Exception ex) {
+					Log.w(TAG, ex.getMessage());
+				}
 			}
 		}
 	}

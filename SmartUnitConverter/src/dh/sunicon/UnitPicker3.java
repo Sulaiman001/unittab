@@ -226,6 +226,8 @@ public class UnitPicker3 extends FragmentActivity {
 				
 				try
 				{
+					listSwitcher_.setVisibility(View.GONE);
+					
 					/* events absorber technique */
 					
 					if (filterEditorTimer_!=null) 
@@ -257,6 +259,7 @@ public class UnitPicker3 extends FragmentActivity {
 										 * heavy process must be executed on other thread  
 										 */
 										switchList(listToggle_.isChecked(), constraint);
+										listSwitcher_.setVisibility(View.VISIBLE);
 									}
 									catch (Exception ex)
 									{

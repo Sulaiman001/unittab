@@ -58,8 +58,13 @@ public class CurrencyUpdater
 			throw new IllegalAccessException("This methode must be called from UI Thread.");
 		}
 
-		if (currencyUnitId<0)
+		if (currencyUnitId<0) {
 			return;
+		}
+		
+		if (currencyUnitId == getCurrencyUnitIdOnLoading()) { //the currencyUnitId is already in processing
+			return;
+		}
 		
 		final int currencyUpdaterOption = getCurrencyUpdaterOption();
 		
@@ -153,7 +158,7 @@ public class CurrencyUpdater
 				}
 				catch (Exception ex)
 				{
-					Log.wtf(TAG, ex);
+					Log.wtf(TAG, ex); ///it cannot happen!
 				}
 				return null;
 			}

@@ -5,14 +5,14 @@ import android.os.StrictMode;
 
 public class MyApplication extends Application {
 
-	public static final boolean DEBUG_MODE = false;
+	public static final boolean DEBUG_MODE = true;
 
 	@Override
 	public void onCreate()
 	{
 		super.onCreate();
 		if (DEBUG_MODE) {
-			StrictMode.enableDefaults();
+			//StrictMode.enableDefaults();
 		}
 	}
 }

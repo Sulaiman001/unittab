@@ -42,7 +42,7 @@
                 android:layout_margin="0dp"
                 android:ellipsize="start"
                 android:hint="value"
-                android:imeOptions="flagNoFullscreen|flagNoExtractUi|actionDone"
+                android:imeOptions="actionDone"
                 android:inputType="numberDecimal"
                 android:maxLength="16"
                 android:padding="5dp" />
@@ -99,7 +99,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:enabled="false"
-            android:imeOptions="flagNoFullscreen|flagNoExtractUi|actionDone"
+            android:imeOptions="actionDone"
             android:inputType="textNoSuggestions|textFilter"
             android:padding="8dp"
             android:singleLine="true"

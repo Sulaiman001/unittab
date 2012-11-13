@@ -7,6 +7,7 @@ import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -656,7 +657,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 					
 					setCurrencyNotification(View.VISIBLE, 
 							Color.WHITE,
-							"Updating currency rate. Touch to skip... ("+currencyUnitId+")"); //TODO Multi-language
+							"Updating currency rate. Touch to skip..."); //TODO Multi-language
 				}
 				catch (Exception ex)
 				{
@@ -701,17 +702,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 						currencyUpdater_.cancel(); //skip
 					}
 					else {
-						//TODO
-						
-						//show Report
-						ReportDialogFragment dialog = ReportDialogFragment.newInstance(report);
-						dialog.show(getActivity().getSupportFragmentManager(), "ReportDialog");
-						
-						//TODO get the callback from dialog 
-//						if (categoryId_ == CURRENCY_CATEGORY) {
-//							currencyUpdater_.cancel(); //cancel previous
-//							currencyUpdater_.process(baseUnitId_);
-//						}
+						showUpdatingReport(report);
 					}
 				}
 				catch (Exception ex)
@@ -721,6 +712,28 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			}
 		});
 	}
+	
+	private void showUpdatingReport(UpdatingReport report) {
+		ReportDialogFragment dialog = ReportDialogFragment.newInstance(report);
+		dialog.setClickRetryListener(new DialogInterface.OnClickListener()
+		{
+			@Override
+			public void onClick(DialogInterface dialog, int which)
+			{
+				try
+				{
+					currencyUpdater_.cancel();
+					currencyUpdater_.process(baseUnitId_);
+				}
+				catch (Exception e)
+				{
+					Log.w("CURR", e);
+				}
+			}
+		});
+		
+		dialog.show(getActivity().getSupportFragmentManager(), "ReportDialog");
+	} 
 	
 	/**
 	 * update base on updateInProgressPanel_.getTag
@@ -753,7 +766,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		
 		int visibility = View.VISIBLE;
 		
-		if (report.successUpdateMostly()) {
+		if (report.isSuccessAll()) {
 			visibility = View.GONE;
 		}
 		

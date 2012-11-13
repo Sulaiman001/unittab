@@ -96,7 +96,7 @@ public class UnitsCursorTreeAdapter extends SimpleCursorTreeAdapter implements
 	@Override
 	protected Cursor getChildrenCursor(Cursor groupCursor) {
 		
-		Log.v(TAG, "getChildrenCursor " + groupCursor.getPosition());
+		//Log.v(TAG, "getChildrenCursor " + groupCursor.getPosition());
 		class UnitLoader implements Runnable {
 	        long categoryId_;
 	        String constraint_;

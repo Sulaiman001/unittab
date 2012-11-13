@@ -48,7 +48,7 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:hint="eg: &apos;lit fuel&apos; or &apos;dista km&apos;..."
-        android:imeOptions="flagNoFullscreen|flagNoExtractUi|actionDone"
+        android:imeOptions="actionDone"
         android:inputType="textNoSuggestions|textFilter"
         android:padding="5dp" />
 

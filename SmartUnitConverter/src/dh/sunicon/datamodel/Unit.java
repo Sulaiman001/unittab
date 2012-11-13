@@ -145,7 +145,7 @@ public class Unit extends BaseEntity
 		}
 		
 		if (rate<=0) {
-			throw new InvalidParameterException("negative or 0 rate");
+			throw new InvalidParameterException("Invalide rate");
 		}
 		
 		if (TextUtils.isEmpty(targetCurrencyShortName)) {
