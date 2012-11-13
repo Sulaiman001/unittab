@@ -15,7 +15,7 @@ public class ReportDialogFragment extends DialogFragment
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 		builder.setTitle("Importation Report") // TODO multi-language
 				.setMessage(getTag())
-				.setNegativeButton("Retry",
+				.setPositiveButton("Retry",
 						new DialogInterface.OnClickListener()
 						{
 							public void onClick(DialogInterface dialog, int id)
@@ -23,7 +23,7 @@ public class ReportDialogFragment extends DialogFragment
 								// User cancelled the dialog
 							}
 						})
-				.setPositiveButton("Report",
+				.setNeutralButton("Report",
 						new DialogInterface.OnClickListener()
 						{
 							public void onClick(DialogInterface dialog, int id)
@@ -31,7 +31,7 @@ public class ReportDialogFragment extends DialogFragment
 								// FIRE ZE MISSILES!
 							}
 						})
-
+				
 				.setNegativeButton("Close",
 						new DialogInterface.OnClickListener()
 						{

@@ -1,11 +1,8 @@
 package dh.sunicon.currency;
 
-import java.sql.Timestamp;
-import java.util.Calendar;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
@@ -15,20 +12,16 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import dh.sunicon.MainActivity;
-import dh.sunicon.currency.ImportationReport.MessageType;
+import dh.sunicon.currency.UpdatingReport.MessageType;
 
 /**
- * CurrencyUdpdater has a TimeToLive = 1 hour for example, that means after 1 hours from the LastUpdate
- * the updater will be expiry.
- * 
- * process() will check isExpiry()
- * - if isExpiry() return false (the CurrencyUpdater is sill fresh), it will immediately return false (means nothing has been updated in the database)
- * - if the CurrencyUpdater is expiried, it will download the data from internet and update the local database from the downloaded data in a background thread
- * 
- * This base class manages the updatingThread and execute the events (BeforeStart + UpdateFinished) on the main thread
+ * CurrencyUdpdater is the entry point to call update currencies exchange rates.
+ * to start the update from the main thread, call process(baseCurrency) 
+
+ * Capture the BeforeUpdateStarted and OnUpdateFinished on the main thread to update the UI
+ * call cancel() to stop the process at anytime. OnUpdateFinish will be callback.
  * 
  * @author hiep
- *
  */
 public class CurrencyUpdater
 {
@@ -40,73 +33,22 @@ public class CurrencyUpdater
 	
 	private final Activity context_;
 	private final SharedPreferences preferences_;
-	private long timeToLive_;
 	private final Handler mainThread_;
 	private final ExecutorService updatingThread_;
-	private Future<ImportationReport> lastProcessingFuture_;
-	private RatesImportersManager currencyImporter_;
+	private UpdatingAgentsManager currencyImporter_;
 	private long currencyUnitIdOnProcess_ = -1;
 	
 	public CurrencyUpdater(Activity context){
 		context_ = context;
 		preferences_ = context_.getPreferences(Activity.MODE_PRIVATE);
-		timeToLive_ = preferences_.getLong("CurrencyRateExpiryDuration", 500);
 		updatingThread_ = Executors.newSingleThreadExecutor();
 		mainThread_ = new Handler();
 	}
 	
-	public long getLastUpdate(long currencyUnitId) {
-		return preferences_.getLong("LastUpdateCurrency-"+currencyUnitId, 0);
-	}
-	
-	public long getTimeToLive() {
-		return timeToLive_;
-	}
-	
-	public boolean isExpiry(long currencyUnitId) {
-		long now = getNow();
-		return (now - getLastUpdate(currencyUnitId)) > timeToLive_;
-	}
-	
-	private boolean allowProcess(long currencyUnitId) {
-	
-		final int currencyUpdaterOption = getCurrencyUpdaterOption(); 
-		
-		if (currencyUpdaterOption == OPT_NEVER)
-			return false;
-	
-		if (isExpiry(currencyUnitId))
-			return true;		
-		
-		/* not expiry */
-		
-		if (lastProcessingFuture_ != null) {
-			
-			//but lastProcessingResult failed
-			
-			if (lastProcessingFuture_.isCancelled())
-				return true;
-			
-			if (lastProcessingFuture_.isDone()) { //lastProcessingResult_ is terminated normally 
-				try
-				{
-					ImportationReport lastRatesImporterReport = lastProcessingFuture_.get();
-					if (!lastRatesImporterReport.successUpdateAll()) //but it is a FAILED
-						return true;
-				}
-				catch (Exception ex)
-				{
-					Log.wtf(TAG, ex);
-				}
-			}
-		}
-		
-		return false;
-	}
 	
 	/**
 	 * Must be call on the Main Thread
-	 * @param currencyUnitId
+	 * @param currencyUnitId - base Currency, the update will be perform on this base
 	 * @throws IllegalAccessException 
 	 */
 	public void process(final long currencyUnitId) throws IllegalAccessException {
@@ -119,20 +61,23 @@ public class CurrencyUpdater
 		if (currencyUnitId<0)
 			return;
 		
-		if (!allowProcess(currencyUnitId))
-			return;
+		final int currencyUpdaterOption = getCurrencyUpdaterOption();
 		
-		Log.d("CURR", "Process BEGIN "+currencyUnitId);
+		if (currencyUpdaterOption == OPT_NEVER) {
+			return;
+		}
+		
+		Log.v("CURR", "Process BEGIN "+currencyUnitId);
 		
 		if (beforeUpdateStarted_!=null)
 			beforeUpdateStarted_.beforeUpdateStarted(CurrencyUpdater.this, currencyUnitId);
 		
-		class CallableWithParam implements Callable<ImportationReport>
+		class CallableWithParam implements Callable<UpdatingReport>
 		{
 			private final long currencyUnitId__;
-			private final RatesImportersManager currencyImporter__;
+			private final UpdatingAgentsManager currencyImporter__;
 			
-			public CallableWithParam(long currencyUnitId, RatesImportersManager currencyImporter) {
+			public CallableWithParam(long currencyUnitId, UpdatingAgentsManager currencyImporter) {
 				currencyUnitId__ = currencyUnitId;
 				currencyImporter__ = currencyImporter;
 			}
@@ -141,16 +86,14 @@ public class CurrencyUpdater
 			 * Check NetWork connectivity which must be appropriated with Preferences option 
 			 * before start importing
 			 */
-			private ImportationReport checkOptionAndImport()
+			private UpdatingReport checkOptionAndImport()
 			{
 				try
 				{
-					final int currencyUpdaterOption = getCurrencyUpdaterOption();
-					
 					NetworkInfo networkInfo = ((MainActivity)context_).getNetworkInfo();
 					if (networkInfo==null || !networkInfo.isConnected()) { 
 						//no network connection
-						ImportationReport ret = new ImportationReport();
+						UpdatingReport ret = new UpdatingReport();
 						ret.add(ret.new ReportEntry(MessageType.ERROR, "Network not avaiable.")); //TODO mutli-language
 						return ret;
 					} 
@@ -158,8 +101,8 @@ public class CurrencyUpdater
 					if (currencyUpdaterOption == OPT_WIFI_ONLY) {
 						if (networkInfo.getType()!=ConnectivityManager.TYPE_WIFI) {
 							//only update on wifi
-							ImportationReport ret = new ImportationReport();
-							ret.add(ret.new ReportEntry(MessageType.WARNING, "Allow update on WIFI only.")); //TODO mutli-language
+							UpdatingReport ret = new UpdatingReport();
+							ret.add(ret.new ReportEntry(MessageType.INFO, "Allow update on WIFI only.")); //TODO mutli-language
 							return ret;
 						}
 					}
@@ -168,7 +111,7 @@ public class CurrencyUpdater
 				}
 				catch (Exception ex)
 				{
-					ImportationReport ret = new ImportationReport();
+					UpdatingReport ret = new UpdatingReport();
 					ret.add(ret.new ReportEntry(MessageType.ERROR, "Udpate Failed: "+ex.getMessage(), Log.getStackTraceString(ex))); //TODO mutli-language
 					Log.w(TAG, ex);
 					return ret;
@@ -176,18 +119,13 @@ public class CurrencyUpdater
 			}
 			
 			@Override
-			public ImportationReport call() throws Exception
+			public UpdatingReport call() throws Exception
 			{
 				try
 				{
 					currencyUnitIdOnProcess_ = currencyUnitId__;
 					
-					final ImportationReport ret = checkOptionAndImport();
-					
-					Log.v("CURR", "checkOptionAndImport finish");
-					
-					if (ret.successUpdateAll() && !currencyImporter__.isDumped())
-						saveLastTimeProcess(currencyUnitId__);
+					final UpdatingReport ret = checkOptionAndImport();
 					
 					//if this is the last called proccess (the last currencyImporter)
 					//it might not neccessary because the currencyUpdater processed on single thread (updatingThread_)
@@ -225,10 +163,10 @@ public class CurrencyUpdater
 		if (currencyImporter_ != null) {
 			currencyImporter_.dumpIt();
 		}
-		currencyImporter_ = new RatesImportersManager(context_);
-		lastProcessingFuture_ = updatingThread_.submit(new CallableWithParam(currencyUnitId, currencyImporter_));
+		currencyImporter_ = new UpdatingAgentsManager(context_);
+		updatingThread_.submit(new CallableWithParam(currencyUnitId, currencyImporter_));
 				
-		Log.d("CURR", "Process END "+currencyUnitId);
+		Log.v("CURR", "Process END "+currencyUnitId);
 	}
 	
 	public void cancel() {
@@ -236,28 +174,6 @@ public class CurrencyUpdater
 		{
 			currencyImporter_.dumpIt();
 		}
-	}
-	
-	private void saveLastTimeProcess(long currencyUnitId) {
-		try
-		{
-			long now = getNow();
-			
-			SharedPreferences.Editor editor = preferences_.edit();
-			editor.putLong("LastUpdateCurrency-"+currencyUnitId, now);
-			editor.commit();
-			
-			Log.d(TAG, "Save LastUpdate-"+currencyUnitId+" "+new Timestamp(now)); //TODO remove it
-		}
-		catch (Exception ex)
-		{
-			Log.wtf(TAG, ex);
-		}
-	}
-	
-	public static long getNow()
-	{
-		return Calendar.getInstance().getTime().getTime();
 	}
 	
 	/** events handling **/
@@ -286,7 +202,7 @@ public class CurrencyUpdater
 	}
 
 	public interface OnUpdateFinishedListener {
-		void onUpdateFinished(CurrencyUpdater sender, ImportationReport result);
+		void onUpdateFinished(CurrencyUpdater sender, UpdatingReport result);
 	}
 	
 	public interface BeforeUpdateStartedListener {

@@ -7,7 +7,10 @@
 
 package dh.sunicon.datamodel;
 
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.Collections;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
@@ -71,6 +74,12 @@ import java.util.TreeSet;
 public class MathEval
 extends Object
 {
+
+public static double parseDouble(String d) throws ParseException {
+	NumberFormat numberFormat = NumberFormat.getInstance(Locale.US);
+	Number x = numberFormat.parse(d);
+	return x.doubleValue();
+}
 
 // *************************************************************************************************
 // INSTANCE PROPERTIES
@@ -338,9 +347,14 @@ private double _evaluate(String exp, int beg, int end, char pop, double tot, cha
                     }
                 try {
                     if(stringSW(txt,"0x")) { val=(double)Long.parseLong(txt.substring(2),16); }
-                    else                   { val=Double.parseDouble(txt);                     }
+                    else                   { val=parseDouble(txt);                     }
                     }
-                catch(NumberFormatException thr) { throw exception(exp,beg,"Invalid numeric value \""+txt+"\""); }
+                catch(ParseException thr1) {
+                	throw exception(exp,beg,"Invalid numeric value \""+txt+"\"");
+                }
+                catch(NumberFormatException thr) { 
+                	throw exception(exp,beg,"Invalid numeric value \""+txt+"\""); 
+                }
                 }
 
             if(opPrecedence(nop)>opPrecedence(cop)) {                                               // correct even for last (non-operator) character, since non-operator have the artificial "precedence" zero

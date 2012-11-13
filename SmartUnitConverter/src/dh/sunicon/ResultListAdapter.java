@@ -338,7 +338,6 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				awaitCalculation();
 				if (owner_.getActivity() == null)
 				{
-					Log.d(TAG, "invokeGuiUpdateAfterCalculation has not been called");
 					return;
 				}
 				owner_.getActivity().runOnUiThread(new Runnable()

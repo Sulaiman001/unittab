@@ -1,5 +1,6 @@
 package dh.sunicon.runnable;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -8,10 +9,12 @@ import org.json.JSONObject;
 
 import android.database.Cursor;
 import android.util.Log;
+import dh.sunicon.currency.UpdatingAgentsManager;
 import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.Conversion;
 import dh.sunicon.datamodel.Corresponding;
 import dh.sunicon.datamodel.DatabaseHelper;
+import dh.sunicon.datamodel.Depot;
 import dh.sunicon.datamodel.EnumValue;
 import dh.sunicon.datamodel.Unit;
 
@@ -260,9 +263,10 @@ public final class ConversionsLoadingRunner implements Runnable
 		
 		//Load conversions to local variable (RAM)
 		
-		//Get the conversions from baseUnitId_
+		//Get the conversions from the optimizeBaseCurrencyId
+		long optimizeBaseCurrencyId = choseBetweenMostRecentCurrencyAnd(baseUnitId_);
 		
-		Cursor cur1 = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(baseUnitId_)});
+		Cursor cur1 = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(optimizeBaseCurrencyId)});
 		try
 		{
 			readConversionFromCursor(cur1);
@@ -270,17 +274,6 @@ public final class ConversionsLoadingRunner implements Runnable
 		finally
 		{
 			cur1.close();
-		}
-		
-		//Get the conversions from USD
-		Cursor cur2 = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(Unit.USD_UNIT)});
-		try
-		{
-			readConversionFromCursor(cur2);
-		}
-		finally
-		{
-			cur2.close();
 		}
 		
 		Log.d("CURR", "readCurrencyConversions END baseUnitId = "+baseUnitId_);
@@ -306,6 +299,51 @@ public final class ConversionsLoadingRunner implements Runnable
 					cur.getString(reversedFormulaCi));
 			conversions_.add(c);
 		}
+	}
+	
+	private final static long MILIS_PER_DAY = 86400000L; 
+	
+	/**
+	 * This method decide which conversions-set we will select to perform conversions (of currency exchange).
+	 * 
+	 * User has chose a base currency (preferedCurrency) for eg: JPY, we will normally load the conversions-set
+	 * which take JPY as base.
+	 * 
+	 * Howerver, if these conversions are out-date (the currency rates of the JPY-base have not been updated for a long time).
+	 * So it will better to get other conversion-set base on other currency which is the most up to date.
+	 * And use this conversion-set to make a two-step conversion.
+	 *   
+	 * So this methode will find out mostRecentCurrency, and make choice:
+	 * - if the mostRecentCurrency.updateTime is 7 days more recent than the preferedCurrency
+	 * it will return mostRecentCurrency. 
+	 * - otherwise, it will return the preferedCurrency
+	 * 
+	 * @param preferedCurrencyId
+	 */
+	private long choseBetweenMostRecentCurrencyAnd(long preferedCurrencyId)
+	{
+		//find the mostRecentCurrency 
+		Cursor cur1 = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM depot WHERE key LIKE 'UA/%' ORDER BY i DESC LIMIT 1", null);
+		try {
+			if (cur1.moveToNext()) {
+				String mostRecentCurrencyHistoryKey = cur1.getString(cur1.getColumnIndex("key"));
+				long mostRecentCurrencyId = UpdatingAgentsManager.getCurrencyIdFromHistoryKey(mostRecentCurrencyHistoryKey);
+				
+				if (mostRecentCurrencyId != preferedCurrencyId) {
+					long mostRecentCurrencyUpdateDate = cur1.getLong(cur1.getColumnIndex("i"));
+					long preferedCurrencyUpdateDate = UpdatingAgentsManager.getLastUpdate(dbHelper_, preferedCurrencyId);
+					
+					if ((mostRecentCurrencyUpdateDate - preferedCurrencyUpdateDate) > 7 * MILIS_PER_DAY) {
+						Log.w(TAG, "Use the Conversion-set of the most recent currency ("+Long.toString(mostRecentCurrencyId)+") with two-step conversion");
+						return mostRecentCurrencyId;
+					}
+				}
+			}
+		}
+		finally {
+			cur1.close();
+		}
+		return preferedCurrencyId; 
 	}
 	
 }

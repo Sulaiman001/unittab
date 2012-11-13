@@ -1,10 +1,12 @@
 package dh.sunicon.datamodel;
 
+import java.security.InvalidParameterException;
 import java.util.HashMap;
 
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.text.TextUtils;
 import android.util.Log;
 
 public class Unit extends BaseEntity
@@ -140,6 +142,14 @@ public class Unit extends BaseEntity
 	{
 		if (categoryId!=Category.CURRENCY_CATEGORY) {
 			throw new UnsupportedOperationException();
+		}
+		
+		if (rate<=0) {
+			throw new InvalidParameterException("negative or 0 rate");
+		}
+		
+		if (TextUtils.isEmpty(targetCurrencyShortName)) {
+			throw new InvalidParameterException("invalide currency code null");
 		}
 		
 		//get targetCurrency

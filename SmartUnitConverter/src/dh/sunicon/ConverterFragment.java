@@ -43,10 +43,11 @@ import com.commonsware.cwac.loaderex.acl.SQLiteCursorLoader;
 import dh.sunicon.currency.CurrencyUpdater;
 import dh.sunicon.currency.CurrencyUpdater.BeforeUpdateStartedListener;
 import dh.sunicon.currency.CurrencyUpdater.OnUpdateFinishedListener;
-import dh.sunicon.currency.ImportationReport;
-import dh.sunicon.currency.ImportationReport.MessageType;
+import dh.sunicon.currency.UpdatingReport;
+import dh.sunicon.currency.UpdatingReport.MessageType;
 import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.DatabaseHelper;
+import dh.sunicon.datamodel.MathEval;
 import dh.sunicon.runnable.RowData;
 
 public class ConverterFragment extends ListFragment implements LoaderCallbacks<Cursor>
@@ -214,12 +215,11 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			//restore CurrencyUpdater
 			long currencyUnitIdOnLoading = savedState.getLong("currencyUnitIdOnLoading"); 
 			
-			if (currencyUnitIdOnLoading>0) {
+			if (currencyUnitIdOnLoading>0) { //update in process
 				currencyUpdater_.process(currencyUnitIdOnLoading);
 			}
 			else {
-				JSONObject jsonReport = new JSONObject(savedState.getString("importationReport"));
-				ImportationReport report = new ImportationReport(jsonReport); 
+				UpdatingReport report = (UpdatingReport) savedState.getSerializable("importationReport");
 				updateInProgressPanel_.setTag(report);
 				updateCurrencyNotificationBar();
 			}
@@ -255,7 +255,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			outState.putLong("currencyUnitIdOnLoading", currencyUpdater_.getCurrencyUnitIdOnLoading());
 			
 			if (updateInProgressPanel_.getTag()!=null) {
-				outState.putString("importationReport", ((ImportationReport) updateInProgressPanel_.getTag()).serialize().toString());
+				outState.putSerializable("importationReport", (UpdatingReport) updateInProgressPanel_.getTag());
 			}
 		}
 		catch (Exception ex)
@@ -664,7 +664,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		currencyUpdater_.setOnUpdateFinished(new OnUpdateFinishedListener()
 		{
 			@Override
-			public void onUpdateFinished(CurrencyUpdater sender, ImportationReport report)
+			public void onUpdateFinished(CurrencyUpdater sender, UpdatingReport report)
 			{
 				try
 				{
@@ -692,7 +692,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 				{
 					if (!isActivityRunning_) return;
 					
-					ImportationReport report = (ImportationReport) updateInProgressPanel_.getTag();
+					UpdatingReport report = (UpdatingReport) updateInProgressPanel_.getTag();
 					
 					if (report == null) {
 						currencyUpdater_.cancel(); //skip
@@ -724,13 +724,13 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	 */
 	private void updateCurrencyNotificationBar()
 	{
-		Log.i("CURR", "updateCurrencyNotificationBar");
-		
-		ImportationReport report = (ImportationReport) updateInProgressPanel_.getTag();
+		UpdatingReport report = (UpdatingReport) updateInProgressPanel_.getTag();
 		
 		if (report == null) {
 			return;
 		}
+	
+		Log.i("CURR", "updateCurrencyNotificationBar");
 		
 		MessageType type = report.getType();
 		
@@ -746,11 +746,12 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			default: 
 		}
 		
-		setCurrencyNotification(bgr, label);
-		
-		if (type == MessageType.INFO || report.isCancel()) {
-			updateInProgressPanel_.setVisibility(View.GONE);
+		int visibility = View.GONE;
+		if (!report.isCancel() && (type!=MessageType.INFO || report.containsErrorOrWarning())) {
+			visibility = View.VISIBLE;
 		}
+		
+		setCurrencyNotification(visibility, bgr, label);
 	}
 	private void setCurrencyNotification(int visibility, int bgr, String label)
 	{
@@ -758,12 +759,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		updateInProgressPanel_.setBackgroundColor(bgr);
 		currencyLoadingLabel_.setText(label);
 	}
-	private void setCurrencyNotification(int bgr, String label)
-	{
-		updateInProgressPanel_.setBackgroundColor(bgr);
-		currencyLoadingLabel_.setText(label);
-	}
-	
+
 	private void initResultListShowHideAnimation()
 	{
 //		ObjectAnimator fadeinAnim = (ObjectAnimator) AnimatorInflater.loadAnimator(this, R.animator.fadein);
@@ -919,7 +915,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		}
 		else
 		{
-			double baseValue = Double.parseDouble(s.toString());
+			double baseValue = Double.parseDouble(s.toString()); //use default culture local to parse
 			getResultListAdapter().setBaseValue(baseValue, -1);
 		}
 	}

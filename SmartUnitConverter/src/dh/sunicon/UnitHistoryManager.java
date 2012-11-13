@@ -1,6 +1,5 @@
 package dh.sunicon;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -19,8 +18,6 @@ public class UnitHistoryManager
 	private final int MAX_ENTRIES = 10;
 	
 	private final DatabaseHelper dbHelper_;
-	
-	private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 	
 	private final ExecutorService saveHistoryThread_ = Executors
 			.newSingleThreadExecutor();
@@ -54,7 +51,7 @@ public class UnitHistoryManager
 			/* insert entry to the history table */
 			
 			ContentValues cv = new ContentValues();
-			cv.put("lastUsed", dateFormat.format(new Date()));
+			cv.put("lastUsed", DatabaseHelper.DateFormat.format(new Date()));
 			cv.put("unitId", unitId);
 			dbHelper_.getWritableDatabase().insertWithOnConflict("unitHistory", null, cv, SQLiteDatabase.CONFLICT_REPLACE);
 			
