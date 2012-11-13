@@ -84,7 +84,7 @@ public class UpdatingReport implements Serializable
 		
 		sw.append(getDisplayMessage() + '\n');
 		for (ReportEntry e : entries_) {
-			boolean hasDetail = TextUtils.isEmpty(e.getDetail()); 
+			boolean hasDetail = !TextUtils.isEmpty(e.getDetail()); 
 			
 			if (hasDetail) {
 				sw.append("\n");
