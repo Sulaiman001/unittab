@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.http.ParseException;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -110,7 +111,12 @@ public class TmcAgent extends SimpleUpdatingAgent
 	 */
 	private String extractCurrencyRate(String rawCode) {
 		Matcher matcher = PAT.matcher(rawCode);
-		return matcher.group(0);
+		if (matcher.find()) {
+			return matcher.group(1);
+		}
+		else {
+			throw new ParseException("Cannot extract currencyCode from '"+rawCode+"'");
+		} 
 	}
 
 	@Override

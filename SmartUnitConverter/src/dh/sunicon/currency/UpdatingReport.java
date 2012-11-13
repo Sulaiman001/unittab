@@ -57,7 +57,7 @@ public class UpdatingReport implements Serializable
 				return "Failed update rates."; //TODO multi-language
 			}
 			
-			if (successUpdateAll()) {
+			if (successUpdateMostly()) {
 				return "Done"; //TODO multi-language
 			}
 			
@@ -80,7 +80,7 @@ public class UpdatingReport implements Serializable
 			return entries_.get(0).getType();
 		}
 		
-		if (successUpdateAll()) {
+		if (successUpdateMostly()) {
 			return MessageType.INFO;
 		}
 		
@@ -102,7 +102,7 @@ public class UpdatingReport implements Serializable
 	/**
 	 * warning: must change the methode name to "successUpdateMostly"
 	 */
-	public boolean successUpdateAll() {
+	public boolean successUpdateMostly() {
 		return updatedCurrencies_.size() >= DatabaseHelper.CURRENCY_COUNT-5; //cheat!
 	}
 	

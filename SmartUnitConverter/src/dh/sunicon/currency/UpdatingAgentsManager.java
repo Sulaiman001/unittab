@@ -42,9 +42,11 @@ public class UpdatingAgentsManager
 		UpdatingAgent tmcAgent = new TmcAgent(context_, baseCurrency, report);
 		agents_.addLast(tmcAgent);
 		
-//		Unit usdCurrency = Unit.findById(dbHelper_, Unit.USD_UNIT);
-//		UpdatingAgent yahooUsdAgent = new YahooUsdAgent(context_, usdCurrency, report);
-//		agents_.addLast(yahooUsdAgent);
+		//always update USD_UNIT base to fill rate which has rates = 0 (eg: 1 VND = 0.00 EUR)
+		
+		Unit usdCurrency = Unit.findById(dbHelper_, Unit.USD_UNIT);
+		UpdatingAgent yahooUsdAgent = new YahooUsdAgent(context_, usdCurrency, report);
+		agents_.addLast(yahooUsdAgent);
 	}
 
 	public synchronized UpdatingReport importOnBackground(long currencyUnitId)
@@ -73,7 +75,7 @@ public class UpdatingAgentsManager
 				agent.process();
 			}
 			
-			if (report.successUpdateAll()) {
+			if (report.successUpdateMostly()) {
 				saveLastUpdate(currencyUnitId);
 			}
 			

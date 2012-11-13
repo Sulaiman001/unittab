@@ -1,6 +1,5 @@
 package dh.sunicon.runnable;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -14,7 +13,6 @@ import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.Conversion;
 import dh.sunicon.datamodel.Corresponding;
 import dh.sunicon.datamodel.DatabaseHelper;
-import dh.sunicon.datamodel.Depot;
 import dh.sunicon.datamodel.EnumValue;
 import dh.sunicon.datamodel.Unit;
 
@@ -264,8 +262,9 @@ public final class ConversionsLoadingRunner implements Runnable
 		//Load conversions to local variable (RAM)
 		
 		//Get the conversions from the optimizeBaseCurrencyId
-		long optimizeBaseCurrencyId = choseBetweenMostRecentCurrencyAnd(baseUnitId_);
 		
+		//Get the conversions from optimizeBaseCurrencyId
+		long optimizeBaseCurrencyId = choseBetweenMostRecentCurrencyAnd(baseUnitId_);
 		Cursor cur1 = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(optimizeBaseCurrencyId)});
 		try
 		{
@@ -274,6 +273,17 @@ public final class ConversionsLoadingRunner implements Runnable
 		finally
 		{
 			cur1.close();
+		}
+		
+		//Always use the conversions from USD to fill lacking rates (for eg, rate conversion from VND to EUR = 0.00)
+		Cursor cur2 = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(Unit.USD_UNIT)});
+		try
+		{
+			readConversionFromCursor(cur2);
+		}
+		finally
+		{
+			cur2.close();
 		}
 		
 		Log.d("CURR", "readCurrencyConversions END baseUnitId = "+baseUnitId_);

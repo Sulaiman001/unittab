@@ -743,12 +743,15 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			case WARNING: 
 				bgr = getResources().getColor(R.color.light_yellow);
 				break;
+			case INFO: 
+				bgr = getResources().getColor(R.color.light_green);
 			default: 
 		}
 		
-		int visibility = View.GONE;
-		if (!report.isCancel() && (type!=MessageType.INFO || report.containsErrorOrWarning())) {
-			visibility = View.VISIBLE;
+		int visibility = View.VISIBLE;
+		
+		if (report.isCancel() || report.successUpdateMostly()) {
+			visibility = View.GONE;
 		}
 		
 		setCurrencyNotification(visibility, bgr, label);

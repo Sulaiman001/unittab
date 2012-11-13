@@ -64,7 +64,7 @@ public abstract class UpdatingAgent
 		if (isDumped()) {
 			return;
 		}
-		if (report_.successUpdateAll()) { //all the rates has been updated by other agents
+		if (report_.successUpdateMostly()) { //all the rates has been updated by other agents
 			return;
 		}
 		try

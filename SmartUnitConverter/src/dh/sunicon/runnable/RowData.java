@@ -242,7 +242,7 @@ public final class RowData implements Runnable
 		
 		if (futureResult_!=null)
 		{
-			Log.v(TAG, "Cancel old base value");
+			//Log.v(TAG, "Cancel old base value");
 			//cancel old calculation
 			futureResult_.cancel(true);
 			resultListAdapter_.unregisterCalculationFromWatingPool(futureResult_);
@@ -402,7 +402,7 @@ public final class RowData implements Runnable
 			EnumValue visitingEnumValueObj = enumValues.get(visitingEnumValue);
 			if (visitingEnumValueObj != null && visitingEnumValueObj.getUnitId() == targetUnitId)
 			{
-				Log.v(TAG, String.format("Convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d, found enumId = %d", baseValueEnumId, baseUnitId, targetUnitId, visitingEnumValueObj.getId()));
+				//Log.v(TAG, String.format("Convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d, found enumId = %d", baseValueEnumId, baseUnitId, targetUnitId, visitingEnumValueObj.getId()));
 				return visitingEnumValueObj;
 			}
 			
@@ -422,7 +422,7 @@ public final class RowData implements Runnable
 			}
 		}
 			
-		Log.v(TAG, String.format("Convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d, NO RESU", baseValueEnumId, baseUnitId, targetUnitId));
+		//Log.v(TAG, String.format("Convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d, NO RESU", baseValueEnumId, baseUnitId, targetUnitId));
 		return null;
 	}
 	
@@ -458,7 +458,7 @@ public final class RowData implements Runnable
 			return Double.NaN;
 		}
 		
-		Log.v(TAG, String.format("Start convert %f from baseUnitId=%d to targetUnitId=%d", baseValue, baseUnitId, targetUnitId));
+		//Log.v(TAG, String.format("Start convert %f from baseUnitId=%d to targetUnitId=%d", baseValue, baseUnitId, targetUnitId));
 		
 		/* The trivial case, if there is a direct connection between baseUnitId and targetUnitId. To give a more accurate result for currency converter */
 		
