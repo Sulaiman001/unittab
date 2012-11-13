@@ -32,6 +32,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
+import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -722,8 +723,10 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			{
 				try
 				{
-					currencyUpdater_.cancel();
-					currencyUpdater_.process(baseUnitId_);
+					if (categoryId_ == Category.CURRENCY_CATEGORY) { //prudent
+						currencyUpdater_.cancel();
+						currencyUpdater_.process(baseUnitId_);
+					}
 				}
 				catch (Exception e)
 				{
@@ -938,6 +941,9 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		{
 			double baseValue = Double.parseDouble(s.toString()); //use default culture local to parse
 			getResultListAdapter().setBaseValue(baseValue, -1);
+			if (currencyUpdater_!=null && categoryId_ == Category.CURRENCY_CATEGORY) { //prudent) {
+				currencyUpdater_.process(baseUnitId_);
+			}
 		}
 	}
 	
