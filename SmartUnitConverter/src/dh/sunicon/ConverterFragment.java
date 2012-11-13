@@ -33,6 +33,7 @@ import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -72,6 +73,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	
 	private View updateInProgressPanel_;
 	private TextView currencyLoadingLabel_;
+	private ProgressBar currencyLoadingProgressBar_;
 	
 	private int spinnerPositionToRestore_ = -1;
 	private long baseUnitId_ = -1;
@@ -640,6 +642,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	{
 		updateInProgressPanel_ = getView().findViewById(R.id.updateInProgressPanel);
 		currencyLoadingLabel_ = (TextView) getView().findViewById(R.id.currencyLoadingLabel); //TODO only for debug => remove it
+		currencyLoadingProgressBar_ = (ProgressBar) getView().findViewById(R.id.currencyLoadingProgressBar); 
 		
 		currencyUpdater_ = new CurrencyUpdater(this.getActivity());
 		currencyUpdater_.setBeforeUpdateStarted_(new BeforeUpdateStartedListener()
@@ -650,6 +653,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 				try
 				{
 					updateInProgressPanel_.setTag(null);
+					currencyLoadingProgressBar_.setVisibility(View.VISIBLE);
 					
 					setCurrencyNotification(View.VISIBLE, 
 							Color.WHITE,
@@ -668,6 +672,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			{
 				try
 				{
+					currencyLoadingProgressBar_.setVisibility(View.GONE);
 					updateInProgressPanel_.setTag(report);
 					updateCurrencyNotificationBar();
 					
