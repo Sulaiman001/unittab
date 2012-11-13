@@ -18,34 +18,9 @@ public class UpdatingReport implements Serializable
 	private boolean inProgress = false;
 	private ArrayList<String> updatedCurrencies_ = new ArrayList<String>();
 	private ArrayList<ReportEntry> entries_ = new ArrayList<ReportEntry>();
+	private boolean isSuccessAll_ = false;
 	
 	public UpdatingReport() {}
-	
-//	public UpdatingReport(JSONObject savedState) throws JSONException {
-//		isDatabaseChanged_ = savedState.getBoolean("isDatabaseChanged");
-//		isCancel_ = savedState.getBoolean("isCancel");
-//		
-//		JSONArray entriesJson = savedState.getJSONArray("entries");
-//		int n = entriesJson.length();
-//		for (int i = 0; i<n; i++) {
-//			ReportEntry e = new ReportEntry((JSONObject) entriesJson.get(i));
-//			entries_.add(e);
-//		}
-//	}
-//	
-//	public JSONObject serialize() throws JSONException {
-//		JSONObject json = new JSONObject();
-//		json.put("isDatabaseChanged", isDatabaseChanged_);
-//		json.put("isCancel", isCancel_);
-//		
-//		JSONArray entriesJson = new JSONArray();
-//		for (ReportEntry e : entries_) {
-//			entriesJson.put(e.serialize());
-//		}
-//		json.put("entries", entriesJson);
-//		
-//		return json;
-//	}
 	
 	public ArrayList<String> getUpdatedCurrencies()
 	{
@@ -57,15 +32,15 @@ public class UpdatingReport implements Serializable
 			return entries_.get(0).getMessage();
 		}
 		else {
-			if (entries_.size() == 0) {
+			if (updatedCurrencies_.size() == 0) {
 				return "Failed update rates."; //TODO multi-language
 			}
 			
-			if (successUpdateMostly()) {
+			if (isSuccessAll()) {
 				return "Done"; //TODO multi-language
 			}
 			
-			return String.format("Success update rates for %d/%d currencies.",updatedCurrencies_.size(),DatabaseHelper.CURRENCY_COUNT);
+			return String.format("Updated rates for %d/%d currencies.",updatedCurrencies_.size(),DatabaseHelper.CURRENCY_COUNT);
 		}
 	}
 	
@@ -84,11 +59,11 @@ public class UpdatingReport implements Serializable
 			return entries_.get(0).getType();
 		}
 		
-		if (successUpdateMostly()) {
+		if (isSuccessAll()) {
 			return MessageType.INFO;
 		}
 		
-		if (entries_.size() == 0) {
+		if (updatedCurrencies_.size() == 0) {
 			return MessageType.ERROR;
 		}
 		
@@ -128,8 +103,8 @@ public class UpdatingReport implements Serializable
 	/**
 	 * warning: must change the methode name to "successUpdateMostly"
 	 */
-	public boolean successUpdateMostly() {
-		return updatedCurrencies_.size() >= DatabaseHelper.CURRENCY_COUNT-1; //cheat!
+	public boolean isSuccessAll() {
+		return isSuccessAll_ || updatedCurrencies_.size() >= DatabaseHelper.CURRENCY_COUNT-1; //cheat!
 	}
 	
 	public ArrayList<ReportEntry> getEntries()
@@ -159,6 +134,11 @@ public class UpdatingReport implements Serializable
 	void setCancel(boolean isCancel)
 	{
 		isCancel_ = isCancel;
+	}
+	
+	void forceSuccessAll()
+	{
+		isSuccessAll_ = true;
 	}
 
 	public static MessageType getMessageType(String s) {
@@ -218,18 +198,5 @@ public class UpdatingReport implements Serializable
 		public String toString() {
 			return "["+getMessageType(type_) +"] "+message_;
 		};
-		
-		
-//		public ReportEntry(JSONObject savedState) throws JSONException
-//		{
-//			this(getMessageType(savedState.getString("type")), savedState.getString("message"), savedState.getString("detail"));
-//		}
-//		public JSONObject serialize() throws JSONException {
-//			JSONObject json = new JSONObject();
-//			json.put("type", getMessageType(type_));
-//			json.put("message", message_);
-//			json.put("detail", detail_);
-//			return json;
-//		}
 	}
 }
