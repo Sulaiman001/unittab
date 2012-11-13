@@ -12,6 +12,7 @@ public class UpdatingReport implements Serializable
 	public enum MessageType {INFO, WARNING, ERROR}
 
 	private boolean isCancel_ = false;
+	private boolean inProgress = false;
 	private ArrayList<String> updatedCurrencies_ = new ArrayList<String>();
 	private ArrayList<ReportEntry> entries_ = new ArrayList<ReportEntry>();
 	
@@ -103,7 +104,7 @@ public class UpdatingReport implements Serializable
 	 * warning: must change the methode name to "successUpdateMostly"
 	 */
 	public boolean successUpdateMostly() {
-		return updatedCurrencies_.size() >= DatabaseHelper.CURRENCY_COUNT-5; //cheat!
+		return updatedCurrencies_.size() >= DatabaseHelper.CURRENCY_COUNT-1; //cheat!
 	}
 	
 	public ArrayList<ReportEntry> getEntries()
@@ -149,6 +150,16 @@ public class UpdatingReport implements Serializable
 		}
 	}
 	
+	public boolean isInProgress()
+	{
+		return inProgress;
+	}
+
+	void setInProgress(boolean inProgress)
+	{
+		this.inProgress = inProgress;
+	}
+
 	public class ReportEntry implements Serializable {
 		private static final long serialVersionUID = -324637469219624409L;
 		private MessageType type_;

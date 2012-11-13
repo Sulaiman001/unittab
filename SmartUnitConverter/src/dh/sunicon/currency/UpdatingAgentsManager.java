@@ -68,8 +68,11 @@ public class UpdatingAgentsManager
 		{
 			setupAgents(currencyUnitId, report);
 			
+			report.setInProgress(true);
+			
 			for (UpdatingAgent agent : agents_) {
 				if (isDumped()) {
+					report.setInProgress(false);
 					return report;
 				}
 				agent.process();
@@ -91,6 +94,9 @@ public class UpdatingAgentsManager
 		{
 			report.add(report.new ReportEntry(MessageType.ERROR, "Update failed.", Log.getStackTraceString(ex)));
 			Log.w(TAG, ex);
+		}
+		finally {
+			report.setInProgress(false);
 		}
 		
 		Log.d("CURR", "importOnBackground END "+currencyUnitId);

@@ -44,7 +44,7 @@ public class UnitHistoryManager
 	private void saveToHistory(final long unitId)
 	{
 		//dbHelper_.getWritableDatabase().execSQL(INSERT_HISTORY, new String[] {Long.toString(unitId)});
-		Log.v(TAG, "Begin save history");
+		//Log.v(TAG, "Begin save history");
 		dbHelper_.getWritableDatabase().beginTransaction();
 		try
 		{
@@ -77,7 +77,7 @@ public class UnitHistoryManager
 		finally
 		{
 			dbHelper_.getWritableDatabase().endTransaction(); //rollback if not marked as successfull
-			Log.v(TAG, "End save history");
+			//Log.v(TAG, "End save history");
 		}
 	}
 }

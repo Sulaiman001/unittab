@@ -48,7 +48,6 @@ import dh.sunicon.currency.UpdatingReport;
 import dh.sunicon.currency.UpdatingReport.MessageType;
 import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.DatabaseHelper;
-import dh.sunicon.datamodel.MathEval;
 import dh.sunicon.runnable.RowData;
 
 public class ConverterFragment extends ListFragment implements LoaderCallbacks<Cursor>
@@ -672,7 +671,6 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			{
 				try
 				{
-					currencyLoadingProgressBar_.setVisibility(View.GONE);
 					updateInProgressPanel_.setTag(report);
 					updateCurrencyNotificationBar();
 					
@@ -760,6 +758,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		}
 		
 		setCurrencyNotification(visibility, bgr, label);
+		
+		currencyLoadingProgressBar_.setVisibility(report.isInProgress() ? View.VISIBLE : View.GONE);
 	}
 	private void setCurrencyNotification(int visibility, int bgr, String label)
 	{
@@ -873,10 +873,10 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		clearTargetUnitFilterButton_.setEnabled(true);
 		baseUnitPickerButton_.setText(unitName);
 		
-		Log.v(TAG, "setBaseUnit.invokeSaveToHistory");
+		//Log.v(TAG, "setBaseUnit.invokeSaveToHistory");
 		unitHistory_.invokeSaveToHistory(unitId);
 		
-		Log.d(TAG, "setBaseUnit.filterSpinner");
+		//Log.d(TAG, "setBaseUnit.filterSpinner");
 		//baseValueSpinnerAdapter_.getFilter().filter(Long.toString(unitId));
 		getLoaderManager().restartLoader(VALUE_SPINNER_LOADER, null, this);
 		if (unitName != null)
@@ -960,7 +960,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		{
 			if (finished)
 			{
-				Log.v(TAG, "switch to result list");
+				//Log.v(TAG, "switch to result list");
 				if (resultListSwitcher_.getNextView() == getListView())
 				{
 					resultListSwitcher_.showNext();
@@ -968,7 +968,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			}
 			else
 			{
-				Log.v(TAG, "switch to progress bar");
+				//Log.v(TAG, "switch to progress bar");
 				if (resultListSwitcher_.getNextView() != getListView())
 				{
 					resultListSwitcher_.showNext();
