@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/mainView"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:animateLayoutChanges="true"
+    android:orientation="horizontal"
+    android:paddingLeft="5dp"
+    android:paddingRight="5dp"
+    android:paddingTop="5dp" >
+
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.6"
+        android:stretchColumns="0" >
+
+        <TextView
+            android:id="@+id/categoryLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_span="2"
+            android:text="Heat Transfer Coefficient"
+            android:textColor="@color/category_fg"
+            android:textSize="14sp" />
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <Button
+                android:id="@+id/baseUnitPickerButton"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/edittext_active"
+                android:hint="choose an unit"
+                android:maxLength="24"
+                android:padding="0dp"
+                android:singleLine="true"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textStyle="bold" />
+
+            <Button
+                android:id="@+id/baseUnitPicker2Button"
+                android:layout_width="36dp"
+                android:layout_height="match_parent"
+                android:background="@drawable/edittext_active"
+                android:enabled="true"
+                android:padding="0dp"
+                android:singleLine="true"
+                android:text="..."
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textStyle="bold" />
+        </TableRow>
+
+        <ViewSwitcher
+            android:id="@+id/baseValueSwitcher"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" 
+            android:layout_marginTop="10dp">
+
+            <EditText
+                android:id="@+id/valueEditor"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="0dp"
+                android:ellipsize="start"
+                android:imeOptions="flagNoFullscreen|flagNoExtractUi|actionDone"
+                android:inputType="numberDecimal"
+                android:maxLength="16"
+                android:padding="5dp" 
+                android:hint="value"
+                />
+
+            <Spinner
+                android:id="@+id/valueSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="0dp"
+                android:background="@drawable/edittext_blue_colorstate"
+                android:padding="5dp"
+                android:popupBackground="@drawable/droplist" />
+        </ViewSwitcher>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Convert to" />
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp" >
+
+            <EditText
+                android:id="@+id/targetUnitFilterEditor"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:enabled="false"
+                android:imeOptions="flagNoFullscreen|flagNoExtractUi|actionDone"
+                android:inputType="textNoSuggestions|textFilter"
+                android:padding="8dp"
+                android:singleLine="true"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+
+            <Button
+                android:id="@+id/clearTargetUnitFilterButton"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:background="@drawable/edittext_blue_colorstate"
+                android:enabled="false"
+                android:minHeight="10dp"
+                android:minWidth="10dp"
+                android:text="X"
+                android:width="10dp" />
+        </TableRow>
+
+        <LinearLayout
+            android:id="@+id/updateInProgressPanel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="10dp"
+            android:paddingTop="10dp"
+            android:visibility="gone" >
+
+            <ProgressBar
+                android:id="@+id/currencyLoadingProgressBar"
+                style="?android:attr/progressBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/currencyLoadingLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Updating currency rate. Touch to skip..." >
+            </TextView>
+        </LinearLayout>
+    </TableLayout>
+
+    <ViewSwitcher
+        android:id="@+id/resultListSwitcher"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="10dp"
+        android:layout_weight="0.4" >
+
+        <ListView
+            android:id="@android:id/list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:animateLayoutChanges="true"
+            android:choiceMode="singleChoice" />
+
+        <ProgressBar
+            android:id="@+id/progressbar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </ViewSwitcher>
+
+</LinearLayout>

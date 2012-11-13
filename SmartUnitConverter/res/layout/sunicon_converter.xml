@@ -41,6 +41,7 @@
                 android:layout_height="match_parent"
                 android:layout_margin="0dp"
                 android:ellipsize="start"
+                android:hint="value"
                 android:imeOptions="flagNoFullscreen|flagNoExtractUi|actionDone"
                 android:inputType="numberDecimal"
                 android:maxLength="16"
@@ -119,8 +120,8 @@
         android:id="@+id/updateInProgressPanel"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingTop="10dp"
         android:paddingBottom="10dp"
+        android:paddingTop="10dp"
         android:visibility="gone" >
 
         <ProgressBar

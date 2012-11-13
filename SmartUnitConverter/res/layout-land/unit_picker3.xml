@@ -1,0 +1,80 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:paddingLeft="5dp"
+    android:paddingRight="5dp" >
+
+    <LinearLayout
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:orientation="vertical"
+         android:layout_weight="0.5" >
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="2dp" 
+            >
+
+            <Button
+                android:id="@+id/backButton"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_alignParentLeft="true"
+                android:background="@drawable/edittext_active"
+                android:gravity="bottom"
+                android:padding="10dp"
+                android:text="Back"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+
+            <ToggleButton
+                android:id="@+id/listToggle"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_alignParentRight="true"
+                android:background="@drawable/edittext_active"
+                android:gravity="bottom"
+                android:padding="10dip"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textOff="List"
+                android:textOn="Tree" />
+        </RelativeLayout>
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Enter (part of) category name and/or (part of) unit name"
+            android:textAppearance="?android:attr/textAppearanceSmall" />
+
+        <EditText
+            android:id="@+id/filterEdit"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:hint="eg: &apos;lit fuel&apos; or &apos;dista km&apos;..."
+            android:imeOptions="flagNoFullscreen|flagNoExtractUi|actionDone"
+            android:inputType="textNoSuggestions|textFilter"
+            android:padding="5dp" />
+    </LinearLayout>
+
+    <ViewSwitcher
+        android:id="@+id/listSwitcher"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+         android:layout_weight="0.5"
+         >
+
+        <ExpandableListView
+            android:id="@+id/treeList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ListView
+            android:id="@+id/flatList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+    </ViewSwitcher>
+
+</LinearLayout>
