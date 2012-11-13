@@ -85,7 +85,8 @@
     <TableRow
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp" >
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp" >
 
         <TextView
             android:layout_width="wrap_content"
@@ -121,7 +122,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="10dp"
-        android:paddingTop="10dp"
         android:visibility="gone" >
 
         <ProgressBar
@@ -141,8 +141,7 @@
     <ViewSwitcher
         android:id="@+id/resultListSwitcher"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginTop="10dp" >
+        android:layout_height="match_parent">
 
         <ListView
             android:id="@android:id/list"

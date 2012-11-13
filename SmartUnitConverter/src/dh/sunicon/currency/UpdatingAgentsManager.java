@@ -43,10 +43,10 @@ public class UpdatingAgentsManager
 		agents_.addLast(tmcAgent);
 		
 		//always update USD_UNIT base to fill rate which has rates = 0 (eg: 1 VND = 0.00 EUR)
-		
-		Unit usdCurrency = Unit.findById(dbHelper_, Unit.USD_UNIT);
-		UpdatingAgent yahooUsdAgent = new YahooUsdAgent(context_, usdCurrency, report);
-		agents_.addLast(yahooUsdAgent);
+//		TODO unlock comment
+//		Unit usdCurrency = Unit.findById(dbHelper_, Unit.USD_UNIT);
+//		UpdatingAgent yahooUsdAgent = new YahooUsdAgent(context_, usdCurrency, report);
+//		agents_.addLast(yahooUsdAgent);
 	}
 
 	public synchronized UpdatingReport importOnBackground(long currencyUnitId)
@@ -73,6 +73,7 @@ public class UpdatingAgentsManager
 			for (UpdatingAgent agent : agents_) {
 				if (isDumped()) {
 					report.setInProgress(false);
+					report.add(report.new ReportEntry(MessageType.WARNING, "Update cancelled by User.")); //TODO multi-language
 					return report;
 				}
 				agent.process();

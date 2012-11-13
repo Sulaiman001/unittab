@@ -697,15 +697,15 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 					
 					UpdatingReport report = (UpdatingReport) updateInProgressPanel_.getTag();
 					
-					if (report == null) {
+					if (report == null || report.isInProgress()) {
 						currencyUpdater_.cancel(); //skip
 					}
 					else {
 						//TODO
 						
 						//show Report
-						ReportDialogFragment dialog = new ReportDialogFragment();
-						dialog.show(getActivity().getSupportFragmentManager(),report.getContentMessage());
+						ReportDialogFragment dialog = ReportDialogFragment.newInstance(report);
+						dialog.show(getActivity().getSupportFragmentManager(), "ReportDialog");
 						
 						//TODO get the callback from dialog 
 //						if (categoryId_ == CURRENCY_CATEGORY) {
@@ -753,7 +753,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		
 		int visibility = View.VISIBLE;
 		
-		if (report.isCancel() || report.successUpdateMostly()) {
+		if (report.successUpdateMostly()) {
 			visibility = View.GONE;
 		}
 		

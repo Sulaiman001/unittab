@@ -1,7 +1,10 @@
 package dh.sunicon.currency;
 
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.util.ArrayList;
+
+import android.text.TextUtils;
 
 import dh.sunicon.datamodel.DatabaseHelper;
 
@@ -93,11 +96,33 @@ public class UpdatingReport implements Serializable
 	}
 	
 	public String getContentMessage() {
-		String resu = getDisplayMessage() + '\n';
+		StringWriter sw = new StringWriter();
+		sw.append(getDisplayMessage() + '\n');
 		for (ReportEntry e : entries_) {
-			resu = resu + '\n'+e.toString();
+			sw.append('\n'+e.toString());
 		}
-		return resu;
+		return sw.toString();
+	}
+	
+	public String getDetailMessage() {
+		StringWriter sw = new StringWriter();
+		
+		sw.append(getDisplayMessage() + '\n');
+		for (ReportEntry e : entries_) {
+			boolean hasDetail = TextUtils.isEmpty(e.getDetail()); 
+			
+			if (hasDetail) {
+				sw.append("\n");
+			}
+			
+			sw.append('\n'+e.toString());
+			
+			if (hasDetail) {
+				sw.append("\n"+e.getDetail());
+			}
+		}
+		
+		return sw.toString();
 	}
 	
 	/**
