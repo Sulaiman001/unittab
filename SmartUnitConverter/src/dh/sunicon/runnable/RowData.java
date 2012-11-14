@@ -267,7 +267,7 @@ public final class RowData implements Runnable
 	}
 	
 	public boolean isDumped() {
-		return cancelCalculation_;
+		return cancelCalculation_ || Thread.currentThread().isInterrupted();
 	}
 	
 	/**
@@ -279,7 +279,7 @@ public final class RowData implements Runnable
 		try
 		{
 			if (isDumped()) {
-				throw new UnsupportedOperationException();
+				return;
 			}
 			
 			if (baseValue_ != null && !baseValue_.isNaN()) //normal case: km/h..
@@ -375,7 +375,7 @@ public final class RowData implements Runnable
 	 */
 	EnumValue computeTargetValue(long baseValueEnumId, long baseUnitId, long targetUnitId) throws IllegalAccessException, InterruptedException, ExecutionException, TimeoutException
 	{
-		if (cancelCalculation_ || baseValueEnumId == -1)
+		if (isDumped() || baseValueEnumId == -1)
 		{
 			return null;
 		}
@@ -397,7 +397,7 @@ public final class RowData implements Runnable
 		ArrayList<Long> visitedEnumValue = new ArrayList<Long>();
 		visitedEnumValueQueue.offer(baseValueEnumId);
 		
-		while (!visitedEnumValueQueue.isEmpty() && !cancelCalculation_)
+		while (!visitedEnumValueQueue.isEmpty() && !isDumped())
 		{
 			long visitingEnumValue = visitedEnumValueQueue.poll();
 			visitedEnumValue.add(visitingEnumValue);
@@ -450,7 +450,7 @@ public final class RowData implements Runnable
 	 */
 	double computeTargetValue(double baseValue, long baseUnitId, long targetUnitId) throws IllegalAccessException, InterruptedException, ExecutionException, TimeoutException
 	{
-		if (cancelCalculation_ || Double.isNaN(baseValue))
+		if (isDumped() || Double.isNaN(baseValue))
 		{
 			return Double.NaN;
 		}		
@@ -486,7 +486,7 @@ public final class RowData implements Runnable
 		visitedUnitQueue.offer(baseUnitId);
 		previous.put(baseUnitId, null);
 		
-		while (!visitedUnitQueue.isEmpty() && !cancelCalculation_)
+		while (!visitedUnitQueue.isEmpty() && !isDumped())
 		{
 			long visitingUnit = visitedUnitQueue.poll();
 			visitedUnit.add(visitingUnit);
@@ -531,20 +531,20 @@ public final class RowData implements Runnable
 			path.addFirst(conv);
 			uid = conv.getOtherUnitId(uid); 
 		}
-		while (uid != baseUnitId && !cancelCalculation_);
+		while (uid != baseUnitId && !isDumped());
 		
 		/* use the path to convert the value */
 		
 		double returned = baseValue;
 		uid = baseUnitId;
-		while (!path.isEmpty() && !cancelCalculation_)
+		while (!path.isEmpty() && !isDumped())
 		{
 			conv = path.poll();
 			returned = conv.convert(returned, uid);
 			uid = conv.getOtherUnitId(uid);
 		}
 		
-		if (cancelCalculation_)
+		if (isDumped())
 		{
 			return Double.NaN;
 		}
