@@ -28,7 +28,7 @@ public class YahooCsvAgent extends SimpleUpdatingAgent
 		super(context, baseCurrency, report, testMode);
 	}
 	
-	protected boolean processUpdate(InputStream inputStream) throws IOException, XmlPullParserException 
+	protected boolean parseAndImportToCache(InputStream inputStream) throws IOException, XmlPullParserException 
 	{
 		Scanner sc = new Scanner(inputStream).useDelimiter("\n");
 		boolean allSuccess = false;
@@ -50,7 +50,7 @@ public class YahooCsvAgent extends SimpleUpdatingAgent
 		try {
 			String code = extractCurrencyCode(sc.next());
 			double rate = sc.nextDouble();
-			updateDatabase(code, rate);
+			putToCache(code, rate);
 		}
 		finally {
 			sc.close();

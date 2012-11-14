@@ -32,7 +32,7 @@ public class YahooUsdAgent extends SimpleUpdatingAgent
 		}
 	}
 	
-	protected boolean processUpdate(InputStream inputStream) throws IOException, XmlPullParserException 
+	protected boolean parseAndImportToCache(InputStream inputStream) throws IOException, XmlPullParserException 
 	{
         XmlPullParser parser = Xml.newPullParser();
         parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
@@ -98,7 +98,7 @@ public class YahooUsdAgent extends SimpleUpdatingAgent
 	    	return false;
 	    }
 	    
-	    return updateDatabase(currencyCode, rateStr);
+	    return importToCache(currencyCode, rateStr);
 	}
 	
 	/**

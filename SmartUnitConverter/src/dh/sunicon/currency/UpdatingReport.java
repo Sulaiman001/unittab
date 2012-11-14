@@ -3,9 +3,9 @@ package dh.sunicon.currency;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import android.text.TextUtils;
-
 import dh.sunicon.datamodel.DatabaseHelper;
 
 public class UpdatingReport implements Serializable
@@ -13,26 +13,22 @@ public class UpdatingReport implements Serializable
 	private static final long serialVersionUID = 7032023292731426695L;
 
 	public enum MessageType {INFO, WARNING, ERROR}
+	public enum OperationType {INSERT, UPDATE}
 
 	private boolean isCancel_ = false;
 	private boolean inProgress = false;
-	private ArrayList<String> updatedCurrencies_ = new ArrayList<String>();
+	private int updatedCount_ = 0;
+	private HashMap<String, UpdateItem> cacheUpdates_ = new HashMap<String, UpdateItem>();
 	private ArrayList<ReportEntry> entries_ = new ArrayList<ReportEntry>();
-	private boolean isSuccessAll_ = false;
 	
 	public UpdatingReport() {}
 	
-	public ArrayList<String> getUpdatedCurrencies()
-	{
-		return updatedCurrencies_;
-	}
-
 	public String getDisplayMessage() {
 		if (entries_.size() == 1) {
 			return entries_.get(0).getMessage();
 		}
 		else {
-			if (updatedCurrencies_.size() == 0) {
+			if (updatedCount_ == 0) {
 				return "Failed update rates."; //TODO multi-language
 			}
 			
@@ -40,7 +36,7 @@ public class UpdatingReport implements Serializable
 				return "Done"; //TODO multi-language
 			}
 			
-			return String.format("Updated rates for %d/%d currencies.",updatedCurrencies_.size(),DatabaseHelper.CURRENCY_COUNT);
+			return String.format("Updated rates for %d/%d currencies.", updatedCount_, DatabaseHelper.CURRENCY_COUNT);
 		}
 	}
 	
@@ -63,7 +59,7 @@ public class UpdatingReport implements Serializable
 			return MessageType.INFO;
 		}
 		
-		if (updatedCurrencies_.size() == 0) {
+		if (updatedCount_ == 0) {
 			return MessageType.ERROR;
 		}
 		
@@ -104,7 +100,14 @@ public class UpdatingReport implements Serializable
 	 * warning: must change the methode name to "successUpdateMostly"
 	 */
 	public boolean isSuccessAll() {
-		return isSuccessAll_ || updatedCurrencies_.size() >= DatabaseHelper.CURRENCY_COUNT-1; //cheat!
+		return updatedCount_ >= DatabaseHelper.CURRENCY_COUNT-10; //cheat!
+	}
+	
+	/**
+	 * warning: must change the methode name to "successUpdateMostly"
+	 */
+	public boolean isCacheFull() {
+		return cacheUpdates_.size() == DatabaseHelper.CURRENCY_COUNT;
 	}
 	
 	public ArrayList<ReportEntry> getEntries()
@@ -115,15 +118,14 @@ public class UpdatingReport implements Serializable
 	{
 		entries_.add(reportEntry);
 	}
-	public boolean isCurrencyUdpated(String currencyCode) {
-		return updatedCurrencies_.contains(currencyCode);
+	public boolean isCached(String currencyCode) {
+		return cacheUpdates_.containsKey(currencyCode);
 	}
-	void reportUpdatedCurrency(String currencyCode)
-	{
-		updatedCurrencies_.add(currencyCode);
+	void cacheUpdate(String currencyCode, UpdateItem updateItem) {
+		cacheUpdates_.put(currencyCode, updateItem);
 	}
 	public boolean isDatabaseChanged() {
-		return !updatedCurrencies_.isEmpty();
+		return updatedCount_>0;
 	}
 
 	public boolean isCancel()
@@ -138,7 +140,7 @@ public class UpdatingReport implements Serializable
 	
 	void forceSuccessAll()
 	{
-		isSuccessAll_ = true;
+		updatedCount_ = DatabaseHelper.CURRENCY_COUNT;
 	}
 
 	public static MessageType getMessageType(String s) {
@@ -165,6 +167,19 @@ public class UpdatingReport implements Serializable
 		this.inProgress = inProgress;
 	}
 
+	HashMap<String, UpdateItem> getCacheUpdates()
+	{
+		return cacheUpdates_;
+	}
+
+	void incrementUpdatedCount() {
+		updatedCount_++;
+	}
+	
+	void resetUpdatedCount() {
+		updatedCount_ = 0;
+	}
+	
 	public class ReportEntry implements Serializable {
 		private static final long serialVersionUID = -324637469219624409L;
 		private MessageType type_;
@@ -198,5 +213,39 @@ public class UpdatingReport implements Serializable
 		public String toString() {
 			return "["+getMessageType(type_) +"] "+message_;
 		};
+	}
+	
+	public class UpdateItem implements Serializable {
+		private static final long serialVersionUID = -1864164486618962935L;
+		private OperationType operation_;
+		private long base_;
+		private long target_;
+		private double rate_;
+		public UpdateItem(OperationType operation, long base, long target,
+				double rate)
+		{
+			super();
+			operation_ = operation;
+			base_ = base;
+			target_ = target;
+			rate_ = rate;
+		}
+		public OperationType getOperation()
+		{
+			return operation_;
+		}
+		public long getBase()
+		{
+			return base_;
+		}
+		public long getTarget()
+		{
+			return target_;
+		}
+		public double getRate()
+		{
+			return rate_;
+		}
+		
 	}
 }

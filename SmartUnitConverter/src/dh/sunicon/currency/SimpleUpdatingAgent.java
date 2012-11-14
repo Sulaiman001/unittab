@@ -28,7 +28,7 @@ public abstract class SimpleUpdatingAgent extends UpdatingAgent
 	
 	
 	@Override
-	protected boolean processUpdate() {
+	protected boolean importToCache() {
 		InputStream inputStream = null;
 		
 		try
@@ -45,7 +45,7 @@ public abstract class SimpleUpdatingAgent extends UpdatingAgent
 		
 		try
 		{
-			return processUpdate(inputStream);
+			return parseAndImportToCache(inputStream);
 		}
 		catch (Exception ex)
 		{
@@ -59,7 +59,7 @@ public abstract class SimpleUpdatingAgent extends UpdatingAgent
 				inputStream.close();
 			} catch (IOException e) {
 				report_.add(report_.new ReportEntry(MessageType.WARNING, 
-						"Somthing wrong: "+e.getMessage()  //TODO multi-language
+						"Oops: "+e.getMessage()  //TODO multi-language
 						));
 				return false;
 			}
@@ -69,7 +69,7 @@ public abstract class SimpleUpdatingAgent extends UpdatingAgent
 	/**
 	 * return true only if all row is successfully updated 
 	 */
-	protected abstract boolean processUpdate(InputStream inputStream) throws IOException, XmlPullParserException;
+	protected abstract boolean parseAndImportToCache(InputStream inputStream) throws IOException, XmlPullParserException;
 
 	/**
 	 * must return a unique string per agent. It can be the class name, but I might refactoring the class name!

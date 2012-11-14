@@ -15,10 +15,12 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import android.app.Activity;
+import android.database.Cursor;
 import android.text.TextUtils;
 import android.util.Log;
 import dh.sunicon.MainActivity;
 import dh.sunicon.currency.UpdatingReport.MessageType;
+import dh.sunicon.currency.UpdatingReport.OperationType;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.datamodel.MathEval;
 import dh.sunicon.datamodel.Unit;
@@ -60,16 +62,16 @@ public abstract class UpdatingAgent
 	 * process only if last update is expiry. save the lastTime updating if processUpdate successfully returned.
 	 * this is the entry point of the updating agent.
 	 */
-	public void process() {
+	public void buildCache() {
 		if (isDumped()) {
 			return;
 		}
-		if (report_.isSuccessAll()) { //all the rates has been updated by other agents
+		if (report_.isCacheFull()) { //all the rates has been cached by other agents
 			return;
 		}
 		try
 		{
-			processUpdate();
+			importToCache();
 		}
 		catch (Exception ex)
 		{
@@ -86,7 +88,7 @@ public abstract class UpdatingAgent
 	 * return true if update success. you must download data, parse it and call updateDatabse here.
 	 * if one of the row is not imported, it must return false
 	 */
-	protected abstract boolean processUpdate();
+	protected abstract boolean importToCache();
 
 	/**
 	 * must return a unique string per agent. It can be the class name, but I might refactoring the class name!
@@ -96,11 +98,11 @@ public abstract class UpdatingAgent
 	/**
 	 * update the rate of a currency into local database and report the update result
 	 */
-	protected boolean updateDatabase(String currencyCode, String rate) {
+	protected boolean importToCache(String currencyCode, String rate) {
 		
 		try
 		{
-			return updateDatabase(currencyCode, MathEval.parseDouble(rate));
+			return putToCache(currencyCode, MathEval.parseDouble(rate));
 		}
 		catch (Exception ex)
 		{
@@ -116,11 +118,17 @@ public abstract class UpdatingAgent
 	/**
 	 * update the rate of a currency into local database and report the update result
 	 */
-	protected boolean updateDatabase(String currencyCode, double rate) {
+	protected boolean putToCache(String currencyCode, double rate) {
 		
 		try
 		{
-			if (report_.isCurrencyUdpated(currencyCode)) { //already update by other agent(s)
+			if (rate<=0) {
+				throw new InvalidParameterException("Invalid rate");
+			}
+			if (TextUtils.isEmpty(currencyCode)) {
+				throw new InvalidParameterException("invalide currency code");
+			}
+			if (report_.isCached(currencyCode)) { //already reported by other agent(s)
 				return true;
 			}
 			
@@ -131,10 +139,9 @@ public abstract class UpdatingAgent
 				Log.v("CURR", getName()+" "+currencyCode + " / "+rate);
 			}
 			else {
-				baseCurrency_.insertOrUpdateCurrency(currencyCode, rate);
+				checkAndPutToCache(currencyCode, rate);
 			}
 			
-			report_.reportUpdatedCurrency(currencyCode);
 			return true;
 		}
 		catch (Exception ex)
@@ -146,6 +153,58 @@ public abstract class UpdatingAgent
 			Log.d("CURR", msg);
 			return false;
 		}
+	}
+	
+	private boolean checkAndPutToCache(String targetCurrencyCode, double rate)
+	{
+		//get targetCurrency
+		Unit targetCurrency = null;
+		{
+			Cursor cur = dbHelper_.getReadableDatabase().query("unit", null,
+					"categoryId=11 AND shortName=?", new String[] {
+						targetCurrencyCode },
+					null, null, null, null);
+			try
+			{
+				if (cur.moveToNext())
+				{
+					targetCurrency = Unit.parseCursor(dbHelper_, cur);
+				}
+			}
+			finally
+			{
+				cur.close();
+			}
+		}
+		
+		if (targetCurrency == null)
+			return false;
+		
+		//check if the conversion exits
+		boolean conversionExist = false;
+		{
+			Cursor cur = dbHelper_.getReadableDatabase().query("conversion", null,
+					"base=? AND target=?", 
+					new String[] {Long.toString(baseCurrency_.getId()), Long.toString(targetCurrency.getId()) },
+					null, null, null, null);
+			try {
+				conversionExist = cur.getCount()>0;
+			}
+			finally
+			{
+				cur.close();
+			}
+		}
+		
+		report_.cacheUpdate(targetCurrencyCode, 
+				report_.new UpdateItem(
+						conversionExist ? OperationType.UPDATE : OperationType.INSERT,
+						baseCurrency_.getId(),
+						targetCurrency.getId(),
+						rate
+						));
+		
+		return true;
 	}
 	
 	public void dumpIt()

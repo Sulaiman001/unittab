@@ -5,9 +5,13 @@ import java.util.Calendar;
 import java.util.LinkedList;
 
 import android.app.Activity;
+import android.content.ContentValues;
+import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
 import dh.sunicon.MainActivity;
 import dh.sunicon.currency.UpdatingReport.MessageType;
+import dh.sunicon.currency.UpdatingReport.OperationType;
+import dh.sunicon.currency.UpdatingReport.UpdateItem;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.datamodel.Depot;
 import dh.sunicon.datamodel.Unit;
@@ -70,19 +74,15 @@ public class UpdatingAgentsManager
 		try
 		{
 			setupAgents(currencyUnitId, report);
-			
 			report.setInProgress(true);
+
+			buildUpdateCache(report);
+			processUpdateCache(report);
 			
-			for (UpdatingAgent agent : agents_) {
-				if (isDumped()) {
-					report.setInProgress(false);
-					report.add(report.new ReportEntry(MessageType.WARNING, "Update cancelled by User.")); //TODO multi-language
-					return report;
-				}
-				agent.process();
+			if (isDumped()) {
+				report.add(report.new ReportEntry(MessageType.WARNING, "Update cancelled by User.")); //TODO multi-language
 			}
-			
-			if (report.isSuccessAll()) {
+			else if (report.isSuccessAll()) {
 				saveLastUpdate(currencyUnitId);
 			}
 		}
@@ -97,6 +97,55 @@ public class UpdatingAgentsManager
 		
 		Log.d("CURR", "importOnBackground END "+currencyUnitId);
 		return report;
+	}
+	
+	private void buildUpdateCache(UpdatingReport report) {
+		for (UpdatingAgent agent : agents_) {
+			if (isDumped()) {
+				return;
+			}
+			agent.buildCache();
+		}
+	}
+	
+	private void processUpdateCache(UpdatingReport report) {
+		
+		SQLiteDatabase db = dbHelper_.getWritableDatabase(); 
+		db.beginTransaction();
+		try
+		{
+			for (UpdateItem i : report.getCacheUpdates().values()) {
+				if (!isDumped())
+				{
+					if (i.getOperation() == OperationType.INSERT) {
+						ContentValues contentValues = new ContentValues();
+						contentValues.put("fx", i.getRate());
+						db.update("conversion", contentValues, "base=? and target=?", 
+								new String[] {Long.toString(i.getBase()), Long.toString(i.getTarget()) });
+					}
+					else {
+						ContentValues contentValues = new ContentValues();
+						contentValues.put("fx", i.getRate());
+						contentValues.put("base", i.getBase());
+						contentValues.put("target", i.getTarget());
+						db.insert("conversion", null, contentValues);
+					}
+					report.incrementUpdatedCount();
+				}
+			}
+	
+			db.setTransactionSuccessful(); 
+		}
+		catch (Exception ex)
+		{
+			report.add(report.new ReportEntry(MessageType.ERROR, "Update failed: "+ex.getMessage(), Log.getStackTraceString(ex)));
+			report.resetUpdatedCount();
+			Log.w(TAG, ex);
+		}
+		finally
+		{
+			db.endTransaction(); //rollback if not marked as successfull
+		}
 	}
 	
 	/**

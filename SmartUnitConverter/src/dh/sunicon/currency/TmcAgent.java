@@ -30,7 +30,7 @@ public class TmcAgent extends SimpleUpdatingAgent
 		super(context, baseCurrency, report, testMode);
 	}
 	
-	protected boolean processUpdate(InputStream inputStream) throws IOException, XmlPullParserException 
+	protected boolean parseAndImportToCache(InputStream inputStream) throws IOException, XmlPullParserException 
 	{
         XmlPullParser parser = Xml.newPullParser();
         parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false);
@@ -92,7 +92,7 @@ public class TmcAgent extends SimpleUpdatingAgent
 	    	return false;
 	    }
 	    
-	    return updateDatabase(code, rate);
+	    return importToCache(code, rate);
 	}
 	
 	/**
