@@ -6,6 +6,7 @@ import java.io.InputStream;
 import org.xmlpull.v1.XmlPullParserException;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.util.Log;
 import dh.sunicon.currency.UpdatingReport.MessageType;
 import dh.sunicon.datamodel.Unit;
@@ -18,12 +19,12 @@ public abstract class SimpleUpdatingAgent extends UpdatingAgent
 	//private static final String TAG = SimpleUpdatingAgent.class.getName();
 	
 	public SimpleUpdatingAgent(Activity context, Unit baseCurrency,
-			UpdatingReport report) {
-		super(context, baseCurrency, report);
+			UpdatingReport report, AsyncTask asyncTask) {
+		super(context, baseCurrency, report, asyncTask);
 	}
 	public SimpleUpdatingAgent(Activity context, Unit baseCurrency,
-			UpdatingReport report, boolean testMode) {
-		super(context, baseCurrency, report, testMode);
+			UpdatingReport report, AsyncTask asyncTask, boolean testMode) {
+		super(context, baseCurrency, report, asyncTask, testMode);
 	}
 	
 	

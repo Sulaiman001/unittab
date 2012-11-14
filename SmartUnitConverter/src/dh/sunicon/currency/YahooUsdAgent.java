@@ -8,6 +8,7 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.util.Xml;
 import dh.sunicon.datamodel.Unit;
 
@@ -20,13 +21,13 @@ public class YahooUsdAgent extends SimpleUpdatingAgent
 	//private static final String TAG = YahooRatesImporter.class.getName();
 	private static final String ns = null;
 
-	public YahooUsdAgent(Activity context, Unit baseCurrency, UpdatingReport report)
+	public YahooUsdAgent(Activity context, Unit baseCurrency, UpdatingReport report, AsyncTask asyncTask)
 	{
-		this(context, baseCurrency, report, false);
+		this(context, baseCurrency, report, asyncTask, false);
 	}
-	public YahooUsdAgent(Activity context, Unit baseCurrency, UpdatingReport report, boolean testMode)
+	public YahooUsdAgent(Activity context, Unit baseCurrency, UpdatingReport report, AsyncTask asyncTask, boolean testMode)
 	{
-		super(context, baseCurrency, report, testMode);
+		super(context, baseCurrency, report, asyncTask, testMode);
 		if (baseCurrency.getId()!=Unit.USD_UNIT) {
 			throw new InvalidParameterException();
 		}

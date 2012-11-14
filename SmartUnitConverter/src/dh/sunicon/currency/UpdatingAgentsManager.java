@@ -10,11 +10,11 @@ import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.util.Log;
 import dh.sunicon.MainActivity;
 import dh.sunicon.currency.UpdatingReport.MessageType;
 import dh.sunicon.currency.UpdatingReport.OperationType;
-import dh.sunicon.currency.UpdatingReport.ReportEntry;
 import dh.sunicon.currency.UpdatingReport.UpdateItem;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.datamodel.Depot;
@@ -29,14 +29,15 @@ import dh.sunicon.workarounds.MyApplication;
 public class UpdatingAgentsManager
 {
 	private static final String TAG = UpdatingAgentsManager.class.getName();
-	private boolean requestCancellation_ = false;
 	private Activity context_;
 	private DatabaseHelper dbHelper_;
 	private LinkedList<UpdatingAgent> agents_;
+	private AsyncTask asyncTask_;
 
-	public UpdatingAgentsManager(Activity context)
+	public UpdatingAgentsManager(Activity context, AsyncTask asyncTask)
 	{
 		context_ = context;
+		asyncTask_ = asyncTask;
 		dbHelper_ = ((MainActivity)context_).getDatabaseHelper();
 	}
 	
@@ -45,17 +46,17 @@ public class UpdatingAgentsManager
 		
 		Unit baseCurrency = Unit.findById(dbHelper_, currencyId);
 		
-		UpdatingAgent yahooCsvAgent = new YahooCsvAgent(context_, baseCurrency, report);
+		UpdatingAgent yahooCsvAgent = new YahooCsvAgent(context_, baseCurrency, report, asyncTask_);
 		agents_.addLast(yahooCsvAgent);
 		
-		UpdatingAgent tmcAgent = new TmcAgent(context_, baseCurrency, report);
+		UpdatingAgent tmcAgent = new TmcAgent(context_, baseCurrency, report, asyncTask_);
 		agents_.addLast(tmcAgent);
 		
 		if (!MyApplication.DEBUG_MODE) { //if not in debug mode i'm going easy to minimize error
 			
 			//Go easy: always update USD_UNIT base to fill rate which has rates = 0 (eg: 1 VND = 0.00 EUR)
 			Unit usdCurrency = Unit.findById(dbHelper_, Unit.USD_UNIT);
-			UpdatingAgent yahooUsdAgent = new YahooUsdAgent(context_, usdCurrency, report);
+			UpdatingAgent yahooUsdAgent = new YahooUsdAgent(context_, usdCurrency, report, asyncTask_);
 			agents_.addLast(yahooUsdAgent);
 		}
 	}
@@ -214,24 +215,9 @@ public class UpdatingAgentsManager
 	public static long getNow() {
 		return Calendar.getInstance().getTime().getTime();
 	}
-	
-	public void dumpIt() {
-		requestCancellation_ = true;
-		if (agents_!=null) 
-		{
-			for (UpdatingAgent agent : agents_) {
-				try {
-					agent.dumpIt();
-				}
-				catch (Exception ex) {
-					Log.w(TAG, ex.getMessage());
-				}
-			}
-		}
-	}
 
 	public boolean isDumped()
 	{
-		return requestCancellation_;
+		return asyncTask_ == null || asyncTask_.isCancelled();
 	}
 }

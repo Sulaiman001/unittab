@@ -16,6 +16,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import android.app.Activity;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.text.TextUtils;
 import android.util.Log;
 import dh.sunicon.MainActivity;
@@ -44,17 +45,19 @@ public abstract class UpdatingAgent
 	protected UpdatingReport report_;
 	private Activity context_;
 	protected boolean testMode_ = false;
+	protected AsyncTask asyncTask_;
 	
-	public UpdatingAgent(Activity context, Unit baseCurrency, UpdatingReport report)
+	public UpdatingAgent(Activity context, Unit baseCurrency, UpdatingReport report, AsyncTask asyncTask)
 	{
-		this(context, baseCurrency, report, false);
+		this(context, baseCurrency, report, asyncTask, false);
 	}
 	
-	UpdatingAgent(Activity context, Unit baseCurrency, UpdatingReport report, boolean testMode) {
+	UpdatingAgent(Activity context, Unit baseCurrency, UpdatingReport report, AsyncTask asyncTask, boolean testMode) {
 		context_ = context;
 		dbHelper_ = ((MainActivity)context).getDatabaseHelper();
 		baseCurrency_ = baseCurrency;
 		report_ = report;
+		asyncTask_ = asyncTask;
 		testMode_ = testMode;
 	}
 	
@@ -206,32 +209,10 @@ public abstract class UpdatingAgent
 		
 		return true;
 	}
-	
-	public void dumpIt()
-	{
-		requestCancellation_ = true;
-		report_.setCancel(true);
-		if (httpGet_!=null) {
-			try {
-				httpGet_.abort();
-			}
-			catch (Exception ex) {
-				Log.w(TAG, ex.getMessage());
-			}
-		}
-		if (httpConnection_!=null) {
-			try {
-				httpConnection_.disconnect();
-			}
-			catch (Exception ex) {
-				Log.w(TAG, ex.getMessage());
-			}
-		}
-	}
 
 	public boolean isDumped()
 	{
-		return requestCancellation_;
+		return asyncTask_.isCancelled();
 	}
 	
 	/* Toolset */

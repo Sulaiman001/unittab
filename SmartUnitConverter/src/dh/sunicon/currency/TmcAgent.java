@@ -10,6 +10,7 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.util.Log;
 import android.util.Xml;
 import dh.sunicon.datamodel.Unit;
@@ -23,11 +24,11 @@ public class TmcAgent extends SimpleUpdatingAgent
 	//private static final String TAG = YahooRatesImporter.class.getName();
 	private static final String ns = null;
 
-	public TmcAgent(Activity context, Unit baseCurrency, UpdatingReport report) {
-		super(context, baseCurrency, report);
+	public TmcAgent(Activity context, Unit baseCurrency, UpdatingReport report, AsyncTask asyncTask) {
+		super(context, baseCurrency, report, asyncTask);
 	}
-	public TmcAgent(Activity context, Unit baseCurrency, UpdatingReport report, boolean testMode) {
-		super(context, baseCurrency, report, testMode);
+	public TmcAgent(Activity context, Unit baseCurrency, UpdatingReport report, AsyncTask asyncTask, boolean testMode) {
+		super(context, baseCurrency, report, asyncTask, testMode);
 	}
 	
 	protected boolean parseAndImportToCache(InputStream inputStream) throws IOException, XmlPullParserException 

@@ -1,11 +1,8 @@
 package dh.sunicon.currency;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
 import android.app.Activity;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Looper;
 import android.util.Log;
 
@@ -29,14 +26,12 @@ public class CurrencyUpdater
 	
 	private final Activity context_;
 	private final SharedPreferences preferences_;
-	private final ExecutorService updatingThread_;
-	private UpdatingAgentsManager currencyImporter_;
 	private long currencyUnitIdOnProcess_ = -1;
+	private RateUpdatingTask currentRateUpdatingTask_;
 	
 	public CurrencyUpdater(Activity context){
 		context_ = context;
 		preferences_ = context_.getPreferences(Activity.MODE_PRIVATE);
-		updatingThread_ = Executors.newSingleThreadExecutor();
 	}
 	
 	
@@ -69,74 +64,22 @@ public class CurrencyUpdater
 		
 		Log.v("CURR", "Process BEGIN "+currencyUnitId);
 		
+		
 		if (beforeUpdateStarted_!=null)
 			beforeUpdateStarted_.beforeUpdateStarted(CurrencyUpdater.this, currencyUnitId);
 		
-		class CallableWithParam implements Callable<UpdatingReport>
-		{
-			private final long currencyUnitId__;
-			private final UpdatingAgentsManager currencyImporter__;
-			
-			public CallableWithParam(long currencyUnitId, UpdatingAgentsManager currencyImporter) {
-				currencyUnitId__ = currencyUnitId;
-				currencyImporter__ = currencyImporter;
-			}
-			
-			@Override
-			public UpdatingReport call() throws Exception
-			{
-				try
-				{
-					currencyUnitIdOnProcess_ = currencyUnitId__;
-					
-					final UpdatingReport ret = currencyImporter__.importOnBackground(currencyUnitId__);
-					
-					//if this is the last called proccess (the last currencyImporter)
-					//it might not neccessary because the currencyUpdater processed on single thread (updatingThread_)
-					if (currencyImporter__ == CurrencyUpdater.this.currencyImporter_)   
-					{
-						currencyUnitIdOnProcess_ = -1;
-						context_.runOnUiThread(new Runnable()
-						{
-							@Override
-							public void run()
-							{
-								try {
-									if (onUpdateFinished_!=null)
-										onUpdateFinished_.onUpdateFinished(CurrencyUpdater.this, ret);
-								}
-								catch (Exception ex)
-								{
-									Log.wtf(TAG, ex);
-								}
-							}
-						});
-					}
-					
-					return ret;
-				}
-				catch (Exception ex)
-				{
-					Log.wtf(TAG, ex); ///it cannot happen!
-				}
-				return null;
-			}
-		}
+		currencyUnitIdOnProcess_ = currencyUnitId;
 		
-		//dump old currencyImporter to cancel old update which is currently running on the updatingThread (if there is one)
-		if (currencyImporter_ != null) {
-			currencyImporter_.dumpIt();
-		}
-		currencyImporter_ = new UpdatingAgentsManager(context_);
-		updatingThread_.submit(new CallableWithParam(currencyUnitId, currencyImporter_));
-				
+		cancel();
+		currentRateUpdatingTask_ = new RateUpdatingTask();
+		currentRateUpdatingTask_.execute(currencyUnitId);
+	
 		Log.v("CURR", "Process END "+currencyUnitId);
 	}
 	
 	public void cancel() {
-		if (currencyImporter_ != null)
-		{
-			currencyImporter_.dumpIt();
+		if (currentRateUpdatingTask_!=null) {
+			currentRateUpdatingTask_.cancel(false);
 		}
 	}
 	
@@ -171,5 +114,49 @@ public class CurrencyUpdater
 	
 	public interface BeforeUpdateStartedListener {
 		void beforeUpdateStarted(CurrencyUpdater sender, long currencyUnitId);
+	}
+	
+	private final class RateUpdatingTask extends AsyncTask<Long, Void, UpdatingReport>
+	{
+		@Override
+		protected UpdatingReport doInBackground(Long... params)
+		{
+			try
+			{
+				if (isCancelled()) {
+					return null;
+				}
+				UpdatingAgentsManager agentsManager_ = new UpdatingAgentsManager(context_, this);
+				return agentsManager_.importOnBackground(params[0]);
+			}
+			catch (Exception ex)
+			{
+				Log.wtf(TAG, ex);
+			}
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(UpdatingReport report)
+		{
+			try {
+				currencyUnitIdOnProcess_ = -1;
+				if (onUpdateFinished_!=null) {
+					onUpdateFinished_.onUpdateFinished(CurrencyUpdater.this, report);
+				}
+			}
+			catch (Exception ex)
+			{
+				Log.wtf(TAG, ex);
+			}
+		}
+		
+		@Override
+		protected void onCancelled()
+		{
+			if (onUpdateFinished_!=null) {
+				onUpdateFinished_.onUpdateFinished(CurrencyUpdater.this, null);
+			}
+		}
 	}
 }

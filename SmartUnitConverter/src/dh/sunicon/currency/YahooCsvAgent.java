@@ -9,6 +9,7 @@ import org.xmlpull.v1.XmlPullParserException;
 
 import android.app.Activity;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.util.Log;
 import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.Unit;
@@ -21,11 +22,11 @@ public class YahooCsvAgent extends SimpleUpdatingAgent
 {	
 	//private static final String TAG = YahooRatesImporter.class.getName();
 
-	public YahooCsvAgent(Activity context, Unit baseCurrency, UpdatingReport report) {
-		super(context, baseCurrency, report);
+	public YahooCsvAgent(Activity context, Unit baseCurrency, UpdatingReport report, AsyncTask asyncTask) {
+		super(context, baseCurrency, report, asyncTask);
 	}
-	public YahooCsvAgent(Activity context, Unit baseCurrency, UpdatingReport report, boolean testMode) {
-		super(context, baseCurrency, report, testMode);
+	public YahooCsvAgent(Activity context, Unit baseCurrency, UpdatingReport report, AsyncTask asyncTask, boolean testMode) {
+		super(context, baseCurrency, report, asyncTask, testMode);
 	}
 	
 	protected boolean parseAndImportToCache(InputStream inputStream) throws IOException, XmlPullParserException 

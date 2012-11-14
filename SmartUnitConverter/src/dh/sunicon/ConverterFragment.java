@@ -32,7 +32,6 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -51,7 +50,6 @@ import dh.sunicon.currency.UpdatingReport.MessageType;
 import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.runnable.RowData;
-import dh.sunicon.workarounds.MyApplication;
 
 public class ConverterFragment extends ListFragment implements LoaderCallbacks<Cursor>
 {
@@ -677,7 +675,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 					updateInProgressPanel_.setTag(report);
 					updateCurrencyNotificationBar();
 					
-					if (report.isDatabaseChanged()) {
+					if (report!=null && report.isDatabaseChanged()) {
 						Log.v("CURR", "reComputeAll");
 						//re-calculate resultList after updating currency rate. Warning, donnot process update again
 						resultListAdapter_.reComputeAll();
@@ -747,6 +745,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		UpdatingReport report = (UpdatingReport) updateInProgressPanel_.getTag();
 		
 		if (report == null) {
+			updateInProgressPanel_.setVisibility(View.GONE);
 			return;
 		}
 	
