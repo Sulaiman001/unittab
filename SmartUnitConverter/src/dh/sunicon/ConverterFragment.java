@@ -943,10 +943,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			double baseValue = Double.parseDouble(s.toString()); //use default culture local to parse
 			getResultListAdapter().setBaseValue(baseValue, -1);
 			
-			if (MyApplication.DEBUG_MODE) {
-				if (currencyUpdater_!=null && categoryId_ == Category.CURRENCY_CATEGORY) { //prudent) {
-					currencyUpdater_.process(baseUnitId_);
-				}
+			if (currencyUpdater_!=null && categoryId_ == Category.CURRENCY_CATEGORY) { //prudent) {
+				currencyUpdater_.process(baseUnitId_);
 			}
 		}
 	}

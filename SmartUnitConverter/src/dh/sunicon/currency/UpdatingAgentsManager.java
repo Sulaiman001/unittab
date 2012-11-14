@@ -6,11 +6,15 @@ import java.util.LinkedList;
 
 import android.app.Activity;
 import android.content.ContentValues;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.util.Log;
 import dh.sunicon.MainActivity;
 import dh.sunicon.currency.UpdatingReport.MessageType;
 import dh.sunicon.currency.UpdatingReport.OperationType;
+import dh.sunicon.currency.UpdatingReport.ReportEntry;
 import dh.sunicon.currency.UpdatingReport.UpdateItem;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.datamodel.Depot;
@@ -59,7 +63,7 @@ public class UpdatingAgentsManager
 	public synchronized UpdatingReport importOnBackground(long currencyUnitId)
 	{
 		if (isDumped()) {
-			throw new UnsupportedOperationException();
+			return null;
 		}
 		
 		UpdatingReport report = new UpdatingReport();
@@ -68,6 +72,21 @@ public class UpdatingAgentsManager
 			report.add(report.new ReportEntry(MessageType.INFO, "Exchange rates data is still up to date (not yet expiried).")); //TODO multi-language 
 			report.forceSuccessAll();
 			return report;
+		}
+		
+		NetworkInfo networkInfo = ((MainActivity)context_).getNetworkInfo();
+		if (networkInfo==null || !networkInfo.isConnected()) { 
+			//no network connection
+			report.add(report.new ReportEntry(MessageType.ERROR, "Network not avaiable.")); //TODO mutli-language
+			return report;
+		} 
+		
+		if (getCurrencyUpdaterOption() == CurrencyUpdater.OPT_WIFI_ONLY) {
+			if (networkInfo.getType()!=ConnectivityManager.TYPE_WIFI) {
+				//only update on wifi
+				report.add(report.new ReportEntry(MessageType.INFO, "Allow update on WIFI only.")); //TODO mutli-language
+				return report;
+			}
 		}
 		
 		Log.d("CURR", "importOnBackground BEGIN "+currencyUnitId);
@@ -179,12 +198,17 @@ public class UpdatingAgentsManager
 	}
 	
 	private long getTimeToLive() {
-		return context_.getPreferences(Activity.MODE_PRIVATE).getLong("CurrencyRateTimeToLive", 1000);
+		return context_.getPreferences(Activity.MODE_PRIVATE).getLong("CurrencyRateTimeToLive", 3600*1000);
 	}
 	
 	private boolean isExpiry(long currencyUnitId) {
 		long now = getNow();
 		return (now - getLastUpdate(dbHelper_, currencyUnitId)) > getTimeToLive();
+	}
+	
+	private int getCurrencyUpdaterOption() {
+		SharedPreferences preferences_ = context_.getPreferences(Activity.MODE_PRIVATE);
+		return preferences_.getInt(CurrencyUpdater.CurrencyUpdaterOptionName, CurrencyUpdater.OPT_ALL_NETWORK);
 	}
 	
 	public static long getNow() {

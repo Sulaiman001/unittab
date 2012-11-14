@@ -6,13 +6,8 @@ import java.util.concurrent.Executors;
 
 import android.app.Activity;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
-import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
-import dh.sunicon.MainActivity;
-import dh.sunicon.currency.UpdatingReport.MessageType;
 
 /**
  * CurrencyUdpdater is the entry point to call update currencies exchange rates.
@@ -27,13 +22,13 @@ public class CurrencyUpdater
 {
 	private static final String TAG = CurrencyUpdater.class.getName();
 	
-	private static int OPT_ALL_NETWORK = 0;
-	private static int OPT_WIFI_ONLY = 1;
-	private static int OPT_NEVER = 2;
+	public static int OPT_ALL_NETWORK = 0;
+	public static int OPT_WIFI_ONLY = 1;
+	public static int OPT_NEVER = 2;
+	public static final String CurrencyUpdaterOptionName = "CurrencyUpdaterOption";
 	
 	private final Activity context_;
 	private final SharedPreferences preferences_;
-	private final Handler mainThread_;
 	private final ExecutorService updatingThread_;
 	private UpdatingAgentsManager currencyImporter_;
 	private long currencyUnitIdOnProcess_ = -1;
@@ -42,7 +37,6 @@ public class CurrencyUpdater
 		context_ = context;
 		preferences_ = context_.getPreferences(Activity.MODE_PRIVATE);
 		updatingThread_ = Executors.newSingleThreadExecutor();
-		mainThread_ = new Handler();
 	}
 	
 	
@@ -88,42 +82,6 @@ public class CurrencyUpdater
 				currencyImporter__ = currencyImporter;
 			}
 			
-			/**
-			 * Check NetWork connectivity which must be appropriated with Preferences option 
-			 * before start importing
-			 */
-			private UpdatingReport checkOptionAndImport()
-			{
-				try
-				{
-					NetworkInfo networkInfo = ((MainActivity)context_).getNetworkInfo();
-					if (networkInfo==null || !networkInfo.isConnected()) { 
-						//no network connection
-						UpdatingReport ret = new UpdatingReport();
-						ret.add(ret.new ReportEntry(MessageType.ERROR, "Network not avaiable.")); //TODO mutli-language
-						return ret;
-					} 
-					
-					if (currencyUpdaterOption == OPT_WIFI_ONLY) {
-						if (networkInfo.getType()!=ConnectivityManager.TYPE_WIFI) {
-							//only update on wifi
-							UpdatingReport ret = new UpdatingReport();
-							ret.add(ret.new ReportEntry(MessageType.INFO, "Allow update on WIFI only.")); //TODO mutli-language
-							return ret;
-						}
-					}
-					
-					return currencyImporter__.importOnBackground(currencyUnitId__);
-				}
-				catch (Exception ex)
-				{
-					UpdatingReport ret = new UpdatingReport();
-					ret.add(ret.new ReportEntry(MessageType.ERROR, "Udpate Failed: "+ex.getMessage(), Log.getStackTraceString(ex))); //TODO mutli-language
-					Log.w(TAG, ex);
-					return ret;
-				}
-			}
-			
 			@Override
 			public UpdatingReport call() throws Exception
 			{
@@ -131,14 +89,14 @@ public class CurrencyUpdater
 				{
 					currencyUnitIdOnProcess_ = currencyUnitId__;
 					
-					final UpdatingReport ret = checkOptionAndImport();
+					final UpdatingReport ret = currencyImporter__.importOnBackground(currencyUnitId__);
 					
 					//if this is the last called proccess (the last currencyImporter)
 					//it might not neccessary because the currencyUpdater processed on single thread (updatingThread_)
 					if (currencyImporter__ == CurrencyUpdater.this.currencyImporter_)   
 					{
 						currencyUnitIdOnProcess_ = -1;
-						mainThread_.post(new Runnable()
+						context_.runOnUiThread(new Runnable()
 						{
 							@Override
 							public void run()
@@ -204,7 +162,7 @@ public class CurrencyUpdater
 	}
 	
 	private int getCurrencyUpdaterOption() {
-		return preferences_.getInt("CurrencyUpdaterOption", OPT_ALL_NETWORK);
+		return preferences_.getInt(CurrencyUpdaterOptionName, OPT_ALL_NETWORK);
 	}
 
 	public interface OnUpdateFinishedListener {
