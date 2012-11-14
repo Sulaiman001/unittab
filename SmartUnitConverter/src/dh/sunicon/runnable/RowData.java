@@ -39,6 +39,7 @@ public final class RowData implements Runnable
 	/* change on baseValue_ and targetValue_ must be synchronized */
 	private Double baseValue_ = Double.NaN;
 	private double targetValue_ = Double.NaN;
+	private String targetValueHtml_ = "-";
 	private EnumValue targetEnumValue_ = null; 
 	private Long baseValueEnumId_ = (long)-1;
 	
@@ -80,6 +81,7 @@ public final class RowData implements Runnable
 		}
 		if (json.has("targetValue")) {
 			targetValue_ = json.getDouble("targetValue");
+			targetValueHtml_ = json.getString("targetValueHtml");
 		}
 		else {
 			targetValue_ = Double.NaN;
@@ -106,6 +108,7 @@ public final class RowData implements Runnable
 		}
 		if (!Double.isNaN(targetValue_)) {
 			json.put("targetValue", targetValue_);
+			json.put("targetValueHtml", targetValueHtml_);
 		}
 		if (targetEnumValue_!=null) {
 			json.put("targetEnumValue", targetEnumValue_.serialize());
@@ -143,7 +146,7 @@ public final class RowData implements Runnable
 			return targetEnumValue_.toString();
 		}
 		
-		return formatDouble(targetValue_);
+		return targetValueHtml_;
 	}
 	
 	public String getValueToCopy()
@@ -222,6 +225,7 @@ public final class RowData implements Runnable
 		{
 			baseValue_ = baseValue;
 			targetValue_ = Double.NaN;
+			targetValueHtml_ = "-";
 		}
 		
 		synchronized (baseValueEnumId_)
@@ -311,6 +315,7 @@ public final class RowData implements Runnable
 					if (baseValue_.equals(originalValue)) //baseValue_ has not been changed during the calculation process
 					{
 						targetValue_ = resu;
+						targetValueHtml_ = formatDouble(targetValue_);
 						//invokeRefreshGui();
 					}
 					//else, a newer setBaseValue() was called, we must ignore the resu 
@@ -597,6 +602,7 @@ public final class RowData implements Runnable
 
 	public void clearTargetValue() {
 		targetValue_ = Double.NaN;
+		targetValueHtml_ = "-"; 
 		targetEnumValue_ = null; 
 	}
 	
