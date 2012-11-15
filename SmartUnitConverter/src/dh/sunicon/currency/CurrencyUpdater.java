@@ -58,26 +58,10 @@ public class CurrencyUpdater
 			Log.d("CURR", "process of "+currencyUnitId+" is happen");
 			return;
 		}
-		
-		final int currencyUpdaterOption = getCurrencyUpdaterOption();
-		
-		if (currencyUpdaterOption == OPT_NEVER) {
-			return;
-		}
-		
-		Log.v("CURR", "Process BEGIN "+currencyUnitId);
-		
-		
-		if (beforeUpdateStarted_!=null)
-			beforeUpdateStarted_.beforeUpdateStarted(CurrencyUpdater.this, currencyUnitId);
-		
-		currencyUnitIdOnProcess_ = currencyUnitId;
-		
+		currencyUnitIdOnProcess_ = currencyUnitId;		
 		cancel();
 		currentRateUpdatingTask_ = new RateUpdatingTask();
 		currentRateUpdatingTask_.execute(currencyUnitId);
-	
-		Log.v("CURR", "Process END "+currencyUnitId);
 	}
 	
 	public void cancel() {
@@ -106,17 +90,13 @@ public class CurrencyUpdater
 	{
 		return currencyUnitIdOnProcess_;
 	}
-	
-	private int getCurrencyUpdaterOption() {
-		return preferences_.getInt(OPTNAME_CURRENCY_LIVE_UPDATE, OPT_ALL_NETWORK);
-	}
 
 	public interface OnUpdateFinishedListener {
 		void onUpdateFinished(CurrencyUpdater sender, UpdatingReport result);
 	}
 	
 	public interface BeforeUpdateStartedListener {
-		void beforeUpdateStarted(CurrencyUpdater sender, long currencyUnitId);
+		void beforeUpdateStarted(long currencyUnitId);
 	}
 	
 	private final class RateUpdatingTask extends AsyncTask<Long, Void, UpdatingReport>
@@ -130,6 +110,7 @@ public class CurrencyUpdater
 					return null;
 				}
 				UpdatingAgentsManager agentsManager = new UpdatingAgentsManager(context_, this);
+				agentsManager.setBeforeUpdateStarted(beforeUpdateStarted_);
 				
 				if (preferences_.getBoolean(OPTNAME_CURRENCY_USD_ONLY, true)) {
 					return agentsManager.importOnBackground(Unit.USD_UNIT);

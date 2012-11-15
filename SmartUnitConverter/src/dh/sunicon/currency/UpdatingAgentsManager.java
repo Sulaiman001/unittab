@@ -13,13 +13,13 @@ import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.util.Log;
 import dh.sunicon.MainActivity;
+import dh.sunicon.currency.CurrencyUpdater.BeforeUpdateStartedListener;
 import dh.sunicon.currency.UpdatingReport.MessageType;
 import dh.sunicon.currency.UpdatingReport.OperationType;
 import dh.sunicon.currency.UpdatingReport.UpdateItem;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.datamodel.Depot;
 import dh.sunicon.datamodel.Unit;
-import dh.sunicon.workarounds.MyApplication;
 
 /**
  * Implement the cancellable aspect of the updater
@@ -33,6 +33,7 @@ public class UpdatingAgentsManager
 	private DatabaseHelper dbHelper_;
 	private LinkedList<UpdatingAgent> agents_;
 	private AsyncTask asyncTask_;
+	private BeforeUpdateStartedListener beforeUpdateStarted_;
 
 	public UpdatingAgentsManager(Activity context, AsyncTask asyncTask)
 	{
@@ -61,13 +62,21 @@ public class UpdatingAgentsManager
 		//}
 	}
 
-	public synchronized UpdatingReport importOnBackground(long currencyUnitId)
+	public synchronized UpdatingReport importOnBackground(final long currencyUnitId)
 	{
 		if (isDumped()) {
 			return null;
 		}
 		
+		int currencyUpdaterOption = getCurrencyUpdaterOption();
+		
 		UpdatingReport report = new UpdatingReport();
+		
+		if (currencyUpdaterOption == CurrencyUpdater.OPT_NEVER) {
+			report.add(report.new ReportEntry(MessageType.INFO, "Exchange rates live update is disabled.")); //TODO multi-language 
+			report.forceSuccessAll();
+			return report;
+		}
 		
 		if (!isExpiry(currencyUnitId)) {
 			report.add(report.new ReportEntry(MessageType.INFO, "Exchange rates data is still up to date (not yet expiried).")); //TODO multi-language 
@@ -76,13 +85,8 @@ public class UpdatingAgentsManager
 		}
 		
 		NetworkInfo networkInfo = ((MainActivity)context_).getNetworkInfo();
-		if (networkInfo==null || !networkInfo.isConnected()) { 
-			//no network connection
-			report.add(report.new ReportEntry(MessageType.ERROR, "Network not avaiable.")); //TODO mutli-language
-			return report;
-		} 
 		
-		if (getCurrencyUpdaterOption() == CurrencyUpdater.OPT_WIFI_ONLY) {
+		if (networkInfo!=null && currencyUpdaterOption == CurrencyUpdater.OPT_WIFI_ONLY) {
 			if (networkInfo.getType()!=ConnectivityManager.TYPE_WIFI) {
 				//only update on wifi
 				report.forceSuccessAll();
@@ -90,6 +94,25 @@ public class UpdatingAgentsManager
 				return report;
 			}
 		}
+		
+		if (beforeUpdateStarted_ != null) {
+			context_.runOnUiThread(new Runnable()
+			{
+				@Override
+				public void run()
+				{
+					if (beforeUpdateStarted_ != null) {
+						beforeUpdateStarted_.beforeUpdateStarted(currencyUnitId);
+					}
+				}
+			});
+		}
+		
+		if (networkInfo==null || !networkInfo.isConnected()) { 
+			//no network connection
+			report.add(report.new ReportEntry(MessageType.ERROR, "Network not avaiable.")); //TODO mutli-language
+			return report;
+		} 
 		
 		Log.d("CURR", "importOnBackground BEGIN "+currencyUnitId);
 		try
@@ -220,5 +243,10 @@ public class UpdatingAgentsManager
 	public boolean isDumped()
 	{
 		return asyncTask_ == null || asyncTask_.isCancelled();
+	}
+
+	void setBeforeUpdateStarted(BeforeUpdateStartedListener beforeUpdateStarted)
+	{
+		beforeUpdateStarted_ = beforeUpdateStarted;
 	}
 }

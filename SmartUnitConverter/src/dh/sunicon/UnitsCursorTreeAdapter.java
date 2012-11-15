@@ -150,7 +150,6 @@ public class UnitsCursorTreeAdapter extends SimpleCursorTreeAdapter implements
 	private String lastConstraint_;
 	
 	
-	
 	@Override
 	public Cursor runQueryOnBackgroundThread(CharSequence constraint) {
 		try

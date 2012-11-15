@@ -56,6 +56,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 {
 	static final String TAG = ConverterFragment.class.getName();
 	static final int VALUE_SPINNER_LOADER = 0;
+	public static final long EVENTS_DELAY = 1000L;
 	private DatabaseHelper dbHelper_;
 	private TextView categoryLabel_;
 	private ViewSwitcher baseValueSwitcher_;
@@ -81,7 +82,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	private long categoryId_ = -1;
 	
 	private UnitHistoryManager unitHistory_;
-	private Handler mainThread_;
+	//private Handler mainThread_;
 	//private CountDownLatch spinnerLoadingLatch_;
 	
 	private boolean isActivityRunning_ = false;
@@ -91,7 +92,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	{
 		super.onCreate(savedInstanceState);
 		//setRetainInstance(true);
-		mainThread_ = new Handler();
+		//mainThread_ = new Handler();
 	}
 	
 	@Override
@@ -362,7 +363,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 									}
 								});
 						}
-					}, 500);
+					}, EVENTS_DELAY);
 				}
 				catch (Exception ex)
 				{
@@ -651,7 +652,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		currencyUpdater_.setBeforeUpdateStarted_(new BeforeUpdateStartedListener()
 		{
 			@Override
-			public void beforeUpdateStarted(CurrencyUpdater sender, long currencyUnitId)
+			public void beforeUpdateStarted(long currencyUnitId)
 			{
 				try
 				{
@@ -907,8 +908,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		
 		currencyUpdater_.cancel(); //cancel previous
 		if (categoryId_ == Category.CURRENCY_CATEGORY) {
-			currencyUpdaterProcessDelayed();
-			//currencyUpdater_.process(baseUnitId_);
+			//currencyUpdaterProcessDelayed();
+			currencyUpdater_.process(baseUnitId_);
 		}
 		else {
 			updateInProgressPanel_.setTag(null);
@@ -916,24 +917,24 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		}
 	}
 
-	private void currencyUpdaterProcessDelayed()
-	{
-		mainThread_.postDelayed(new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				try
-				{
-					currencyUpdater_.process(baseUnitId_);
-				}
-				catch (IllegalAccessException e)
-				{
-					e.printStackTrace();
-				}
-			}
-		}, 2000);
-	}
+//	private void currencyUpdaterProcessDelayed()
+//	{
+//		mainThread_.postDelayed(new Runnable()
+//		{
+//			@Override
+//			public void run()
+//			{
+//				try
+//				{
+//					currencyUpdater_.process(baseUnitId_);
+//				}
+//				catch (IllegalAccessException e)
+//				{
+//					e.printStackTrace();
+//				}
+//			}
+//		}, 2000);
+//	}
 	
 	private void clearBaseUnit(boolean keepTextOnBaseUnitEditor)
 	{
@@ -966,8 +967,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			getResultListAdapter().setBaseValue(baseValue, -1);
 			
 			if (currencyUpdater_!=null && categoryId_ == Category.CURRENCY_CATEGORY) { //prudent) {
-				currencyUpdaterProcessDelayed();
-				//currencyUpdater_.process(baseUnitId_);
+				//currencyUpdaterProcessDelayed();
+				currencyUpdater_.process(baseUnitId_);
 			}
 		}
 	}
