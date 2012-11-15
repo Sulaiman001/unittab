@@ -1,5 +1,6 @@
 package dh.sunicon.currency;
 
+import dh.sunicon.datamodel.Unit;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
@@ -22,7 +23,10 @@ public class CurrencyUpdater
 	public static int OPT_ALL_NETWORK = 0;
 	public static int OPT_WIFI_ONLY = 1;
 	public static int OPT_NEVER = 2;
-	public static final String CurrencyUpdaterOptionName = "CurrencyUpdaterOption";
+	public static final String OPTNAME_CURRENCY_LIVE_UPDATE = "CurrencyLiveUpdateOption";
+	public static final String OPTNAME_CURRENCY_EXPIRY_TIME = "CurrencyLiveUpdateExpiryTime";
+	public static final String OPTNAME_CURRENCY_USD_ONLY = "CurrencyLiveUpdateUSDOnly";
+	public static final long DEFAULT_CURRENCY_EXPIRY_TIME = 3600000L;
 	
 	private final Activity context_;
 	private final SharedPreferences preferences_;
@@ -33,7 +37,6 @@ public class CurrencyUpdater
 		context_ = context;
 		preferences_ = context_.getPreferences(Activity.MODE_PRIVATE);
 	}
-	
 	
 	/**
 	 * Must be call on the Main Thread
@@ -105,7 +108,7 @@ public class CurrencyUpdater
 	}
 	
 	private int getCurrencyUpdaterOption() {
-		return preferences_.getInt(CurrencyUpdaterOptionName, OPT_ALL_NETWORK);
+		return preferences_.getInt(OPTNAME_CURRENCY_LIVE_UPDATE, OPT_ALL_NETWORK);
 	}
 
 	public interface OnUpdateFinishedListener {
@@ -126,8 +129,14 @@ public class CurrencyUpdater
 				if (isCancelled()) {
 					return null;
 				}
-				UpdatingAgentsManager agentsManager_ = new UpdatingAgentsManager(context_, this);
-				return agentsManager_.importOnBackground(params[0]);
+				UpdatingAgentsManager agentsManager = new UpdatingAgentsManager(context_, this);
+				
+				if (preferences_.getBoolean(OPTNAME_CURRENCY_USD_ONLY, true)) {
+					return agentsManager.importOnBackground(Unit.USD_UNIT);
+				}
+				else {
+					return agentsManager.importOnBackground(params[0]);
+				} 
 			}
 			catch (Exception ex)
 			{
@@ -154,6 +163,7 @@ public class CurrencyUpdater
 		@Override
 		protected void onCancelled()
 		{
+			currencyUnitIdOnProcess_ = -1;
 			if (onUpdateFinished_!=null) {
 				onUpdateFinished_.onUpdateFinished(CurrencyUpdater.this, null);
 			}

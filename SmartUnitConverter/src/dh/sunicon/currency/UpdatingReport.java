@@ -18,6 +18,7 @@ public class UpdatingReport implements Serializable
 	private boolean isCancel_ = false;
 	private boolean inProgress = false;
 	private int updatedCount_ = 0;
+	private boolean forcedSuccessAll_ = false;
 	private HashMap<String, UpdateItem> cacheUpdates_ = new HashMap<String, UpdateItem>();
 	private ArrayList<ReportEntry> entries_ = new ArrayList<ReportEntry>();
 	
@@ -100,7 +101,7 @@ public class UpdatingReport implements Serializable
 	 * warning: must change the methode name to "successUpdateMostly"
 	 */
 	public boolean isSuccessAll() {
-		return updatedCount_ >= DatabaseHelper.CURRENCY_COUNT-10; //cheat!
+		return forcedSuccessAll_ || updatedCount_ >= DatabaseHelper.CURRENCY_COUNT-10; //cheat!
 	}
 	
 	/**
@@ -140,7 +141,7 @@ public class UpdatingReport implements Serializable
 	
 	void forceSuccessAll()
 	{
-		updatedCount_ = DatabaseHelper.CURRENCY_COUNT;
+		forcedSuccessAll_ = true;
 	}
 
 	public static MessageType getMessageType(String s) {

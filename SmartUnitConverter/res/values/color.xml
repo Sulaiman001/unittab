@@ -2,6 +2,7 @@
 <resources>
     <color name="category_fg">#FF258AAF</color>
     <color name="light_gray">#88DDDDDD</color>
+    <color name="light_gray2">#888888</color>
     <color name="light_red">#FFBBBB</color>
     <color name="light_yellow">#FFFFBB</color>
     <color name="light_green">#BBFFBB</color>

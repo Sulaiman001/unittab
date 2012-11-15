@@ -13,6 +13,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
@@ -80,16 +81,18 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	private long categoryId_ = -1;
 	
 	private UnitHistoryManager unitHistory_;
+	private Handler mainThread_;
 	//private CountDownLatch spinnerLoadingLatch_;
 	
 	private boolean isActivityRunning_ = false;
 	
-//	@Override
-//	public void onCreate(Bundle savedInstanceState) 
-//	{
-//		super.onCreate(savedInstanceState);
-//		setRetainInstance(true);
-//	}
+	@Override
+	public void onCreate(Bundle savedInstanceState) 
+	{
+		super.onCreate(savedInstanceState);
+		//setRetainInstance(true);
+		mainThread_ = new Handler();
+	}
 	
 	@Override
 	public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -904,12 +907,32 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		
 		currencyUpdater_.cancel(); //cancel previous
 		if (categoryId_ == Category.CURRENCY_CATEGORY) {
-			currencyUpdater_.process(baseUnitId_);
+			currencyUpdaterProcessDelayed();
+			//currencyUpdater_.process(baseUnitId_);
 		}
 		else {
 			updateInProgressPanel_.setTag(null);
 			updateInProgressPanel_.setVisibility(View.GONE);
 		}
+	}
+
+	private void currencyUpdaterProcessDelayed()
+	{
+		mainThread_.postDelayed(new Runnable()
+		{
+			@Override
+			public void run()
+			{
+				try
+				{
+					currencyUpdater_.process(baseUnitId_);
+				}
+				catch (IllegalAccessException e)
+				{
+					e.printStackTrace();
+				}
+			}
+		}, 2000);
 	}
 	
 	private void clearBaseUnit(boolean keepTextOnBaseUnitEditor)
@@ -943,7 +966,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			getResultListAdapter().setBaseValue(baseValue, -1);
 			
 			if (currencyUpdater_!=null && categoryId_ == Category.CURRENCY_CATEGORY) { //prudent) {
-				currencyUpdater_.process(baseUnitId_);
+				currencyUpdaterProcessDelayed();
+				//currencyUpdater_.process(baseUnitId_);
 			}
 		}
 	}

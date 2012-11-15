@@ -5,7 +5,7 @@
     android:orientation="vertical"
      >
 
-    <TextView
+    <ImageView
         android:id="@+id/label"
         android:layout_width="fill_parent"
         android:layout_height="32dp"
@@ -13,9 +13,8 @@
         android:background="@drawable/tab_bg_selector"
         android:gravity="center"
         android:padding="5dip"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:textColor="@drawable/tab_text_selector"
-        android:textStyle="bold" />
+        android:src="@drawable/ic_setting"
+        />
 
     <View
         android:layout_width="fill_parent"

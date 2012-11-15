@@ -37,7 +37,6 @@ import dh.sunicon.datamodel.Unit;
 public abstract class UpdatingAgent
 {	
 	private static final String TAG = UpdatingAgent.class.getName();
-	private boolean requestCancellation_ = false;
 	private HttpGet httpGet_;
 	private HttpURLConnection httpConnection_;
 	protected DatabaseHelper dbHelper_;

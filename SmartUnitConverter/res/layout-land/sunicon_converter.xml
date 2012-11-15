@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/mainView"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
     android:animateLayoutChanges="true"
     android:orientation="horizontal"
     android:paddingLeft="5dp"
@@ -12,9 +12,9 @@
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginRight="5dp"
         android:layout_weight="0.6"
-        android:stretchColumns="0"
-        android:layout_marginRight="5dp">
+        android:stretchColumns="0" >
 
         <TextView
             android:id="@+id/categoryLabel"
@@ -143,13 +143,13 @@
     <ViewSwitcher
         android:id="@+id/resultListSwitcher"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="fill_parent"
         android:layout_weight="0.4" >
 
         <ListView
             android:id="@android:id/list"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
             android:animateLayoutChanges="true"
             android:choiceMode="singleChoice" />
 

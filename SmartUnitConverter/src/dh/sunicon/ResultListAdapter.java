@@ -45,6 +45,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	 * Thread Pool to calculate the converted value
 	 */
 	private final ExecutorService calculationPoolThread_ = Executors.newCachedThreadPool();
+	//private final ExecutorService calculationPoolThread_ = Executors.newFixedThreadPool(16);
+	
 	/**
 	 * the future result of calculation is stock in here
 	 */
@@ -363,17 +365,27 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	/**
 	 * unregister a calculation so the methode awaitCalculation() will NOT wait for it to finish 
 	 */
-	public void unregisterCalculationFromWatingPool(Future<?> f)
+	public synchronized void unregisterCalculationFromWatingPool(Future<?> f)
 	{
-		calculationWatingPool_.remove(f);
+		try {
+			calculationWatingPool_.remove(f);
+		}
+		catch (Exception ex) {
+			Log.w(TAG, ex);
+		}
 	}
 	
 	/**
 	 * register a calculation so the methode awaitCalculation() will wait for it to finish 
 	 */
-	public void registerCalculationToWatingPool(Future<?> f)
+	public synchronized void registerCalculationToWatingPool(Future<?> f)
 	{
-		calculationWatingPool_.offer(f);
+		try {
+			calculationWatingPool_.offer(f);
+		}
+		catch (Exception ex) {
+			Log.w(TAG, ex);
+		}
 	}
 	
 	/**
@@ -381,7 +393,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	 * @throws ExecutionException 
 	 * @throws InterruptedException 
 	 */
-	private void awaitCalculation()
+	private synchronized void awaitCalculation()
 	{
 		try
 		{

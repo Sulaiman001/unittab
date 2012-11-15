@@ -52,13 +52,13 @@ public class UpdatingAgentsManager
 		UpdatingAgent tmcAgent = new TmcAgent(context_, baseCurrency, report, asyncTask_);
 		agents_.addLast(tmcAgent);
 		
-		if (!MyApplication.DEBUG_MODE) { //if not in debug mode i'm going easy to minimize error
+		//if (!MyApplication.DEBUG_MODE) { //if not in debug mode i'm going easy to minimize error
 			
 			//Go easy: always update USD_UNIT base to fill rate which has rates = 0 (eg: 1 VND = 0.00 EUR)
-			Unit usdCurrency = Unit.findById(dbHelper_, Unit.USD_UNIT);
+			Unit usdCurrency = Unit.USD_UNIT == currencyId ? baseCurrency : Unit.findById(dbHelper_, Unit.USD_UNIT);
 			UpdatingAgent yahooUsdAgent = new YahooUsdAgent(context_, usdCurrency, report, asyncTask_);
 			agents_.addLast(yahooUsdAgent);
-		}
+		//}
 	}
 
 	public synchronized UpdatingReport importOnBackground(long currencyUnitId)
@@ -85,6 +85,7 @@ public class UpdatingAgentsManager
 		if (getCurrencyUpdaterOption() == CurrencyUpdater.OPT_WIFI_ONLY) {
 			if (networkInfo.getType()!=ConnectivityManager.TYPE_WIFI) {
 				//only update on wifi
+				report.forceSuccessAll();
 				report.add(report.new ReportEntry(MessageType.INFO, "Allow update on WIFI only.")); //TODO mutli-language
 				return report;
 			}
@@ -135,26 +136,26 @@ public class UpdatingAgentsManager
 		try
 		{
 			for (UpdateItem i : report.getCacheUpdates().values()) {
-				if (!isDumped())
-				{
-					if (i.getOperation() == OperationType.INSERT) {
-						ContentValues contentValues = new ContentValues();
-						contentValues.put("fx", i.getRate());
-						db.update("conversion", contentValues, "base=? and target=?", 
-								new String[] {Long.toString(i.getBase()), Long.toString(i.getTarget()) });
-					}
-					else {
-						ContentValues contentValues = new ContentValues();
-						contentValues.put("fx", i.getRate());
-						contentValues.put("base", i.getBase());
-						contentValues.put("target", i.getTarget());
-						db.insert("conversion", null, contentValues);
-					}
-					report.incrementUpdatedCount();
+				if (isDumped()) {
+					break;
 				}
+				if (i.getOperation() == OperationType.UPDATE) {
+					ContentValues contentValues = new ContentValues();
+					contentValues.put("fx", i.getRate());
+					db.update("conversion", contentValues, "base=? and target=?", 
+							new String[] {Long.toString(i.getBase()), Long.toString(i.getTarget()) });
+				}
+				else {
+					ContentValues contentValues = new ContentValues();
+					contentValues.put("fx", i.getRate());
+					contentValues.put("base", i.getBase());
+					contentValues.put("target", i.getTarget());
+					db.insert("conversion", null, contentValues);
+				}
+				report.incrementUpdatedCount();
 			}
 	
-			db.setTransactionSuccessful(); 
+			db.setTransactionSuccessful();
 		}
 		catch (Exception ex)
 		{
@@ -199,7 +200,7 @@ public class UpdatingAgentsManager
 	}
 	
 	private long getTimeToLive() {
-		return context_.getPreferences(Activity.MODE_PRIVATE).getLong("CurrencyRateTimeToLive", 3600*1000);
+		return context_.getPreferences(Activity.MODE_PRIVATE).getLong(CurrencyUpdater.OPTNAME_CURRENCY_EXPIRY_TIME, 10*1000);
 	}
 	
 	private boolean isExpiry(long currencyUnitId) {
@@ -209,7 +210,7 @@ public class UpdatingAgentsManager
 	
 	private int getCurrencyUpdaterOption() {
 		SharedPreferences preferences_ = context_.getPreferences(Activity.MODE_PRIVATE);
-		return preferences_.getInt(CurrencyUpdater.CurrencyUpdaterOptionName, CurrencyUpdater.OPT_ALL_NETWORK);
+		return preferences_.getInt(CurrencyUpdater.OPTNAME_CURRENCY_LIVE_UPDATE, CurrencyUpdater.OPT_ALL_NETWORK);
 	}
 	
 	public static long getNow() {

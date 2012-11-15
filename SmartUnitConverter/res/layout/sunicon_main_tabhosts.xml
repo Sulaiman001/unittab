@@ -39,6 +39,11 @@
                     android:id="@+id/explorerTab"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent" />
+                
+                <dh.sunicon.workarounds.TabPatchView
+                    android:id="@+id/settingTab"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
             </FrameLayout>
         </LinearLayout>
     </TabHost>

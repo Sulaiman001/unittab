@@ -24,10 +24,9 @@ public class MainActivity extends FragmentActivity implements
 {
 	private static final String TAG = MainActivity.class.getName();
 	private TabHost tabHost_;
-//	private HashMap<String, TabInfo> tabsInfo_ = new HashMap<String, MainActivity.TabInfo>();
-//	private TabInfo lastTab_ = null;
 	private DatabaseHelper dbHelper_;
-	private String currentTabTag_;
+	private int currentTabTag_;
+	private SettingFragment settingFragment_;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -45,14 +44,21 @@ public class MainActivity extends FragmentActivity implements
 
 		final String conversionTag = Integer.toString(R.id.converterTab);
 		final String conversionIndicator = "Converter"; // TODO: multi language
-		final TabSpec converterTabSpec = tabHost_.newTabSpec(conversionTag).setIndicator(createTabLabelView(conversionIndicator)).setContent(R.id.converterTab);
+		final TabSpec converterTabSpec = tabHost_.newTabSpec(conversionTag).
+				setIndicator(createTabLabelView(conversionIndicator)).setContent(R.id.converterTab);
 		
 		final String explorerTag = Integer.toString(R.id.explorerTab);
 		final String explorerIndicator = "Explorer"; // TODO: multi language
-		final TabSpec explorerTabSpec = tabHost_.newTabSpec(explorerTag).setIndicator(createTabLabelView(explorerIndicator)).setContent(R.id.explorerTab);
+		final TabSpec explorerTabSpec = tabHost_.newTabSpec(explorerTag).
+				setIndicator(createTabLabelView(explorerIndicator)).setContent(R.id.explorerTab);
 
+		final String settingTag = Integer.toString(R.id.settingTab);
+		final TabSpec settingTabSpec = tabHost_.newTabSpec(settingTag).
+				setIndicator(createTabImageView()).setContent(R.id.settingTab);
+		
 		tabHost_.addTab(converterTabSpec);
 		tabHost_.addTab(explorerTabSpec);
+		tabHost_.addTab(settingTabSpec);
 		
 		onTabChanged(conversionTag);
 		
@@ -64,8 +70,12 @@ public class MainActivity extends FragmentActivity implements
 		View indicatorView = getLayoutInflater().inflate(R.layout.tab_label_indicator, null);
 		TextView label = (TextView)indicatorView.findViewById(R.id.label);
 		label.setText(textIndicator);
-//		TextView indicatorView = (TextView)getLayoutInflater().inflate(R.layout.tab_label_indicator, null);
 //		indicatorView.setText(textIndicator);
+		return indicatorView;
+	}
+	private View createTabImageView()
+	{
+		View indicatorView = getLayoutInflater().inflate(R.layout.tab_image_indicator, null);
 		return indicatorView;
 	}
 	
@@ -73,7 +83,7 @@ public class MainActivity extends FragmentActivity implements
 	protected void onSaveInstanceState(Bundle outState)
 	{
 		super.onSaveInstanceState(outState);
-		outState.putString("currentTabTag", currentTabTag_);
+		outState.putString("currentTabTag", Integer.toString(currentTabTag_));
 	}
 	
 	@Override
@@ -92,6 +102,10 @@ public class MainActivity extends FragmentActivity implements
 	 */
 	public void onTabChanged(String tag)
 	{
+		if (settingFragment_!=null && currentTabTag_ == R.id.settingTab) {
+			settingFragment_.savePrefs();
+		}
+		
 		//Toast.makeText(this, "onTabChanged: "+tag, Toast.LENGTH_SHORT).show();
 		int placeHolder = Integer.parseInt(tag);
 		
@@ -100,21 +114,26 @@ public class MainActivity extends FragmentActivity implements
 		
         if (fg == null) 
         {
-        	if (placeHolder == R.id.converterTab)
-        	{
-        		fg = new ConverterFragment();
+        	switch (placeHolder) {
+        		case R.id.converterTab:
+        			fg = new ConverterFragment();
+        			break;
+        		case R.id.explorerTab:
+        			fg = new ExplorerFragment();
+        			break;
+        		case R.id.settingTab:
+        			settingFragment_ = new SettingFragment();
+        			fg = settingFragment_;
+        			break;
+        		default: throw new UnsupportedOperationException();
         	}
-        	else
-        	{
-        		fg = new ExplorerFragment();
-        	}
-        	
+        	        	
             fm.beginTransaction()
                     .replace(placeHolder, fg, tag)
                     .commit();
         }
         
-        currentTabTag_ = tag;
+        currentTabTag_ = placeHolder;
 	}
 
 	public DatabaseHelper getDatabaseHelper()

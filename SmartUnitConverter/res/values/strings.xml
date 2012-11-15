@@ -4,4 +4,19 @@
     <string name="menu_settings">Settings</string>
     <string name="title_activity_unit_picker">Smart Unit Picker</string>
     <string name="title_activity_unit_picker2">Standard Unit Picker</string>
+    <string-array name="opt_currency_live_update">
+        <item>All network</item>
+        <item>Wifi only</item>
+        <item>Never</item>
+    </string-array>
+    <string-array name="opt_currency_expiry_time">
+        <item>1 second</item>
+        <item>1 hour</item>
+        <item>1 day</item>
+        <item>1 week</item>
+    </string-array>
+     <string-array name="opt_currency_usd_only">
+        <item>Yes</item>
+        <item>No</item>
+    </string-array>
 </resources>

@@ -265,25 +265,50 @@ public final class ConversionsLoadingRunner implements Runnable
 		
 		//Get the conversions from optimizeBaseCurrencyId
 		long optimizeBaseCurrencyId = choseBetweenMostRecentCurrencyAnd(baseUnitId_);
-		Cursor cur1 = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(optimizeBaseCurrencyId)});
-		try
 		{
-			readConversionFromCursor(cur1);
-		}
-		finally
-		{
-			cur1.close();
+			Cursor cur1 = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(optimizeBaseCurrencyId)});
+			try
+			{
+				readConversionFromCursor(cur1);
+			}
+			finally
+			{
+				cur1.close();
+			}
 		}
 		
-		//Always use the conversions from USD to fill lacking rates (for eg, rate conversion from VND to EUR = 0.00)
-		Cursor cur2 = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(Unit.USD_UNIT)});
-		try
-		{
-			readConversionFromCursor(cur2);
+		if (optimizeBaseCurrencyId!=Unit.USD_UNIT) //if not already load the USD conversion-set from above... 
+		{  
+			//Always use the conversions from USD to fill lacking rates (for eg, rate conversion from VND to EUR = 0.00)
+			Cursor cur2 = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(Unit.USD_UNIT)});
+			try
+			{
+				readConversionFromCursor(cur2);
+			}
+			finally
+			{
+				cur2.close();
+			}
 		}
-		finally
+		
+		if (conversions_.isEmpty())
 		{
-			cur2.close();
+			// read all possible currency conversion! it can be really long!
+			Cursor cur = dbHelper_.getReadableDatabase().rawQuery(
+					SELECT_CONVERSION_QUERY,
+					new String[] { Long.toString(categoryId_) });
+			try
+			{
+				readConversionFromCursor(cur);
+			}
+			finally
+			{
+				cur.close();
+			}
+		}
+		
+		if (conversions_.isEmpty()) {
+			Log.w("CURR", "No conversion for Currency found!");
 		}
 		
 		Log.d("CURR", "readCurrencyConversions END baseUnitId = "+baseUnitId_);
