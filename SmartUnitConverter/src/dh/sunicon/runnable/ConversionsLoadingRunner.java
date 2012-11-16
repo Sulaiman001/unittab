@@ -311,7 +311,7 @@ public final class ConversionsLoadingRunner implements Runnable
 			Log.w("CURR", "No conversion for Currency found!");
 		}
 		
-		Log.d("CURR", "readCurrencyConversions END baseUnitId = "+baseUnitId_);
+		Log.d("CURR", String.format("readCurrencyConversions END baseUnitId = %d - found %d conversion", baseUnitId_, conversions_.size()));
 	}
 	
 	private void readConversionFromCursor(Cursor cur)
@@ -369,7 +369,7 @@ public final class ConversionsLoadingRunner implements Runnable
 					long preferedCurrencyUpdateDate = UpdatingAgentsManager.getLastUpdate(dbHelper_, preferedCurrencyId);
 					
 					if ((mostRecentCurrencyUpdateDate - preferedCurrencyUpdateDate) > 7 * MILIS_PER_DAY) {
-						Log.w(TAG, "Use the Conversion-set of the most recent currency ("+Long.toString(mostRecentCurrencyId)+") with two-step conversion");
+						Log.w("CURR", "Use the Conversion-set of the most recent currency ("+Long.toString(mostRecentCurrencyId)+") with two-step conversion");
 						return mostRecentCurrencyId;
 					}
 				}

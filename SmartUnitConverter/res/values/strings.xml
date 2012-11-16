@@ -7,7 +7,7 @@
     <string-array name="opt_currency_live_update">
         <item>All network</item>
         <item>Wifi only</item>
-        <item>Never</item>
+        <item>Disable</item>
     </string-array>
     <string-array name="opt_currency_expiry_time">
         <item>1 second</item>

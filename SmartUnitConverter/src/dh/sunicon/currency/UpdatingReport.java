@@ -101,7 +101,7 @@ public class UpdatingReport implements Serializable
 	 * warning: must change the methode name to "successUpdateMostly"
 	 */
 	public boolean isSuccessAll() {
-		return forcedSuccessAll_ || updatedCount_ >= DatabaseHelper.CURRENCY_COUNT-10; //cheat!
+		return forcedSuccessAll_ || updatedCount_ >= DatabaseHelper.CURRENCY_COUNT-1; //cheat!
 	}
 	
 	/**

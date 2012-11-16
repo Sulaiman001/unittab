@@ -45,8 +45,6 @@ public final class RowData implements Runnable
 	private EnumValue targetEnumValue_ = null; 
 	private volatile Long baseValueEnumId_ = (long)-1;
 	
-	private Future<?> futureResult_; 
-	
 	private volatile boolean cancelCalculation_ = false;
 	
 	private RowData(ResultListAdapter resultListAdapter, long categoryId, long baseUnitId, long targetUnitId, String targetUnitName,
@@ -69,41 +67,15 @@ public final class RowData implements Runnable
 			String targetUnitName,
 			String targetUnitShortName, 
 			double baseValue, 
-			long baseValueEnumId) throws IllegalAccessException
-	{
-		this(resultListAdapter, 
-				categoryId, 
-				baseUnitId, 
-				targetUnitId, 
-				targetUnitName, 
-				targetUnitShortName,
-				baseValue,
-				baseValueEnumId,
-				false);
-		//setBase(baseValue, baseValueEnumId, baseUnitId);
-	}
-	public RowData(ResultListAdapter resultListAdapter, 
-			long categoryId, 
-			long baseUnitId, 
-			long targetUnitId, 
-			String targetUnitName,
-			String targetUnitShortName, 
-			double baseValue, 
-			long baseValueEnumId, 
-			boolean fastConstructor) throws IllegalAccessException
+			long baseValueEnumId)
 	{
 		this(resultListAdapter, categoryId, baseUnitId, targetUnitId, targetUnitName, targetUnitShortName);
-		if (fastConstructor) {
-			baseUnitId_ = baseUnitId;
-			baseValue_ = baseValue;
-			targetValue_ = Double.NaN;
-			targetValueHtml_ = "-";
-			baseValueEnumId_ = baseValueEnumId;
-			targetEnumValue_ = null;
-		}
-		else {
-			setBase(baseValue, baseValueEnumId, baseUnitId);
-		}
+		baseUnitId_ = baseUnitId;
+		baseValue_ = baseValue;
+		targetValue_ = Double.NaN;
+		targetValueHtml_ = "-";
+		baseValueEnumId_ = baseValueEnumId;
+		targetEnumValue_ = null;
 	}
 	
 	public RowData(ResultListAdapter resultListAdapter, JSONObject json) throws JSONException
@@ -276,34 +248,7 @@ public final class RowData implements Runnable
 		targetValueHtml_ = "-";
 		baseValueEnumId_ = enumId;
 		targetEnumValue_ = null;
-		
-		invokeCalculation();
-		
-		
 	}	
-	
-	/**
-	 * Cancel old calculation, start a new one
-	 */
-	private void invokeCalculation()
-	{
-		
-		
-		//synchronized (resultListAdapter_.calcFutureResult_)
-		
-		if (futureResult_!=null)
-		{
-			//Log.v(TAG, "Cancel old base value");
-			//cancel old calculation
-			futureResult_.cancel(true);
-			resultListAdapter_.unregisterCalculationFromWatingPool(futureResult_);
-		}
-		//start a new calculation
-		long startTime = DatabaseHelper.getNow();
-		futureResult_ = resultListAdapter_.getCalculationPoolThread().submit(this);
-		Log.d(TAG, String.format("invokeCalculation %d (%d ms)", getUnitId(), DatabaseHelper.getNow()-startTime));
-		resultListAdapter_.registerCalculationToWatingPool(futureResult_);
-	}
 	
 	/**
 	 * Add more security layer to make sure that the calculation will stop, it shoud be called before we dump this RowData
@@ -332,6 +277,8 @@ public final class RowData implements Runnable
 			
 			if (baseValue_ != null && !baseValue_.isNaN()) //normal case: km/h..
 			{
+				//long startTime = DatabaseHelper.getNow();
+				
 				/* copy the current baseValue_ to original Value */
 				double originalValue;
 	
@@ -368,6 +315,8 @@ public final class RowData implements Runnable
 					}
 					//else, a newer setBaseValue() was called, we must ignore the resu 
 				}
+				
+				//Log.v(TAG, String.format("Finish convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d %d ms)", baseValueEnumId_, baseUnitId_, targetUnitId_, (DatabaseHelper.getNow()-startTime)));
 			}
 			//else //enum unit: clothing size..
 			if (baseValueEnumId_ >= 0)
@@ -397,25 +346,6 @@ public final class RowData implements Runnable
 		}
 	}
 	
-//	private void invokeRefreshGui()
-//	{
-//		((MainActivity)this.resultListAdapter_.getContext()).runOnUiThread(new Runnable()
-//		{
-//			@Override
-//			public void run()
-//			{
-//				try
-//				{
-//					RowData.this.resultListAdapter_.notifyDataSetChanged();
-//				}
-//				catch (Exception ex)
-//				{
-//					Log.w(TAG, ex);
-//				}
-//			}
-//		}); 
-//	}
-	
 	/**
 	 * Convert the "36" of "clothing size woman france" to "XX-Small" of "clothing size woman US"; 
 	 * @throws TimeoutException 
@@ -438,7 +368,7 @@ public final class RowData implements Runnable
 		
 		if (correspondings == null || enumValues == null)
 		{
-			Log.v(TAG, String.format("Cancel convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d. Because correspondings or enumValues tables is null", baseValueEnumId, baseUnitId, targetUnitId));
+			//Log.v(TAG, String.format("Cancel convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d. Because correspondings or enumValues tables is null", baseValueEnumId, baseUnitId, targetUnitId));
 			return null;
 		}
 		
@@ -516,7 +446,7 @@ public final class RowData implements Runnable
 		
 		if (conversions == null)
 		{
-			Log.v(TAG, String.format("Cancel convert %f from baseUnitId=%d to targetUnitId=%d. Because conversions table is Null", baseValue, baseUnitId, targetUnitId));
+			//Log.v(TAG, String.format("Cancel convert %f from baseUnitId=%d to targetUnitId=%d. Because conversions table is Null", baseValue, baseUnitId, targetUnitId));
 			return Double.NaN;
 		}
 		
@@ -526,6 +456,10 @@ public final class RowData implements Runnable
 		
 		for (Conversion conv : conversions)
 		{
+			if (isDumped()) {
+				return Double.NaN;
+			} 
+			
 			if (conv.getBaseUnitId() == baseUnitId && conv.getTargetUnitId() == targetUnitId)
 			{
 				return conv.convert(baseValue, baseUnitId);

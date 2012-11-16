@@ -3,7 +3,9 @@ package dh.sunicon;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -14,8 +16,6 @@ import java.util.concurrent.TimeoutException;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import com.google.common.base.Stopwatch;
 
 import android.database.Cursor;
 import android.os.AsyncTask;
@@ -255,19 +255,17 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		conversionsLoadingFuture_ = conversionsLoadingThread_.submit(conversionsLoadingRunner_);
 		
 		if (data_!=null && sameCategory ) {
-			reComputeAll();
+			invokeCalculation();
 		}
 		else {
 			data_ = null;
 			
 			/*fill the list with related target unit (of the same category)*/
-			
 			invokeFillData();
-			invokeGuiUpdateAfterCalculation();
 		}
 		
 	}
-	
+
 	/**
 	 * set base value and compute conversion values
 	 * @throws IllegalAccessException 
@@ -286,17 +284,14 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			
 			if (data_ == null || data_.size() == 0)
 			{
-				Log.d(TAG, "RowData list is empty");
+				Log.w(TAG, "RowData list is empty");
 				((ConverterFragment)owner_).setComputationStateFinished(true);
 				return;
 			}
 
 			/* calculate all value */
 			
-			for (RowData rowdata : data_)
-				rowdata.setBase(baseValue_, baseValueEnumId_, baseUnitId_);
-			
-			invokeGuiUpdateAfterCalculation();
+			invokeCalculation();
 		}
 		else
 		{
@@ -309,6 +304,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 
 		if (!onGuiThread())
 			throw new IllegalAccessException("reComputeAll() must be called from UI Thread");
+		
+		Log.v(TAG, "reComputeAll");
 		
 		((ConverterFragment)owner_).setComputationStateFinished(false);
 		
@@ -330,10 +327,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			}
 		}
 		
-		if (filter_!=null)
-			filter_.reComputeAll();
-		
-		invokeGuiUpdateAfterCalculation();
+		invokeCalculation();
 	}
 	
 	/* wait the calculations finished then update the list View */
@@ -356,7 +350,14 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 					{
 						try
 						{
-							notifyDataSetChanged();
+							if (data_!=null && data_.size() > 0)
+							{
+								notifyDataSetChanged();
+							}
+							else
+							{
+								notifyDataSetInvalidated();
+							}
 							((ConverterFragment)owner_).setComputationStateFinished(true);
 						}
 						catch (Exception ex)
@@ -404,7 +405,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	{
 		try
 		{
-			long startTime = System.currentTimeMillis();
+			long startTime = DatabaseHelper.getNow();
 			
 			while (!calculationWatingPool_.isEmpty())
 			{
@@ -413,18 +414,37 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				{
 					futRe.get();
 				}
-				catch (InterruptedException e)
-				{
-					Log.w(TAG, e);
-				}
-				catch (ExecutionException e)
+				catch (Exception e)
 				{
 					Log.w(TAG, e);
 				}
 			}
 			
-			long endTime = System.currentTimeMillis();
-			Log.d(TAG, "await calculation "+(endTime - startTime)+"ms");
+			Log.d(TAG, "await calculation "+(DatabaseHelper.getNow() - startTime)+"ms");
+		}
+		catch (Exception ex)
+		{
+			Log.w(TAG, ex);
+		}
+	}
+	/**
+	 * waiting for calculationPoolThread_ to finish all the calculation
+	 * @throws ExecutionException 
+	 * @throws InterruptedException 
+	 */
+	private void cancelCalculation()
+	{
+		try
+		{
+			long startTime = DatabaseHelper.getNow();
+			
+			while (!calculationWatingPool_.isEmpty())
+			{
+				Future<?> futRe = calculationWatingPool_.poll();
+				futRe.cancel(true);
+			}
+			
+			Log.d(TAG, "await calculation "+(DatabaseHelper.getNow() - startTime)+"ms");
 		}
 		catch (Exception ex)
 		{
@@ -432,11 +452,6 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		}
 	}
 
-	public ExecutorService getCalculationPoolThread()
-	{
-		return calculationPoolThread_;
-	}
-	
 	public ArrayList<Conversion> getConversions() throws InterruptedException, ExecutionException, TimeoutException, IllegalAccessException
 	{
 		waitConversionLoadingRunner();
@@ -461,7 +476,12 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		{
 			throw new UnsupportedOperationException("The conversion loading has not been started. Base Unit was not set");
 		}
+		
+		//long startTime = DatabaseHelper.getNow();
+		
 		conversionsLoadingFuture_.get(10, TimeUnit.SECONDS);
+		
+		//Log.v(TAG, String.format("waitConversionLoadingRunner %d ms",DatabaseHelper.getNow()-startTime)); 
 	}
 
 	public boolean onGuiThread()
@@ -476,15 +496,75 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	
 	private void invokeFillData()
 	{
+		cancelCalculation();
 		if (fillDataTask_ != null)
 			fillDataTask_.cancel(false);
 		fillDataTask_ = new FillDataTask();
 		fillDataTask_.execute(categoryId_, baseUnitId_);
 	}
 	
+	private final static int MAX_THREADS_CALCULATION = 16;
+	
+	private void invokeCalculation() throws IllegalAccessException {
+		if (!onGuiThread()) {
+			throw new IllegalAccessException();
+		}
+		if (data_ == null) {
+			return;
+		}
+		
+		((ConverterFragment)owner_).setComputationStateFinished(false);
+
+		cancelCalculation();
+		
+		for (RowData r : data_) {
+			r.setBase(baseValue_, baseValueEnumId_, baseUnitId_);
+		}
+		
+		int count = data_.size();
+		int rowDataPerBatch = (count / MAX_THREADS_CALCULATION)+1;
+		
+		int s = 0;
+		int e = rowDataPerBatch;
+		while (s<count) {
+			if (e>count) {
+				e = count;
+			}
+			BatchCalculation bc = new BatchCalculation(data_.subList(s, e));
+			registerCalculationToWatingPool(calculationPoolThread_.submit(bc));
+			s = s + rowDataPerBatch;
+			e = e + rowDataPerBatch;
+		}
+		invokeGuiUpdateAfterCalculation();
+	}
+	
 	/*
 	 * **** Inner classes ****
 	 */
+	private final class BatchCalculation implements Callable<Integer> {
+
+		private List<RowData> data_;
+		
+		public BatchCalculation(List<RowData> data)
+		{
+			super();
+			data_ = data;
+		}
+
+		@Override
+		public Integer call() throws Exception
+		{
+			int c = 0;
+			for (RowData r : data_) {
+				if (Thread.currentThread().isInterrupted()) {
+					return c;
+				}
+				r.run();
+				c++;
+			}
+			return c;
+		}
+	}
 	
 	/**
 	 * this AsynTask populates the DataRow list of the owner
@@ -521,14 +601,13 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 					
 					while (cur.moveToNext() && !isCancelled()) 
 					{
-						
 						RowData co = new RowData(
 								ResultListAdapter.this, categoryId, 
 								baseUnitId,
 								cur.getLong(idColumnIndex),
 								cur.getString(nameColumnIndex),
 								cur.getString(shortNameColumnIndex),
-								baseValue_, baseValueEnumId_, true
+								baseValue_, baseValueEnumId_
 							);
 						resu.add(co);
 					}
@@ -556,44 +635,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			try
 			{
 				data_ = result;
-				
-				//reset filter
-				if (filter_ != null)
-					filter_.dumpFilterData();
-				
-				if (result == null || result.size() == 0)
-				{
-					notifyDataSetInvalidated();
-				}
-				else
-				{
-					Log.d(TAG, String.format("Finished fill data for category %d, found %d units", categoryId_, result.size()));
-					notifyDataSetChanged();
-					
-					double baseValue = baseValue_; 
-					long baseValueEnumId = baseValueEnumId_;
-					long baseUnitId = baseUnitId_;
-					
-					//Stopwatch stopwatch = new Stopwatch();
-					
-					//make a initial calculation
-					for (RowData rowdata : data_)
-					{
-						
-						//stopwatch.reset().start();
-						//long startTime = DatabaseHelper.getNow();
-						
-						rowdata.clearTargetValue(); //reset target value
-						rowdata.setBase(baseValue, baseValueEnumId, baseUnitId); //recalcule target value
-						
-						//Log.d(TAG, String.format("Init calculate - setBase %d (%d ms)", rowdata.getUnitId(), stopwatch.elapsedMillis()));
-						
-						//Log.d(TAG, String.format("Init calculate %d (%d ms)", rowdata.getUnitId(), DatabaseHelper.getNow()-startTime));
-					}
-					//stopwatch.stop();
-					
-					invokeGuiUpdateAfterCalculation();
-				}
+				invokeCalculation();
 			}
 			catch (Exception e)
 			{
@@ -699,14 +741,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				ArrayList<RowData> l;
 				if (TextUtils.isEmpty(constraint))
 				{
-					synchronized (lock_) 
-					{
-						l = new ArrayList<RowData>(fullData_);
-						for (RowData r : l)
-						{
-							r.setBase(baseValue_, baseValueEnumId_, baseUnitId_);
-						}
-					}
+					l = new ArrayList<RowData>(fullData_);
 				}
 				else
 				{
@@ -741,7 +776,6 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 						
 						if (matched)
 						{
-							row.setBase(baseValue_, baseValueEnumId_, baseUnitId_);
 							l.add(row);
 						}
 					}
@@ -749,8 +783,6 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				
 				resu.values = l;
 				resu.count = l.size();
-				
-				awaitCalculation();
 				return resu;
 			}
 			catch (Exception ex)
@@ -771,43 +803,14 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			}
 			
 			data_ = (ArrayList<RowData>) (results.values);
-			
-			if (results.count > 0)
+			try
 			{
-				notifyDataSetChanged();
+				invokeCalculation();
 			}
-			else
+			catch (IllegalAccessException e)
 			{
-				notifyDataSetInvalidated();
+				Log.w(TAG, e);
 			}
-		}
-		
-		public void reComputeAll() throws IllegalAccessException
-		{
-			if (fullData_ == null)
-				return;
-			
-			for (RowData r : fullData_)
-			{
-				r.clearTargetValue();
-				r.setBase(baseValue_, baseValueEnumId_, baseUnitId_);
-			}
-		}
-		
-		/**
-		 * Must be called each time the result list (data_) is re-populate
-		 */
-		public void dumpFilterData()
-		{
-			if (fullData_ == null)
-				return;
-			
-			// dump the data row before replacing it
-			for (RowData r : fullData_)
-			{
-				r.dumpIt();
-			}
-			fullData_ = null;
 		}
 	}
 }

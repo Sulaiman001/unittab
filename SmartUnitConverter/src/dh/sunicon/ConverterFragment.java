@@ -13,7 +13,6 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
@@ -56,7 +55,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 {
 	static final String TAG = ConverterFragment.class.getName();
 	static final int VALUE_SPINNER_LOADER = 0;
-	public static final long EVENTS_DELAY = 1000L;
+	public static final long EVENTS_DELAY = 500L;
 	private DatabaseHelper dbHelper_;
 	private TextView categoryLabel_;
 	private ViewSwitcher baseValueSwitcher_;
@@ -679,10 +678,12 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 					updateInProgressPanel_.setTag(report);
 					updateCurrencyNotificationBar();
 					
-					if (report!=null && report.isDatabaseChanged()) {
-						Log.v("CURR", "reComputeAll");
+					if (report!=null) {
+						Log.v("CURR", report.getContentMessage());
+						
 						//re-calculate resultList after updating currency rate. Warning, donnot process update again
-						resultListAdapter_.reComputeAll();
+						if (report.isDatabaseChanged())
+							resultListAdapter_.reComputeAll();
 					}
 				}
 				catch (Exception ex)

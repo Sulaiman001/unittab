@@ -16,11 +16,24 @@
 
     <TableRow android:paddingLeft="20dp" >
 
-        <TextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="5dp"
-            android:text="Live update" />
+            android:orientation="vertical" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
+                android:text="Live update (L.U)" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
+                android:text="()when rates data expiry"
+                android:textColor="@color/light_gray2" />
+        </LinearLayout>
 
         <Spinner
             android:id="@+id/currencyLiveUpdateOption"
@@ -30,11 +43,24 @@
 
     <TableRow android:paddingLeft="20dp" >
 
-        <TextView
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="5dp"
-            android:text="Rates data expiry after" />
+            android:orientation="vertical" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
+                android:text="Rates data expiry after" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
+                android:text="(1s means always do L.U)"
+                android:textColor="@color/light_gray2" />
+        </LinearLayout>
 
         <Spinner
             android:id="@+id/currencyExpiryTime"
@@ -53,13 +79,13 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="5dp"
-                android:text="Use only USD rates:" />
+                android:text="L.U only USD rates:" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="5dp"
-                android:text="More perfs but less accurate"
+                android:text="(less L.U, less accurate)"
                 android:textColor="@color/light_gray2" />
         </LinearLayout>
 
