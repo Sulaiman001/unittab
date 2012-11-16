@@ -3,6 +3,7 @@ package dh.sunicon.datamodel;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Locale;
 
 import android.content.Context;
@@ -33,6 +34,11 @@ public class DatabaseHelper extends SQLiteAssetHelper
 		// final int cacheSize = 1024 * 1024 * memClass / 8;
 
 		// this.entityCache = new LruCache<Long, BaseEntity>(cacheSize);
+	}
+
+	
+	public static long getNow() {
+		return Calendar.getInstance().getTime().getTime();
 	}
 	
 	// public LruCache<Long, BaseEntity> getEntityCache()

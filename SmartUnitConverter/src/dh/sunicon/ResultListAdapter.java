@@ -15,6 +15,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.common.base.Stopwatch;
+
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Looper;
@@ -229,7 +231,9 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		if (!onGuiThread())
 			throw new IllegalAccessException("this methode must be called from UI Thread.");
 		
-		if (categoryId == categoryId_ && baseUnitId == baseUnitId_)
+		boolean sameCategory = (categoryId == categoryId_);
+		
+		if (sameCategory && baseUnitId == baseUnitId_)
 		{
 			((ConverterFragment)owner_).setComputationStateFinished(true);
 			return; //nothing changed
@@ -250,15 +254,18 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, categoryId_, baseUnitId_);
 		conversionsLoadingFuture_ = conversionsLoadingThread_.submit(conversionsLoadingRunner_);
 		
-		synchronized (lock_)
-		{
+		if (data_!=null && sameCategory ) {
+			reComputeAll();
+		}
+		else {
 			data_ = null;
+			
+			/*fill the list with related target unit (of the same category)*/
+			
+			invokeFillData();
+			invokeGuiUpdateAfterCalculation();
 		}
 		
-		/*fill the list with related target unit (of the same category)*/
-		
-		invokeFillData();
-		invokeGuiUpdateAfterCalculation();
 	}
 	
 	/**
@@ -287,7 +294,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			/* calculate all value */
 			
 			for (RowData rowdata : data_)
-				rowdata.setBaseValue(baseValue_, baseValueEnumId_);
+				rowdata.setBase(baseValue_, baseValueEnumId_, baseUnitId_);
 			
 			invokeGuiUpdateAfterCalculation();
 		}
@@ -319,7 +326,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			for (RowData rowdata : data_)
 			{
 				rowdata.clearTargetValue(); //reset target value
-				rowdata.setBaseValue(baseValue_, baseValueEnumId_); //recalcule target value
+				rowdata.setBase(baseValue_, baseValueEnumId_, baseUnitId_); //recalcule target value
 			}
 		}
 		
@@ -365,7 +372,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	/**
 	 * unregister a calculation so the methode awaitCalculation() will NOT wait for it to finish 
 	 */
-	public synchronized void unregisterCalculationFromWatingPool(Future<?> f)
+	public void unregisterCalculationFromWatingPool(Future<?> f)
 	{
 		try {
 			calculationWatingPool_.remove(f);
@@ -378,7 +385,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	/**
 	 * register a calculation so the methode awaitCalculation() will wait for it to finish 
 	 */
-	public synchronized void registerCalculationToWatingPool(Future<?> f)
+	public void registerCalculationToWatingPool(Future<?> f)
 	{
 		try {
 			calculationWatingPool_.offer(f);
@@ -393,7 +400,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	 * @throws ExecutionException 
 	 * @throws InterruptedException 
 	 */
-	private synchronized void awaitCalculation()
+	private void awaitCalculation()
 	{
 		try
 		{
@@ -494,34 +501,45 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				long categoryId = params[0];
 				long baseUnitId = params[1];
 				
+//				Cursor cur = dbHelper_.getReadableDatabase().
+//								query("unit", new String[]{"id", "name", "shortName"}, 
+//									"enabled=1 AND categoryId=? AND id<>?", 
+//									new String[] {Long.toString(categoryId), Long.toString(baseUnitId)}, 
+//									null, null, "lower(name)");
+				
 				Cursor cur = dbHelper_.getReadableDatabase().
-								query("unit", new String[]{"id", "name", "shortName"}, 
-									"enabled=1 AND categoryId=? AND id<>?", 
-									new String[] {Long.toString(categoryId), Long.toString(baseUnitId)}, 
-									null, null, "lower(name)");
-				
-				int idColumnIndex = cur.getColumnIndex("id");
-				int nameColumnIndex = cur.getColumnIndex("name");
-				int shortNameColumnIndex = cur.getColumnIndex("shortName");
-				
-				while (cur.moveToNext() && !isCancelled()) 
+						query("unit", new String[]{"id", "name", "shortName"}, 
+							"enabled=1 AND categoryId=?", 
+							new String[] {Long.toString(categoryId)}, 
+							null, null, "lower(name)");
+				try
 				{
-					RowData co = new RowData(
-							ResultListAdapter.this, categoryId, 
-							baseUnitId,
-							cur.getLong(idColumnIndex),
-							cur.getString(nameColumnIndex),
-							cur.getString(shortNameColumnIndex),
-							baseValue_, baseValueEnumId_
-						);
-					resu.add(co);
+				
+					int idColumnIndex = cur.getColumnIndex("id");
+					int nameColumnIndex = cur.getColumnIndex("name");
+					int shortNameColumnIndex = cur.getColumnIndex("shortName");
+					
+					while (cur.moveToNext() && !isCancelled()) 
+					{
+						
+						RowData co = new RowData(
+								ResultListAdapter.this, categoryId, 
+								baseUnitId,
+								cur.getLong(idColumnIndex),
+								cur.getString(nameColumnIndex),
+								cur.getString(shortNameColumnIndex),
+								baseValue_, baseValueEnumId_, true
+							);
+						resu.add(co);
+					}
 				}
-	
-				cur.close();
+				finally {
+					cur.close();
+				}
 				
 				//MainActivity.simulateLongOperation(1, 3);
 	
-				awaitCalculation();
+				//awaitCalculation();
 				
 				return resu;
 			}
@@ -537,10 +555,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		{
 			try
 			{
-				synchronized (lock_)
-				{
-					data_ = result;
-				}
+				data_ = result;
 				
 				//reset filter
 				if (filter_ != null)
@@ -555,12 +570,27 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 					Log.d(TAG, String.format("Finished fill data for category %d, found %d units", categoryId_, result.size()));
 					notifyDataSetChanged();
 					
+					double baseValue = baseValue_; 
+					long baseValueEnumId = baseValueEnumId_;
+					long baseUnitId = baseUnitId_;
+					
+					//Stopwatch stopwatch = new Stopwatch();
+					
 					//make a initial calculation
 					for (RowData rowdata : data_)
 					{
+						
+						//stopwatch.reset().start();
+						//long startTime = DatabaseHelper.getNow();
+						
 						rowdata.clearTargetValue(); //reset target value
-						rowdata.setBaseValue(baseValue_, baseValueEnumId_); //recalcule target value
+						rowdata.setBase(baseValue, baseValueEnumId, baseUnitId); //recalcule target value
+						
+						//Log.d(TAG, String.format("Init calculate - setBase %d (%d ms)", rowdata.getUnitId(), stopwatch.elapsedMillis()));
+						
+						//Log.d(TAG, String.format("Init calculate %d (%d ms)", rowdata.getUnitId(), DatabaseHelper.getNow()-startTime));
 					}
+					//stopwatch.stop();
 					
 					invokeGuiUpdateAfterCalculation();
 				}
@@ -674,7 +704,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 						l = new ArrayList<RowData>(fullData_);
 						for (RowData r : l)
 						{
-							r.setBaseValue(baseValue_, baseValueEnumId_);
+							r.setBase(baseValue_, baseValueEnumId_, baseUnitId_);
 						}
 					}
 				}
@@ -711,7 +741,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 						
 						if (matched)
 						{
-							row.setBaseValue(baseValue_, baseValueEnumId_);
+							row.setBase(baseValue_, baseValueEnumId_, baseUnitId_);
 							l.add(row);
 						}
 					}
@@ -740,10 +770,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				return;
 			}
 			
-			synchronized (lock_)
-			{
-				data_ = (ArrayList<RowData>) (results.values);
-			}
+			data_ = (ArrayList<RowData>) (results.values);
 			
 			if (results.count > 0)
 			{
@@ -755,7 +782,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			}
 		}
 		
-		public void reComputeAll()
+		public void reComputeAll() throws IllegalAccessException
 		{
 			if (fullData_ == null)
 				return;
@@ -763,7 +790,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			for (RowData r : fullData_)
 			{
 				r.clearTargetValue();
-				r.setBaseValue(baseValue_, baseValueEnumId_);
+				r.setBase(baseValue_, baseValueEnumId_, baseUnitId_);
 			}
 		}
 		

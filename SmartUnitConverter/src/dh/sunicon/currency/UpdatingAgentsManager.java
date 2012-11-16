@@ -1,7 +1,6 @@
 package dh.sunicon.currency;
 
 import java.security.InvalidParameterException;
-import java.util.Calendar;
 import java.util.LinkedList;
 
 import android.app.Activity;
@@ -62,7 +61,7 @@ public class UpdatingAgentsManager
 		//}
 	}
 
-	public synchronized UpdatingReport importOnBackground(final long currencyUnitId)
+	public UpdatingReport importOnBackground(final long currencyUnitId)
 	{
 		if (isDumped()) {
 			return null;
@@ -219,7 +218,7 @@ public class UpdatingAgentsManager
 	 * save time of last update of this currencyUnitId
 	 */
 	private void saveLastUpdate(long currencyUnitId) {
-		Depot.putLong(dbHelper_, getHistoryKey(currencyUnitId), getNow());
+		Depot.putLong(dbHelper_, getHistoryKey(currencyUnitId), DatabaseHelper.getNow());
 	}
 	
 	private long getTimeToLive() {
@@ -227,17 +226,13 @@ public class UpdatingAgentsManager
 	}
 	
 	private boolean isExpiry(long currencyUnitId) {
-		long now = getNow();
+		long now = DatabaseHelper.getNow();
 		return (now - getLastUpdate(dbHelper_, currencyUnitId)) > getTimeToLive();
 	}
 	
 	private int getCurrencyUpdaterOption() {
 		SharedPreferences preferences_ = context_.getPreferences(Activity.MODE_PRIVATE);
 		return preferences_.getInt(CurrencyUpdater.OPTNAME_CURRENCY_LIVE_UPDATE, CurrencyUpdater.OPT_ALL_NETWORK);
-	}
-	
-	public static long getNow() {
-		return Calendar.getInstance().getTime().getTime();
 	}
 
 	public boolean isDumped()
