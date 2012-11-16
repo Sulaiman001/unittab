@@ -37,7 +37,7 @@ public final class ConversionsLoadingRunner implements Runnable
 	private final long categoryId_;
 	private final long baseUnitId_;
 	
-	private boolean cancelled_ = false;
+	private volatile boolean cancelled_ = false;
 	//private CountDownLatch countDownLatch_ = new CountDownLatch(1);
 	
 	private ArrayList<Conversion> conversions_;
