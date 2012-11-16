@@ -10,17 +10,15 @@ import android.database.Cursor;
 import android.text.TextUtils;
 import android.util.Log;
 import android.util.SparseArray;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.CursorTreeAdapter;
 import android.widget.Filterable;
+import android.widget.SimpleCursorTreeAdapter;
 import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.DatabaseHelper;
 
-public class UnitsCursorTreeAdapter extends CursorTreeAdapter implements
+public class UnitsCursorSimpleTreeAdapter extends SimpleCursorTreeAdapter implements
 		Filterable
 {
-	static final String TAG = UnitsCursorTreeAdapter.class.getName();
+	static final String TAG = UnitsCursorSimpleTreeAdapter.class.getName();
 
 	static final String SELECT_HISTORY = 
 			"SELECT"
@@ -66,36 +64,51 @@ public class UnitsCursorTreeAdapter extends CursorTreeAdapter implements
 	private final ExecutorService categoryLoadingThread_ = Executors.newCachedThreadPool();
 	private final SparseArray<Category> categoriesByPosition = new SparseArray<Category>(); 
 	
-	
-	public UnitsCursorTreeAdapter(Cursor cursor, Context context)
-	{
-		super(cursor, context);
-		owner_ = (Activity) context;
-		if (owner_ instanceof UnitPicker3)
-		{
-			dbHelper_ = ((UnitPicker3) owner_).getDatabaseHelper();
+	public UnitsCursorSimpleTreeAdapter(Context context,
+			int groupLayout, String[] groupFrom, int[] groupTo,
+			int childLayout, String[] childFrom, int[] childTo) {
+		super(context, null, groupLayout, groupFrom, groupTo, childLayout, childFrom,
+				childTo);
+		owner_ = (Activity)context;
+		if (owner_ instanceof UnitPicker3) {
+			dbHelper_ = ((UnitPicker3)owner_).getDatabaseHelper();
 		}
-		else
-		{
-			dbHelper_ = ((MainActivity) owner_).getDatabaseHelper();
+		else {
+			dbHelper_ = ((MainActivity)owner_).getDatabaseHelper();
 		}
 	}
 
-	public UnitsCursorTreeAdapter(Cursor cursor, Context context,
-			boolean autoRequery)
-	{
-		super(cursor, context, autoRequery);
-		owner_ = (Activity) context;
-		if (owner_ instanceof UnitPicker3)
-		{
-			dbHelper_ = ((UnitPicker3) owner_).getDatabaseHelper();
+	public UnitsCursorSimpleTreeAdapter(Context context,
+			int collapsedGroupLayout, int expandedGroupLayout,
+			String[] groupFrom, int[] groupTo, int childLayout,
+			String[] childFrom, int[] childTo) {
+		super(context, null, collapsedGroupLayout, expandedGroupLayout,
+				groupFrom, groupTo, childLayout, childFrom, childTo);
+		owner_ = (Activity)context;
+		if (owner_ instanceof UnitPicker3) {
+			dbHelper_ = ((UnitPicker3)owner_).getDatabaseHelper();
 		}
-		else
-		{
-			dbHelper_ = ((MainActivity) owner_).getDatabaseHelper();
+		else {
+			dbHelper_ = ((MainActivity)owner_).getDatabaseHelper();
 		}
 	}
-	
+
+	public UnitsCursorSimpleTreeAdapter(Context context,
+			int collapsedGroupLayout, int expandedGroupLayout,
+			String[] groupFrom, int[] groupTo, int childLayout,
+			int lastChildLayout, String[] childFrom, int[] childTo) {
+		super(context, null, collapsedGroupLayout, expandedGroupLayout,
+				groupFrom, groupTo, childLayout, lastChildLayout, childFrom,
+				childTo);
+		owner_ = (Activity)context;
+		if (owner_ instanceof UnitPicker3) {
+			dbHelper_ = ((UnitPicker3)owner_).getDatabaseHelper();
+		}
+		else {
+			dbHelper_ = ((MainActivity)owner_).getDatabaseHelper();
+		}
+	}
+
 	@Override
 	protected Cursor getChildrenCursor(Cursor groupCursor) {
 		
@@ -310,47 +323,5 @@ public class UnitsCursorTreeAdapter extends CursorTreeAdapter implements
 	
 	public interface OnChangeCursorListener {
 		void onChangeCursor(Cursor c);
-	}
-
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	@Override
-	protected View newGroupView(Context context, Cursor cursor,
-			boolean isExpanded, ViewGroup parent)
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	protected void bindGroupView(View view, Context context, Cursor cursor,
-			boolean isExpanded)
-	{
-		// TODO Auto-generated method stub
-		
-	}
-
-	@Override
-	protected View newChildView(Context context, Cursor cursor,
-			boolean isLastChild, ViewGroup parent)
-	{
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	protected void bindChildView(View view, Context context, Cursor cursor,
-			boolean isLastChild)
-	{
-		// TODO Auto-generated method stub
-		
 	}
 }

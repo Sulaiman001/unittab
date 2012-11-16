@@ -28,7 +28,7 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 import android.widget.ViewSwitcher;
 import dh.sunicon.UnitsCursorAdapter.SuggestionData;
-import dh.sunicon.UnitsCursorTreeAdapter.OnChangeCursorListener;
+import dh.sunicon.UnitsCursorSimpleTreeAdapter.OnChangeCursorListener;
 import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.DatabaseHelper;
 
@@ -40,7 +40,7 @@ public class UnitPicker3 extends FragmentActivity {
 	private ListView flatList_;
 	private ExpandableListView treeList_;
 	private UnitsCursorAdapter unitCursorAdapter_;
-	private UnitsCursorTreeAdapter unitCursorTreeAdapter_;
+	private UnitsCursorSimpleTreeAdapter unitCursorTreeAdapter_;
 	private Button backButton_;
 	private ToggleButton listToggle_;
 	private Timer filterEditorTimer_;
@@ -146,7 +146,7 @@ public class UnitPicker3 extends FragmentActivity {
 //				android.R.layout.simple_expandable_list_item_1,  
 //				new String[] { "unitName" },
 //                new int[] { android.R.id.text1 });
-		unitCursorTreeAdapter_ = new UnitsCursorTreeAdapter(this, 
+		unitCursorTreeAdapter_ = new UnitsCursorSimpleTreeAdapter(this, 
 				R.layout.category_item2,
 				new String[] { "categoryName" },
 	            new int[] { R.id.label },
