@@ -20,8 +20,8 @@ public class SettingFragment extends Fragment
 {	
 	static final BiMap<Integer, Long> MAP_EXPIRY_TIME = ImmutableBiMap.of(
 			0, 1000L, 
-			1, CurrencyUpdater.DEFAULT_CURRENCY_EXPIRY_TIME, 
-			2, 86400000L, 
+			1, 3600000L,
+			2, CurrencyUpdater.DEFAULT_CURRENCY_EXPIRY_TIME, 
 			3, 604800000L);
 		
 	private SharedPreferences preferences_;
@@ -121,7 +121,7 @@ public class SettingFragment extends Fragment
 		int expiryTimePos = MAP_EXPIRY_TIME.inverse().get(expiryTime);
 		currencyExpiryTime_.setSelection(expiryTimePos);
 		
-		boolean usdOnly = preferences_.getBoolean(CurrencyUpdater.OPTNAME_CURRENCY_USD_ONLY, true);
+		boolean usdOnly = preferences_.getBoolean(CurrencyUpdater.OPTNAME_CURRENCY_USD_ONLY, CurrencyUpdater.DEFAULT_CURRENCY_USD_ONLY);
 		currencyUsdOnly_.setSelection(usdOnly ? 0 : 1);
 		
 		Log.i("Setting", "restoreFromPreferences");

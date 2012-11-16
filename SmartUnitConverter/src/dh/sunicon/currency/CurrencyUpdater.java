@@ -26,7 +26,8 @@ public class CurrencyUpdater
 	public static final String OPTNAME_CURRENCY_LIVE_UPDATE = "CurrencyLiveUpdateOption";
 	public static final String OPTNAME_CURRENCY_EXPIRY_TIME = "CurrencyLiveUpdateExpiryTime";
 	public static final String OPTNAME_CURRENCY_USD_ONLY = "CurrencyLiveUpdateUSDOnly";
-	public static final long DEFAULT_CURRENCY_EXPIRY_TIME = 3600000L;
+	public static final long DEFAULT_CURRENCY_EXPIRY_TIME = 86400000L;
+	public static final boolean DEFAULT_CURRENCY_USD_ONLY = true;
 	
 	private final Activity context_;
 	private final SharedPreferences preferences_;
@@ -112,7 +113,7 @@ public class CurrencyUpdater
 				UpdatingAgentsManager agentsManager = new UpdatingAgentsManager(context_, this);
 				agentsManager.setBeforeUpdateStarted(beforeUpdateStarted_);
 				
-				if (preferences_.getBoolean(OPTNAME_CURRENCY_USD_ONLY, true)) {
+				if (preferences_.getBoolean(OPTNAME_CURRENCY_USD_ONLY, DEFAULT_CURRENCY_USD_ONLY)) {
 					return agentsManager.importOnBackground(Unit.USD_UNIT);
 				}
 				else {
