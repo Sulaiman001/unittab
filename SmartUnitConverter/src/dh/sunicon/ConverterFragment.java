@@ -13,6 +13,7 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
@@ -66,7 +67,6 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	private EditText targetUnitFilterEditor_;
 	private Button clearTargetUnitFilterButton_;
 	private ViewSwitcher resultListSwitcher_;
-	private Timer baseValueEditorTimer_;
 
 	private ResultListAdapter resultListAdapter_;
 	private SimpleCursorAdapter baseValueSpinnerAdapter_;
@@ -81,7 +81,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	private long categoryId_ = -1;
 	
 	private UnitHistoryManager unitHistory_;
-	//private Handler mainThread_;
+	private Handler mainThread_;
 	//private CountDownLatch spinnerLoadingLatch_;
 	
 	private boolean isActivityRunning_ = false;
@@ -91,7 +91,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	{
 		super.onCreate(savedInstanceState);
 		//setRetainInstance(true);
-		//mainThread_ = new Handler();
+		mainThread_ = new Handler();
 	}
 	
 	@Override
@@ -310,8 +310,22 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		baseValueEditor_= (EditText)this.getView().findViewById(R.id.valueEditor);
 		baseValueEditor_.addTextChangedListener(new TextWatcher()
 		{
+			private Runnable lastRunnable_;
+			
 			@Override
 			public void onTextChanged(final CharSequence s, int start, int before, int count)
+			{				
+				
+			}
+			
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after)
+			{
+			}
+			
+			@Override
+			public void afterTextChanged(final Editable s)
 			{
 				try
 				{
@@ -328,59 +342,36 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 					
 					/* events absorber technique */
 					
-					if (baseValueEditorTimer_!=null) 
-					{
-						baseValueEditorTimer_.cancel(); //cancel the old onTextChange event
+					if (lastRunnable_!=null) {
+						mainThread_.removeCallbacks(lastRunnable_);
 					}
-	
-					//the timer is dumped, we must to create a new one
-					baseValueEditorTimer_ = new Timer();
 					
-					//schedule a task which will be execute in 500ms if the timer won't canceled due 
-					//to other (possible future) onTextChanged event
-					baseValueEditorTimer_.schedule(new TimerTask()  
+					lastRunnable_ = new Runnable()
 					{
 						@Override
 						public void run()
 						{
-							if (ConverterFragment.this.getActivity() != null) //no need this if
-								ConverterFragment.this.getActivity().runOnUiThread(new Runnable()
-								{
-									@Override
-									public void run()
-									{
-										try
-										{
-											/*
-											 * do whatever onTextChanged event have to do. But it should be quick 
-											 * heavy process must be executed on other thread  
-											 */
-											setBaseValue(s);
-										}
-										catch (Exception ex)
-										{
-											Log.w(TAG, ex);
-										}
-									}
-								});
+							try
+							{
+								/*
+								 * do whatever onTextChanged event have to do. But it should be quick 
+								 * heavy process must be executed on other thread  
+								 */
+								setBaseValue(s);
+							}
+							catch (Exception ex)
+							{
+								Log.w(TAG, ex);
+							}
 						}
-					}, EVENTS_DELAY);
+					};
+					
+					mainThread_.postDelayed(lastRunnable_, EVENTS_DELAY);
 				}
 				catch (Exception ex)
 				{
 					Log.w(TAG, ex);
 				}
-			}
-			
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count,
-					int after)
-			{
-			}
-			
-			@Override
-			public void afterTextChanged(Editable s)
-			{
 			}
 		});
 	}	
@@ -395,91 +386,6 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 				new int[]{R.id.spinnerLabelItem}, 
 				0);
 		baseValueSpinner_.setAdapter(baseValueSpinnerAdapter_);
-//		baseValueSpinnerAdapter_.setFilterQueryProvider(new FilterQueryProvider()
-//		{
-//			/**
-//			 * constraint must be the unitId, this function will return the cursor of the enumValues of a unit 
-//			 */
-//			@Override
-//			public Cursor runQuery(CharSequence unitIdStr)
-//			{
-//				spinnerLoadingLatch_ = new CountDownLatch(1);
-//				try
-//				{
-//					if (TextUtils.isEmpty(unitIdStr))
-//					{
-//						return null;
-//					}
-//					
-//					Cursor cur = dbHelper_.getReadableDatabase().
-//							query("enumvalue", new String[]{"id as _id", "value as v"}, 
-//								"unitid=?", 
-//								new String[] {unitIdStr.toString()}, 
-//								null, null, "value");
-//
-//					//simulateLongOperation(3, 5);
-//					
-//					/* switch the baseValueEditor to spinner or normal editor*/
-//					if (cur.getCount()>0)
-//					{
-//						//switch to the spinner
-//						getActivity().runOnUiThread(new Runnable()
-//						{
-//							@Override
-//							public void run()
-//							{
-//								try
-//								{
-//									if (baseValueSwitcher_.getNextView() == baseValueSpinner_)
-//									{
-//										baseValueSwitcher_.showNext();
-//									}
-//								}
-//								catch (Exception ex)
-//								{
-//									Log.w(TAG, ex);
-//								}
-//							}
-//						});
-//					}
-//					else
-//					{
-//						//switch to the editor
-//						getActivity().runOnUiThread(new Runnable()
-//						{
-//							@Override
-//							public void run()
-//							{
-//								try
-//								{
-//									if (baseValueSwitcher_.getNextView() == baseValueEditor_)
-//									{
-//										baseValueSwitcher_.showNext();
-//									}
-//								}
-//								catch (Exception ex)
-//								{
-//									Log.w(TAG, ex);
-//								}
-//							}
-//						});
-//					}
-//					
-//					return cur;
-//				}
-//				catch (Exception ex)
-//				{
-//					Log.w(TAG, ex);
-//					return null;
-//				}
-//				finally
-//				{
-//					spinnerLoadingLatch_.countDown();
-//				}
-//			}
-//		});
-		
-		
 		baseValueSpinner_.setOnItemSelectedListener(new OnItemSelectedListener()
 		{
 			@Override
@@ -510,24 +416,6 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			@Override
 			public void onNothingSelected(AdapterView<?> parent)
 			{
-				try
-				{
-//					if (isEventsSuspending())
-//					{
-//						return;
-//					}
-//					
-//					if (!isActivityRunning_ || getResultListAdapter() == null)
-//					{
-//						return;
-//					}
-//					
-//					getResultListAdapter().setBaseValue(Double.NaN, (long)-1);
-				}
-				catch (Exception ex)
-				{
-					Log.w(TAG, ex);
-				}
 			}
         	
 		});
@@ -567,8 +455,21 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		targetUnitFilterEditor_ = (EditText)this.getView().findViewById(R.id.targetUnitFilterEditor);
 		targetUnitFilterEditor_.addTextChangedListener(new TextWatcher()
 		{
+			private Runnable lastRunnable_;
+			
 			@Override
-			public void onTextChanged(final CharSequence s, int start, int before, int count)
+			public void onTextChanged(CharSequence s, int start, int before, int count)
+			{
+			}
+			
+			@Override
+			public void beforeTextChanged(CharSequence s, int start, int count,
+					int after)
+			{
+			}
+			
+			@Override
+			public void afterTextChanged(final Editable s)
 			{
 				try
 				{
@@ -582,23 +483,38 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 						return;
 					}
 					
-					getResultListAdapter().getFilter().filter(s);
+					/* events absorber technique */
+					
+					if (lastRunnable_!=null) {
+						mainThread_.removeCallbacks(lastRunnable_);
+					}
+					
+					lastRunnable_ = new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							try
+							{
+								/*
+								 * do whatever onTextChanged event have to do. But it should be quick 
+								 * heavy process must be executed on other thread  
+								 */
+								getResultListAdapter().getFilter().filter(s);
+							}
+							catch (Exception ex)
+							{
+								Log.w(TAG, ex);
+							}
+						}
+					};
+					
+					mainThread_.postDelayed(lastRunnable_, EVENTS_DELAY);
 				}
 				catch (Exception ex)
 				{
 					Log.w(TAG, ex);
 				}
-			}
-			
-			@Override
-			public void beforeTextChanged(CharSequence s, int start, int count,
-					int after)
-			{
-			}
-			
-			@Override
-			public void afterTextChanged(Editable s)
-			{
 			}
 		});
 		

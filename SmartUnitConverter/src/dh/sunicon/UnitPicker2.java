@@ -92,7 +92,7 @@ public class UnitPicker2 extends Activity {
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count)
 			{
-				categoryAdapter_.getFilter().filter(s);
+				
 			}
 			
 			@Override
@@ -104,6 +104,7 @@ public class UnitPicker2 extends Activity {
 			@Override
 			public void afterTextChanged(Editable s)
 			{
+				categoryAdapter_.getFilter().filter(s);
 			}
 		});
     }
@@ -116,7 +117,6 @@ public class UnitPicker2 extends Activity {
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count)
 			{
-				unitAdapter_.getFilter().filter(s);
 			}
 			
 			@Override
@@ -128,6 +128,7 @@ public class UnitPicker2 extends Activity {
 			@Override
 			public void afterTextChanged(Editable s)
 			{
+				unitAdapter_.getFilter().filter(s);
 			}
 		});
     }

@@ -12,7 +12,6 @@ import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.widget.TextView;
-import dh.sunicon.currency.UpdatingReport;
 
 public class ErrorDialogFragment extends DialogFragment
 {

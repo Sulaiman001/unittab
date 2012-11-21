@@ -676,10 +676,6 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		 */
 		private ArrayList<RowData> fullData_;
 		
-		private final int DELAY_PERFORM_FILTERING = 500;
-		private Object lockLastConstraint_ = new Object();
-		private String lastConstraint_;
-		
 		public TargetUnitFilter() {
 			super();
 		}
@@ -723,32 +719,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				{
 					return null;
 				}
-			
-				/* delayer events technique */
-				
-				if (constraint!=null)
-				{
-					synchronized (lockLastConstraint_)
-					{
-						lastConstraint_ = new String(constraint.toString());
-					}
-				}
-				
-				Thread.sleep(DELAY_PERFORM_FILTERING);
-			
-				if (lastConstraint_!=null)
-				{
-					if (!lastConstraint_.equals(constraint))
-					{
-						/*
-						 * lastConstraint_ has been changed after 500ms 
-						 * => other performFiltering has been called
-						 * => no need to execute this one
-						 */ 
-						return null; 
-					}
-				}
-				
+		
 				/* main */
 				
 				Log.d(TAG, "Perform filtering: "+constraint);
