@@ -70,29 +70,29 @@ public class SQLiteCursorLoader extends AbstractCursorLoader {
     writer.println(Arrays.toString(args));
   }
 
-  public void insert(String table, String nullColumnHack,
+  public ContentChangingTask<Object,Void,Void> insert(String table, String nullColumnHack,
                      ContentValues values) {
-    new InsertTask(this).execute(db, table, nullColumnHack, values);
+    return (ContentChangingTask<Object, Void, Void>) new InsertTask(this).execute(db, table, nullColumnHack, values);
   }
 
-  public void update(String table, ContentValues values,
+  public ContentChangingTask<Object,Void,Void> update(String table, ContentValues values,
                      String whereClause, String[] whereArgs) {
-    new UpdateTask(this).execute(db, table, values, whereClause,
+	  return (ContentChangingTask<Object, Void, Void>) new UpdateTask(this).execute(db, table, values, whereClause,
                                  whereArgs);
   }
 
-  public void replace(String table, String nullColumnHack,
+  public ContentChangingTask<Object,Void,Void> replace(String table, String nullColumnHack,
                       ContentValues values) {
-    new ReplaceTask(this).execute(db, table, nullColumnHack, values);
+	  return (ContentChangingTask<Object, Void, Void>) new ReplaceTask(this).execute(db, table, nullColumnHack, values);
   }
 
-  public void delete(String table, String whereClause,
+  public ContentChangingTask<Object,Void,Void> delete(String table, String whereClause,
                      String[] whereArgs) {
-    new DeleteTask(this).execute(db, table, whereClause, whereArgs);
+	  return (ContentChangingTask<Object, Void, Void>) new DeleteTask(this).execute(db, table, whereClause, whereArgs);
   }
 
-  public void execSQL(String sql, Object[] bindArgs) {
-    new ExecSQLTask(this).execute(db, sql, bindArgs);
+  public ContentChangingTask<Object,Void,Void> execSQL(String sql, Object[] bindArgs) {
+	  return (ContentChangingTask<Object, Void, Void>) new ExecSQLTask(this).execute(db, sql, bindArgs);
   }
 
   private class InsertTask extends
@@ -127,7 +127,7 @@ public class SQLiteCursorLoader extends AbstractCursorLoader {
       ContentValues values=(ContentValues)params[2];
       String where=(String)params[3];
       String[] whereParams=(String[])params[4];
-
+      
       db.getWritableDatabase()
         .update(table, values, where, whereParams);
 

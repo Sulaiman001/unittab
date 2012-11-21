@@ -7,11 +7,13 @@ import java.util.concurrent.Executors;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
+import android.support.v4.content.AsyncTaskLoader;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
 import android.util.Log;
@@ -24,9 +26,11 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.Filter;
 import android.widget.Filterable;
+import android.widget.ProgressBar;
 import android.widget.TextView;
-import android.support.v4.content.AsyncTaskLoader;
+import android.widget.ViewSwitcher;
 
+import com.commonsware.cwac.loaderex.acl.ContentChangingTask;
 import com.commonsware.cwac.loaderex.acl.SQLiteCursorLoader;
 
 import dh.sunicon.datamodel.DatabaseHelper;
@@ -70,11 +74,13 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
 //	private final ExecutorService categoryLoadingThread_ = Executors.newCachedThreadPool();
 //	private final SparseArray<Category> categoriesByPosition = new SparseArray<Category>(); 
 	private final LayoutInflater inflater_;
-	private final ExecutorService updateThread = Executors.newCachedThreadPool();
-	private final Handler mainThread_ = new Handler();
+//	private final ExecutorService updateThread = Executors.newCachedThreadPool();
+//	private final Handler mainThread_ = new Handler();
 	private boolean blockAllCheckChangedEvent_ = false;
 	private Cursor categoryCursor_ = null;
 	private SparseArray<Cursor> unitsOfCategory_ = new SparseArray<Cursor>();
+	private SparseArray<ContentChangingTask<Object, Void, Void>> updateCategoryTasks = new SparseArray<ContentChangingTask<Object,Void,Void>>();
+	private SparseArray<ContentChangingTask<Object, Void, Void>> updateUnitTasks = new SparseArray<ContentChangingTask<Object,Void,Void>>();
 	
 	public UnitsCursorTreeAdapter(Fragment owner)
 	{
@@ -89,7 +95,7 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
 		if (categoryCursor_!=null) {
 			return categoryCursor_.getCount();
 		}
-		return 0;
+		return 1;
 	}
 
 	@Override
@@ -98,7 +104,7 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
 		if (c!=null) {
 			return c.getCount();
 		}
-		return 0;
+		return 1;
 	}
 
 	@Override
@@ -144,14 +150,24 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
 	public View getGroupView(int groupPosition, boolean isExpanded,
 			View convertView, ViewGroup parent) {
 		
+		if (categoryCursor_ == null) {
+			if (convertView != null && convertView instanceof ProgressBar)
+			{
+				return convertView;
+			}
+			return inflater_.inflate(R.layout.progressbar_item, parent, false);
+		}
+		
 		View v;
+		
 		SubViewsHolder tag;
-		if (convertView == null) {
+		if (convertView == null || convertView instanceof ProgressBar) {
 			v=inflater_.inflate(R.layout.category_check_item, parent, false);
 			
 			tag = new SubViewsHolder();
 			tag.label_ = (TextView) v.findViewById(R.id.label);
 			tag.check_ = (CheckBox) v.findViewById(R.id.check);
+			tag.switcher_ = (ViewSwitcher) v.findViewById(R.id.checkProgressSwitcher);
 			
 			v.setTag(tag);
 		}
@@ -160,19 +176,22 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
 			tag = (SubViewsHolder)convertView.getTag();
 		}
 		
-		if (categoryCursor_!=null) {
+		if (categoryCursor_!=null) //not need this if
+		{
 			categoryCursor_.moveToPosition(groupPosition);
 			
 			tag.label_.setText(categoryCursor_.getString(categoryCursor_.getColumnIndex("categoryName")));
 			int categoryId = categoryCursor_.getInt(0);
 			
-			if (tag.checkChangedEvent_ == null) {
+			if (tag.checkChangedEvent_ == null) 
+			{
 				tag.check_.setChecked(categoryCursor_.getInt(categoryCursor_.getColumnIndex("enabled")) == 1);
-				tag.checkChangedEvent_ = new CheckedChangeAdapter();
+				tag.checkChangedEvent_ = new CheckedChangeAdapter(tag);
 				tag.checkChangedEvent_.setId(categoryId, -1);
 				tag.check_.setOnCheckedChangeListener(tag.checkChangedEvent_);
 			}
-			else {
+			else 
+			{
 				tag.checkChangedEvent_.setEnabled(false);
 				try {
 					tag.check_.setChecked(categoryCursor_.getInt(categoryCursor_.getColumnIndex("enabled")) == 1);
@@ -181,6 +200,13 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
 					tag.checkChangedEvent_.setEnabled(true);
 				}
 				tag.checkChangedEvent_.setId(categoryId, -1);
+			}
+			
+			if (tag.updateCheckBoxInProgress()) {
+				tag.turnToProgressBar();
+			}
+			else {
+				tag.turnToCheckBox();
 			}
 			
 			if (isExpanded) {
@@ -195,15 +221,33 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
 	public View getChildView(int groupPosition, int childPosition,
 			boolean isLastChild, View convertView, ViewGroup parent) {
 		
+		Object[] ret = getCursorOfGroup(groupPosition);
+		Cursor unitCursor = null;
+		int categoryId = -1;
+		if (ret!=null)
+		{
+			unitCursor = (Cursor)ret[0];
+			categoryId = (Integer)ret[1];
+		}
+		
+		if (unitCursor == null) {
+			
+			if (convertView != null && convertView instanceof ProgressBar)
+			{
+				return convertView;
+			}
+			return inflater_.inflate(R.layout.progressbar_item, parent, false);
+		}
+		
 		View v;
 		SubViewsHolder tag;
-		if (convertView == null) {
+		if (convertView == null || convertView instanceof ProgressBar) {
 			v=inflater_.inflate(R.layout.unit_check_item, parent, false);
 			
 			tag = new SubViewsHolder();
 			tag.label_ = (TextView) v.findViewById(R.id.label);
 			tag.check_ = (CheckBox) v.findViewById(R.id.check);
-			
+			tag.switcher_ = (ViewSwitcher) v.findViewById(R.id.checkProgressSwitcher);
 			v.setTag(tag);
 		}
 		else {
@@ -211,35 +255,34 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
 			tag = (SubViewsHolder)convertView.getTag();
 		}
 		
-		Object[] ret = getCursorOfGroup(groupPosition);
-		
-		if (ret!=null)
-		{
-			Cursor unitCursor = (Cursor)ret[0];
-			int categoryId = (Integer)ret[1];
+		if (unitCursor!=null) {
+			unitCursor.moveToPosition(childPosition);
 			
-			if (unitCursor!=null) {
-				unitCursor.moveToPosition(childPosition);
-				
-				tag.label_.setText(unitCursor.getString(unitCursor.getColumnIndex("unitName")));
-				int unitId = unitCursor.getInt(0);
-				
-				if (tag.checkChangedEvent_ == null) {
+			tag.label_.setText(unitCursor.getString(unitCursor.getColumnIndex("unitName")));
+			int unitId = unitCursor.getInt(0);
+			
+			if (tag.checkChangedEvent_ == null) {
+				tag.check_.setChecked(unitCursor.getInt(unitCursor.getColumnIndex("enabled")) == 1);
+				tag.checkChangedEvent_ = new CheckedChangeAdapter(tag);
+				tag.checkChangedEvent_.setId(categoryId, unitId);
+				tag.check_.setOnCheckedChangeListener(tag.checkChangedEvent_);
+			}
+			else {
+				tag.checkChangedEvent_.setEnabled(false);
+				try {
 					tag.check_.setChecked(unitCursor.getInt(unitCursor.getColumnIndex("enabled")) == 1);
-					tag.checkChangedEvent_ = new CheckedChangeAdapter();
-					tag.checkChangedEvent_.setId(categoryId, unitId);
-					tag.check_.setOnCheckedChangeListener(tag.checkChangedEvent_);
 				}
-				else {
-					tag.checkChangedEvent_.setEnabled(false);
-					try {
-						tag.check_.setChecked(unitCursor.getInt(unitCursor.getColumnIndex("enabled")) == 1);
-					}
-					finally {
-						tag.checkChangedEvent_.setEnabled(true);
-					}
-					tag.checkChangedEvent_.setId(categoryId, unitId);
+				finally {
+					tag.checkChangedEvent_.setEnabled(true);
 				}
+				tag.checkChangedEvent_.setId(categoryId, unitId);
+			}
+			
+			if (tag.updateCheckBoxInProgress()) {
+				tag.turnToProgressBar();
+			}
+			else {
+				tag.turnToCheckBox();
 			}
 		}
 		
@@ -430,6 +473,7 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
         	}
         }
         else {
+        	Log.d(TAG, "onLoadFinished "+loaderId);
         	unitsOfCategory_.put(loaderId, cursor);
         }
 		notifyDataSetChanged();
@@ -447,11 +491,13 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
         	categoryCursor_ = null;
         }
         else {
+        	Log.d(TAG, "onLoaderReset "+loaderId);
         	unitsOfCategory_.put(loaderId, null);
         }
+        notifyDataSetChanged();
 	}
 	
-	private void invokeSetEnableCateogryOrUnit(final int categoryId, final int unitId, final boolean enabled) {
+	private ContentChangingTask<Object,Void,Void> invokeSetEnableCateogryOrUnit(final int categoryId, final int unitId, final boolean enabled) {
 		
 		//getLoader of root (categoriesCursor) or of category which contains the unitId
 		boolean forCategory = unitId<0;
@@ -461,23 +507,52 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
 		//update and notify the loader
 		ContentValues cvs = new ContentValues();
 		cvs.put("enabled", enabled);
-		loader.update(forCategory?"category":"unit", cvs, "id=?", new String[] {Integer.toString(forCategory ? categoryId : unitId)});
+		return loader.update(forCategory?"category":"unit", cvs, "id=?", new String[] {Integer.toString(forCategory ? categoryId : unitId)});
 	}
 	
 	private class SubViewsHolder {
 		TextView label_;
 		CheckBox check_;
+		ViewSwitcher switcher_ = null;
 		CheckedChangeAdapter checkChangedEvent_;
+		
+		public void turnToProgressBar() {
+			if (switcher_==null) {
+				return;
+			}
+			if (switcher_.getNextView() != check_) {
+				switcher_.showNext();
+			}
+		}
+		public void turnToCheckBox() {
+			if (switcher_==null) {
+				return;
+			}
+			if (switcher_.getNextView() == check_) {
+				switcher_.showNext();
+			}
+		}
+		public boolean updateCheckBoxInProgress() {
+			if (checkChangedEvent_!=null) {
+				return checkChangedEvent_.updateCheckBoxInProgress();
+			}
+			else {
+				return false;
+			}
+		}
 	}
 	
 	private class CheckedChangeAdapter implements CompoundButton.OnCheckedChangeListener {
-		private Runnable lastRun_ = null;
+		private final SubViewsHolder owner_;
+		
+		//private Runnable lastRun_ = null;
 		private int unitId_;
 		private int categoryId_;
 		private boolean enabled_ = true;
 
-		public CheckedChangeAdapter() {
+		public CheckedChangeAdapter(SubViewsHolder owner) {
 			super();
+			owner_ = owner;
 		}
 		
 		@Override
@@ -486,25 +561,16 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
 				if (!isEnabled() || blockAllCheckChangedEvent_) {
 					return;
 				}
-				/* delayed event technique, prevent users crazy-continous-click on checkbox */
 				
-				if (lastRun_ != null) {
-					mainThread_.removeCallbacks(lastRun_);
+				owner_.turnToProgressBar();
+				
+				ContentChangingTask<Object, Void, Void> updateTask = invokeSetEnableCateogryOrUnit(categoryId_, unitId_, isChecked);
+				if (unitId_ < 0) {
+					updateCategoryTasks.put(categoryId_, updateTask);
 				}
-				
-				lastRun_ = new Runnable() {
-						@Override
-						public void run() {
-							try {
-								invokeSetEnableCateogryOrUnit(categoryId_, unitId_, isChecked);
-							}
-							catch (Exception ex) {
-								Log.w(TAG, ex);
-							}
-						}
-					};
-				
-				mainThread_.postDelayed(lastRun_, 500);
+				else {
+					updateUnitTasks.put(unitId_, updateTask);
+				}
 			}
 			catch (Exception ex) {
 				Log.w(TAG, ex);
@@ -521,6 +587,22 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
 		{
 			categoryId_ = categoryId;
 			unitId_ = id;
+		}
+		public boolean updateCheckBoxInProgress() 
+		{
+			ContentChangingTask<Object, Void, Void> updateTask = null;
+			
+			if (unitId_ < 0) {
+				updateTask = updateCategoryTasks.get(categoryId_);
+			}
+			else {
+				updateTask = updateUnitTasks.get(unitId_);
+			}
+			
+			if (updateTask!=null) {
+				return (updateTask.getStatus() != AsyncTask.Status.FINISHED && !updateTask.isCancelled());
+			}
+			return false;
 		}
 	}
 }
