@@ -46,11 +46,11 @@ public class UpdatingAgentsManager
 		
 		Unit baseCurrency = Unit.findById(dbHelper_, currencyId);
 		
-		UpdatingAgent yahooCsvAgent = new YahooCsvAgent(context_, baseCurrency, report, asyncTask_);
-		agents_.addLast(yahooCsvAgent);
-		
 		UpdatingAgent tmcAgent = new TmcAgent(context_, baseCurrency, report, asyncTask_);
 		agents_.addLast(tmcAgent);
+		
+		UpdatingAgent yahooCsvAgent = new YahooCsvAgent(context_, baseCurrency, report, asyncTask_);
+		agents_.addLast(yahooCsvAgent);
 		
 		//if (!MyApplication.DEBUG_MODE) { //if not in debug mode i'm going easy to minimize error
 			
@@ -222,7 +222,9 @@ public class UpdatingAgentsManager
 	}
 	
 	private long getTimeToLive() {
-		return context_.getPreferences(Activity.MODE_PRIVATE).getLong(CurrencyUpdater.OPTNAME_CURRENCY_EXPIRY_TIME, 10*1000);
+		long ttl = context_.getPreferences(Activity.MODE_PRIVATE).getLong(CurrencyUpdater.OPTNAME_CURRENCY_EXPIRY_TIME, 10*1000);
+		Log.v("CURR", "Get TTL = "+ttl);
+		return ttl;
 	}
 	
 	private boolean isExpiry(long currencyUnitId) {
@@ -232,7 +234,9 @@ public class UpdatingAgentsManager
 	
 	private int getCurrencyUpdaterOption() {
 		SharedPreferences preferences_ = context_.getPreferences(Activity.MODE_PRIVATE);
-		return preferences_.getInt(CurrencyUpdater.OPTNAME_CURRENCY_LIVE_UPDATE, CurrencyUpdater.OPT_ALL_NETWORK);
+		int o = preferences_.getInt(CurrencyUpdater.OPTNAME_CURRENCY_LIVE_UPDATE, CurrencyUpdater.OPT_ALL_NETWORK);
+		Log.v("CURR", "Get Currency Updater Option = "+o);
+		return o;
 	}
 
 	public boolean isDumped()

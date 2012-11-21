@@ -31,16 +31,16 @@
 
         <ViewSwitcher
             android:id="@+id/baseValueSwitcher"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_marginRight="5dp" >
+            android:layout_marginRight="5dp"
+            android:layout_weight="0.45" >
 
             <EditText
                 android:id="@+id/valueEditor"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_margin="0dp"
-                android:ellipsize="start"
                 android:hint="value"
                 android:imeOptions="actionDone"
                 android:inputType="numberDecimal"
@@ -59,11 +59,11 @@
 
         <Button
             android:id="@+id/baseUnitPickerButton"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="match_parent"
+            android:layout_weight="0.45"
             android:background="@drawable/edittext_active"
             android:hint="choose an unit"
-            android:maxLength="24"
             android:padding="0dp"
             android:singleLine="true"
             android:textAppearance="?android:attr/textAppearanceSmall"
@@ -85,19 +85,21 @@
     <TableRow
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp" >
+        android:layout_marginBottom="5dp"
+        android:layout_marginTop="5dp" >
 
         <TextView
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginRight="5dp"
+            android:layout_weight="0.45"
             android:text="Convert to" />
 
         <EditText
             android:id="@+id/targetUnitFilterEditor"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="0.45"
             android:enabled="false"
             android:imeOptions="actionDone"
             android:inputType="textNoSuggestions|textFilter"
@@ -141,7 +143,7 @@
     <ViewSwitcher
         android:id="@+id/resultListSwitcher"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent" >
 
         <ListView
             android:id="@android:id/list"

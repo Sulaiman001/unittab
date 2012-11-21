@@ -1,12 +1,9 @@
 package dh.sunicon.datamodel;
 
-import java.security.InvalidParameterException;
 import java.util.HashMap;
 
-import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.text.TextUtils;
 import android.util.Log;
 
 public class Unit extends BaseEntity

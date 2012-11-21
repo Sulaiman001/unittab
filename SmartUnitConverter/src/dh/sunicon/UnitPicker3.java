@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.v4.app.FragmentActivity;
 import android.text.Editable;
 import android.text.TextUtils;
@@ -43,15 +44,17 @@ public class UnitPicker3 extends FragmentActivity {
 	private UnitsCursorSimpleTreeAdapter unitCursorTreeAdapter_;
 	private Button backButton_;
 	private ToggleButton listToggle_;
-	private Timer filterEditorTimer_;
+	private Handler mainThread_;
 	private DatabaseHelper dbHelper_;
 	
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.i(TAG, "onCreate UnitPicker3");
         setContentView(R.layout.unit_picker3);
         dbHelper_ = new DatabaseHelper(this);
         listSwitcher_ = (ViewSwitcher) findViewById(R.id.listSwitcher);
+        mainThread_ = new Handler();
         
         initFilterEdit();
         initBackButton();
@@ -211,6 +214,8 @@ public class UnitPicker3 extends FragmentActivity {
 		filterEdit_ = (EditText) findViewById(R.id.filterEdit);
         filterEdit_.addTextChangedListener(new TextWatcher() {
 			
+        	private Runnable lastRunnable_ = null;
+        	
 			@Override
 			public void onTextChanged(CharSequence s, int start, int before, int count) {
 				
@@ -222,53 +227,33 @@ public class UnitPicker3 extends FragmentActivity {
 			}
 			
 			@Override
-			public void afterTextChanged(Editable s) {
+			public void afterTextChanged(final Editable s) {
 				
 				try
 				{
 					listSwitcher_.setVisibility(View.GONE);
 					
-					/* events absorber technique */
-					
-					if (filterEditorTimer_!=null) 
-					{
-						filterEditorTimer_.cancel(); //cancel the old onTextChange event
+					if (lastRunnable_ != null) {
+						mainThread_.removeCallbacks(lastRunnable_);
 					}
-	
-					//the timer is dumped, we must to create a new one
-					filterEditorTimer_ = new Timer();
 					
-					//schedule a task which will be execute in 500ms if the timer won't canceled due 
-					//to other (possible future) onTextChanged event
-					
-					final CharSequence constraint = s;
-					filterEditorTimer_.schedule(new TimerTask()  
-					{
+					lastRunnable_ = new Runnable() {
 						@Override
-						public void run()
-						{
-							runOnUiThread(new Runnable()
+						public void run() {
+							try
 							{
-								@Override
-								public void run()
-								{
-									try
-									{
-										/*
-										 * do whatever onTextChanged event have to do. But it should be quick 
-										 * heavy process must be executed on other thread  
-										 */
-										switchList(listToggle_.isChecked(), constraint);
-										listSwitcher_.setVisibility(View.VISIBLE);
-									}
-									catch (Exception ex)
-									{
-										Log.w(TAG, ex);
-									}
-								}
-							});
+								switchList(listToggle_.isChecked(), s);
+								listSwitcher_.setVisibility(View.VISIBLE);
+							}
+							catch (Exception ex)
+							{
+								Log.w(TAG, ex);
+							}
 						}
-					}, 500);
+					};
+					
+					mainThread_.postDelayed(lastRunnable_, 500);
+					
 				}
 				catch (Exception ex)
 				{

@@ -212,13 +212,25 @@ public class SQLiteAssetHelper extends SQLiteOpenHelper {
 			mIsInitializing = false;
 			if (success) {
 				if (mDatabase != null) {
-					try { mDatabase.close(); } catch (Exception e) { }
+					try { 
+						mDatabase.close(); 
+					} 
+					catch (Exception e) { 
+						Log.w(TAG, e); 
+					}
 					//mDatabase.unlock();
 				}
 				mDatabase = db;
 			} else {
 				//if (mDatabase != null) mDatabase.unlock();
-				if (db != null) db.close();
+				if (db != null) {
+					try {
+						db.close();
+					}
+					catch (Exception e) { 
+						Log.w(TAG, e); 
+					}
+				}
 			}
 		}
 
@@ -276,7 +288,14 @@ public class SQLiteAssetHelper extends SQLiteOpenHelper {
 			return mDatabase;
 		} finally {
 			mIsInitializing = false;
-			if (db != null && db != mDatabase) db.close();
+			if (db != null && db != mDatabase) {
+				try {
+					db.close();
+				}
+				catch (Exception ex) {
+					Log.w(TAG, ex);
+				}
+			}
 		}
 	}
 
@@ -291,6 +310,7 @@ public class SQLiteAssetHelper extends SQLiteOpenHelper {
 			mDatabase.close();
 			mDatabase = null;
 		}
+		super.close();
 	}
 
 	@Override

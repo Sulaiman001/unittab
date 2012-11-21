@@ -75,14 +75,14 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 	public View newView(Context context, Cursor cursor, ViewGroup parent)
 	{
 		//get the LinearLayout from the unit_dropdown_item
-		View unitDropDownItemView = inflater_.inflate(R.layout.unit_category_item, parent, false);
+		View v = inflater_.inflate(R.layout.unit_category_item, parent, false);
 		
 		//save children views in the tag to avoid call findViewById
-		TextView categoryLabel = (TextView) unitDropDownItemView.findViewById(R.id.categoryLabel);
-		TextView unitLabel = (TextView) unitDropDownItemView.findViewById(R.id.unitLabel);
-		unitDropDownItemView.setTag(new SuggestionData(categoryLabel, unitLabel));
+		TextView categoryLabel = (TextView) v.findViewById(R.id.categoryLabel);
+		TextView unitLabel = (TextView) v.findViewById(R.id.unitLabel);
+		v.setTag(new SuggestionData(categoryLabel, unitLabel));
 		
-		return unitDropDownItemView;
+		return v;
 	}
 
 	@Override

@@ -1,10 +1,7 @@
 package dh.sunicon.datamodel;
 
-import java.text.NumberFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.Locale;
 
 import android.content.Context;
 

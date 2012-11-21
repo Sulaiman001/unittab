@@ -1,10 +1,10 @@
 package dh.sunicon.runnable;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
+import java.util.Locale;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeoutException;
 
 import org.json.JSONException;
@@ -32,18 +32,24 @@ public final class RowData implements Runnable
 	 */
 	private final ResultListAdapter resultListAdapter_;
 	private final long categoryId_;
-	private volatile long baseUnitId_;
+	
 	private final long targetUnitId_;
 	private final String targetUnitName_;
 	private final String targetUnitShortName_;
 	private final String keyword_;
 	
 	/* change on baseValue_ and targetValue_ must be synchronized */
-	private volatile Double baseValue_ = Double.NaN;
+	private volatile long baseUnitId_;
+	private volatile double baseValue_ = Double.NaN;
+	private volatile long baseValueEnumId_ = -1L;
+	
+	private Long lastBaseUnitId_ = null;
+	private Double lastBaseValue_ = null;
+	private Long lastBaseValueEnumId_ = null;
+
 	private double targetValue_ = Double.NaN;
 	private String targetValueHtml_ = "-";
 	private EnumValue targetEnumValue_ = null; 
-	private volatile Long baseValueEnumId_ = (long)-1;
 	
 	private volatile boolean cancelCalculation_ = false;
 	
@@ -57,7 +63,7 @@ public final class RowData implements Runnable
 		targetUnitId_ = targetUnitId;
 		targetUnitName_ = targetUnitName;
 		targetUnitShortName_ = targetUnitShortName;
-		keyword_ = String.format("%s %s", targetUnitShortName_, targetUnitName_).toLowerCase();
+		keyword_ = String.format("%s %s", targetUnitShortName_, targetUnitName_).toLowerCase(Locale.US);
 	}
 	
 	public RowData(ResultListAdapter resultListAdapter, 
@@ -114,7 +120,7 @@ public final class RowData implements Runnable
 		json.put("targetUnitName", targetUnitName_);
 		json.put("targetUnitShortName", targetUnitShortName_);
 		
-		if (baseValue_!=null && !baseValue_.isNaN()) {	
+		if (!Double.isNaN(baseValue_)) {	
 			json.put("baseValue", baseValue_); //can be null
 		}
 		if (!Double.isNaN(targetValue_)) {
@@ -226,30 +232,44 @@ public final class RowData implements Runnable
 	 * @param baseValue
 	 * @throws IllegalAccessException 
 	 */
-	public void setBase(double baseValue, long enumId, long baseUnitId) throws IllegalAccessException
+	public void setBase(double baseValue, long enumId, long baseUnitId, boolean forceClearTarget) throws IllegalAccessException
 	{
 		if (Looper.getMainLooper().getThread() != Thread.currentThread()) {
 			throw new IllegalAccessException("Must be call on GUI thread");
 		}
+
+		if (forceClearTarget) {
+			baseUnitId_ = baseUnitId;
+			baseValue_ = baseValue;
+			baseValueEnumId_ = enumId;
 		
-		if (baseUnitId == baseUnitId_ 
-				&& (baseValue_!=null && baseValue_.equals(baseValue) && !Double.isNaN(targetValue_))
-				&& (baseValueEnumId_>0 && baseValueEnumId_ == enumId && targetEnumValue_ != null))
-		{
-			//no need to invoke calculation, the current targetValue_  and targetEnumValue_ is just right
-			return;
+			targetValue_ = Double.NaN;
+			targetValueHtml_ = "-";
+			targetEnumValue_ = null;
 		}
-		
-		baseUnitId_ = baseUnitId;
-		
-		baseValue_ = baseValue;
-		targetValue_ = Double.NaN;
-		
-		targetValueHtml_ = "-";
-		baseValueEnumId_ = enumId;
-		targetEnumValue_ = null;
-	}	
-	
+		else {
+			if (baseUnitId_!=baseUnitId) {
+				baseUnitId_ = baseUnitId;
+				
+				//clean all target
+				targetValue_ = Double.NaN;
+				targetValueHtml_ = "-";
+				targetEnumValue_ = null;
+			}
+			
+			if (baseValue_ != baseValue) {
+				baseValue_ = baseValue;
+				targetValue_ = Double.NaN;
+				targetValueHtml_ = "-";
+			}
+			
+			if (baseValueEnumId_ != enumId) {
+				baseValueEnumId_ = enumId;
+				targetEnumValue_ = null;
+			}
+		}
+	}
+
 	/**
 	 * Add more security layer to make sure that the calculation will stop, it shoud be called before we dump this RowData
 	 * Warning: Once this methode is called, this object row data cannot be re-used to perform calculation
@@ -267,7 +287,7 @@ public final class RowData implements Runnable
 	 * Compute the value
 	 */
 	@Override
-	public void run()
+	public synchronized void run()
 	{
 		try
 		{
@@ -275,70 +295,24 @@ public final class RowData implements Runnable
 				return;
 			}
 			
-			if (baseValue_ != null && !baseValue_.isNaN()) //normal case: km/h..
+			if (Double.isNaN(targetValue_) 
+					|| (lastBaseValue_!=null && !lastBaseValue_.equals(baseValue_)) 
+					|| (lastBaseUnitId_!=null && !lastBaseUnitId_.equals(baseUnitId_)))
 			{
-				//long startTime = DatabaseHelper.getNow();
-				
-				/* copy the current baseValue_ to original Value */
-				double originalValue;
-	
-				synchronized (baseValue_)
-				{
-					originalValue = baseValue_;
-				}
-				
-				double resu;
-				
-				/* start the calculation process */
-				
-				if (baseUnitId_ == targetUnitId_)
-				{
-					resu = originalValue;
-				}
-				else if (Double.isNaN(originalValue))
-				{
-					resu = Double.NaN;
-				}
-				else
-				{
-					resu = computeTargetValue(originalValue, baseUnitId_, targetUnitId_);
-					//MainActivity.simulateLongOperation(1, 4);
-				}
-				
-				synchronized (baseValue_)
-				{
-					if (baseValue_.equals(originalValue)) //baseValue_ has not been changed during the calculation process
-					{
-						targetValue_ = resu;
-						targetValueHtml_ = formatDouble(targetValue_);
-						//invokeRefreshGui();
-					}
-					//else, a newer setBaseValue() was called, we must ignore the resu 
-				}
-				
-				//Log.v(TAG, String.format("Finish convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d %d ms)", baseValueEnumId_, baseUnitId_, targetUnitId_, (DatabaseHelper.getNow()-startTime)));
+				targetValue_ = computeTargetValue(baseValue_, baseUnitId_, targetUnitId_);				
+				targetValueHtml_ = formatDouble(targetValue_);
+				lastBaseValue_ = baseValue_;
 			}
-			//else //enum unit: clothing size..
-			if (baseValueEnumId_ >= 0)
+			
+			if (targetEnumValue_ == null 
+					|| (lastBaseValueEnumId_!=null && !lastBaseValueEnumId_.equals(baseValueEnumId_)) 
+					|| (lastBaseUnitId_!=null && !lastBaseUnitId_.equals(baseUnitId_)))
 			{
-				long originalValueEnumId;
-				
-				synchronized (baseValueEnumId_)
-				{
-					originalValueEnumId = baseValueEnumId_;
-				}
-
-				EnumValue resu = computeTargetValue(originalValueEnumId, baseUnitId_, targetUnitId_);
-				
-				synchronized (baseValueEnumId_)
-				{
-					if (baseValueEnumId_.equals(originalValueEnumId)) //baseValue_ has not been changed during the calculation process
-					{
-						targetEnumValue_ = resu;
-					}
-					//else, a newer setBaseValueEnum() was called, we must ignore the resu 
-				}
+				targetEnumValue_ = computeTargetValue(baseValueEnumId_, baseUnitId_, targetUnitId_);
+				lastBaseValueEnumId_ = baseValueEnumId_;
 			}
+			
+			lastBaseUnitId_ = baseUnitId_;
 		}
 		catch (Exception ex)
 		{
@@ -360,13 +334,19 @@ public final class RowData implements Runnable
 		
 		HashMap<Long, EnumValue> enumValues = resultListAdapter_.getEnumValues();
 		
+		if (enumValues == null || enumValues.isEmpty()) {
+			return null;
+		}
+		
 		if (baseUnitId == targetUnitId) {
 			return enumValues.get(baseValueEnumId);
 		}
 		
+		//Log.v(TAG, String.format("convert %d to %s", baseValueEnumId, targetUnitName_));
+		
 		ArrayList<Corresponding> correspondings = resultListAdapter_.getCorrespondings();
 		
-		if (correspondings == null || enumValues == null)
+		if (correspondings == null || correspondings.isEmpty())
 		{
 			//Log.v(TAG, String.format("Cancel convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d. Because correspondings or enumValues tables is null", baseValueEnumId, baseUnitId, targetUnitId));
 			return null;
@@ -376,7 +356,7 @@ public final class RowData implements Runnable
 		
 		/* use BFS to find path from baseValueEnumId to one of enumValue of the targetUnitId on the correspondings graph */
 		
-		LinkedList<Long> visitedEnumValueQueue = new LinkedList<Long>();
+		ArrayDeque<Long> visitedEnumValueQueue = new ArrayDeque<Long>(correspondingsCount);
 		ArrayList<Long> visitedEnumValue = new ArrayList<Long>();
 		visitedEnumValueQueue.offer(baseValueEnumId);
 		
@@ -442,6 +422,8 @@ public final class RowData implements Runnable
 			return baseValue;
 		}
 		
+		//Log.v(TAG, String.format("convert %f to %s", baseValue, targetUnitName_));
+		
 		ArrayList<Conversion> conversions = this.resultListAdapter_.getConversions();
 		
 		if (conversions == null)
@@ -466,10 +448,13 @@ public final class RowData implements Runnable
 			}
 		}
 		
+		//long s0 = DatabaseHelper.getNow();
+		
 		/* use BFS to find the shortest path from the baseUnitId to the targetUnitId on the Converions graph */
 		
-		LinkedList<Long> visitedUnitQueue = new LinkedList<Long>();
+		ArrayDeque<Long> visitedUnitQueue = new ArrayDeque<Long>();
 		HashMap<Long, Conversion> previous = new HashMap<Long, Conversion>();
+		
 		ArrayList<Long> visitedUnit = new ArrayList<Long>();  
 		boolean pathFound = false; //turn to true if we can build a path from baseUnitId to targetUnitId
 		
@@ -477,10 +462,17 @@ public final class RowData implements Runnable
 		visitedUnitQueue.offer(baseUnitId);
 		previous.put(baseUnitId, null);
 		
+//		long maxOp = 0;
+		
 		while (!visitedUnitQueue.isEmpty() && !isDumped() && baseUnitId == baseUnitId_)
 		{
+			//long s4 = DatabaseHelper.getNow();
+			
 			long visitingUnit = visitedUnitQueue.poll();
 			visitedUnit.add(visitingUnit);
+			
+//			long elapsed1 = DatabaseHelper.getNow() - s4;
+//			if (maxOp<elapsed1) maxOp = elapsed1;
 			
 			if (visitingUnit == targetUnitId)
 			{
@@ -498,13 +490,20 @@ public final class RowData implements Runnable
 					//check if it is not visited yet
 					if (!visitedUnitQueue.contains(neighborUnit) && !visitedUnit.contains(neighborUnit))
 					{
+						//long s5 = DatabaseHelper.getNow();
+						
 						//neighborUnit is not visited => add it to the queue
 						visitedUnitQueue.offer(neighborUnit);
 						previous.put(neighborUnit, conv);
+						
+//						long elapsed2 = DatabaseHelper.getNow() - s5;
+//						if (maxOp<elapsed2) maxOp = elapsed2;
 					}
 				}
 			}
 		}
+		
+		//long s1 = DatabaseHelper.getNow();
 		
 		/* play back (using previous list) to build the path and compute the value */
 		
@@ -513,7 +512,7 @@ public final class RowData implements Runnable
 			return Double.NaN;
 		}
 		
-		LinkedList<Conversion> path = new LinkedList<Conversion>();
+		ArrayDeque<Conversion> path = new ArrayDeque<Conversion>();
 		long uid = targetUnitId;
 		Conversion conv;
 		
@@ -540,6 +539,13 @@ public final class RowData implements Runnable
 			return Double.NaN;
 		}
 		
+//		long s2 = DatabaseHelper.getNow();
+		
+//		long elapsed = s2-s0;
+//		if (elapsed > 100) {
+//			Log.i(TAG, String.format("Finish convert to targetUnitId=%d (%d + %d = %d ms) maxOp=%d",  targetUnitId_, s1-s0, s2-s1, elapsed, maxOp));
+//		}
+		
 		return returned;
 	}
 	
@@ -554,20 +560,18 @@ public final class RowData implements Runnable
 		{
 			return "-";
 		}
-		String s = String.format("%.12g", d);
+		String s = String.format(Locale.US, "%.12g", d);
 		StringBuilder resu = new StringBuilder("<b>");
 		
 		int firstPoint = s.indexOf('.');
 		int firstComma = s.indexOf(',');
 		int p1 = Math.max(firstPoint, firstComma);
 		
-		if (p1>0)
-		{
+		if (p1>0) {
 			resu.append(s.substring(0, p1));
 			resu.append("</b>");
 		}
-		else
-		{
+		else {
 			p1 = 0;
 		}
 		

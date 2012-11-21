@@ -31,11 +31,11 @@
 
             <Button
                 android:id="@+id/baseUnitPickerButton"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="match_parent"
+                android:layout_weight="0.9"
                 android:background="@drawable/edittext_active"
                 android:hint="choose an unit"
-                android:maxLength="24"
                 android:padding="10dp"
                 android:singleLine="true"
                 android:textAppearance="?android:attr/textAppearanceSmall"
@@ -63,14 +63,14 @@
             <EditText
                 android:id="@+id/valueEditor"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_margin="0dp"
                 android:ellipsize="start"
                 android:hint="value"
                 android:imeOptions="actionDone"
                 android:inputType="numberDecimal"
                 android:maxLength="16"
-                android:padding="5dp" />
+                android:padding="8dp" />
 
             <Spinner
                 android:id="@+id/valueSpinner"
@@ -96,8 +96,9 @@
 
             <EditText
                 android:id="@+id/targetUnitFilterEditor"
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
+                android:layout_weight="0.9"
                 android:enabled="false"
                 android:imeOptions="actionDone"
                 android:inputType="textNoSuggestions|textFilter"

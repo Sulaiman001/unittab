@@ -229,6 +229,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 				updateCurrencyNotificationBar();
 			}
 			
+			resultListAdapter_.invokeCalculation(false);
+			
 			Log.i(TAG + "-SR", "Restore Spinner selection "+savedState.getInt("baseValueSpinnerItemPosition"));
 		}
 		catch (Exception ex)
@@ -497,7 +499,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 					
 					//Log.d(TAG, "spinner changes position = "+position);
 					if (id>0)
-						getResultListAdapter().setBaseValue(Double.NaN, id);
+						getResultListAdapter().setBaseValue(null, id);
 				}
 				catch (Exception ex)
 				{
@@ -679,7 +681,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 					updateCurrencyNotificationBar();
 					
 					if (report!=null) {
-						Log.v("CURR", report.getContentMessage());
+						//Log.v("CURR", report.getContentMessage());
 						
 						//re-calculate resultList after updating currency rate. Warning, donnot process update again
 						if (report.isDatabaseChanged())
@@ -754,7 +756,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			return;
 		}
 	
-		Log.i("CURR", "updateCurrencyNotificationBar");
+		Log.v("CURR", "updateCurrencyNotificationBar");
 		
 		MessageType type = report.getType();
 		
@@ -847,6 +849,9 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		try
 		{
 			AdapterContextMenuInfo info = (AdapterContextMenuInfo) item.getMenuInfo();
+			if (info == null) {
+				return false;
+			}
 			RowData rowData = (RowData)getListAdapter().getItem(info.position);
 		    switch (item.getItemId()) 
 		    {
@@ -960,12 +965,12 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	{
 		if (TextUtils.isEmpty(s))
 		{
-			getResultListAdapter().setBaseValue(Double.NaN, -1);
+			getResultListAdapter().setBaseValue(Double.NaN, null);
 		}
 		else
 		{
 			double baseValue = Double.parseDouble(s.toString()); //use default culture local to parse
-			getResultListAdapter().setBaseValue(baseValue, -1);
+			getResultListAdapter().setBaseValue(baseValue, null);
 			
 			if (currencyUpdater_!=null && categoryId_ == Category.CURRENCY_CATEGORY) { //prudent) {
 				//currencyUpdaterProcessDelayed();
@@ -1000,30 +1005,56 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		eventsSuspendingLevel_--;
 	}
 	
-	public void setComputationStateFinished(boolean finished)
-	{
-		if (resultListSwitcher_!=null)
-		{
-			if (finished)
-			{
-				//Log.v(TAG, "switch to result list");
-				if (resultListSwitcher_.getNextView() == getListView())
-				{
-					resultListSwitcher_.showNext();
-				}
-			}
-			else
-			{
-				//Log.v(TAG, "switch to progress bar");
-				if (resultListSwitcher_.getNextView() != getListView())
-				{
-					resultListSwitcher_.showNext();
-				}
-			}
-			//getListView().setVisibility(visible ? View.VISIBLE : View.GONE);
+	private Timer setComputationStateTimer_;
+	public void setComputationStateFinished(final boolean finished) {
+		
+		/* events absorber technique */
+
+		if (setComputationStateTimer_ != null) {
+			setComputationStateTimer_.cancel(); // cancel the old onTextChange
+												// event
 		}
+
+		// the timer is dumped, we must to create a new one
+		setComputationStateTimer_ = new Timer();
+
+		// schedule a task which will be execute in 500ms if the timer won't
+		// canceled due to other (possible future) onTextChanged event
+		setComputationStateTimer_.schedule(new TimerTask() {
+			@Override
+			public void run() {
+				if (ConverterFragment.this.getActivity() != null) 
+					ConverterFragment.this.getActivity().runOnUiThread(
+							new Runnable() {
+								@Override
+								public void run() {
+									try {
+										if (!isActivityRunning_) {
+											return;
+										}
+										if (resultListSwitcher_ != null) {
+											if (finished) {
+												// Log.v(TAG, "switch to result list");
+												if (resultListSwitcher_.getNextView() == getListView()) {
+													resultListSwitcher_.showNext();
+												}
+											} else {
+												// Log.v(TAG, "switch to progress bar");
+												if (resultListSwitcher_.getNextView() != getListView()) {
+													resultListSwitcher_.showNext();
+												}
+											}
+											// getListView().setVisibility(visible ? View.VISIBLE : View.GONE);
+										}
+									} catch (Exception ex) {
+										Log.w(TAG, ex);
+									}
+								}
+							});
+			}
+		}, EVENTS_DELAY);
 	}
-	
+
 	public ResultListAdapter getResultListAdapter()
 	{
 		return resultListAdapter_;

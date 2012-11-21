@@ -98,19 +98,19 @@ public class SettingFragment extends Fragment
 		
 		int liveUpdateOption = currencyLiveUpdateOption_.getSelectedItemPosition();
 		editor.putInt(CurrencyUpdater.OPTNAME_CURRENCY_LIVE_UPDATE, liveUpdateOption);
-		Log.i("Setting", "Saved setting "+CurrencyUpdater.OPTNAME_CURRENCY_LIVE_UPDATE+" "+Integer.toString(liveUpdateOption));
+		Log.v("Setting", "Saved setting "+CurrencyUpdater.OPTNAME_CURRENCY_LIVE_UPDATE+" "+Integer.toString(liveUpdateOption));
 		
 		long expiryTime = MAP_EXPIRY_TIME.get(currencyExpiryTime_.getSelectedItemPosition());
 		editor.putLong(CurrencyUpdater.OPTNAME_CURRENCY_EXPIRY_TIME, expiryTime);
-		Log.i("Setting", "Saved setting "+CurrencyUpdater.OPTNAME_CURRENCY_EXPIRY_TIME+" "+Long.toString(expiryTime));
+		Log.v("Setting", "Saved setting "+CurrencyUpdater.OPTNAME_CURRENCY_EXPIRY_TIME+" "+Long.toString(expiryTime));
 		
 		boolean usdOnly = currencyUsdOnly_.getSelectedItemPosition() == 0 ? true : false;
 		editor.putBoolean(CurrencyUpdater.OPTNAME_CURRENCY_USD_ONLY, usdOnly);
-		Log.i("Setting", "Saved setting "+CurrencyUpdater.OPTNAME_CURRENCY_USD_ONLY+" "+Boolean.toString(usdOnly));
+		Log.v("Setting", "Saved setting "+CurrencyUpdater.OPTNAME_CURRENCY_USD_ONLY+" "+Boolean.toString(usdOnly));
 		
 		editor.commit();
 		
-		Log.i("Setting", "Saved settings Done");
+		Log.v("Setting", "Saved settings Done");
 	}
 	
 	private void restoreFromPreferences() 
@@ -124,7 +124,7 @@ public class SettingFragment extends Fragment
 		boolean usdOnly = preferences_.getBoolean(CurrencyUpdater.OPTNAME_CURRENCY_USD_ONLY, CurrencyUpdater.DEFAULT_CURRENCY_USD_ONLY);
 		currencyUsdOnly_.setSelection(usdOnly ? 0 : 1);
 		
-		Log.i("Setting", "restoreFromPreferences");
+		Log.v("Setting", "restoreFromPreferences");
 	}
 	
 }
