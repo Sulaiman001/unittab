@@ -63,7 +63,7 @@ public class UpdatingAgentsManager
 
 	public UpdatingReport importOnBackground(final long currencyUnitId)
 	{
-		if (isDumped()) {
+		if (isCancelled()) {
 			return null;
 		}
 		
@@ -122,7 +122,7 @@ public class UpdatingAgentsManager
 			buildUpdateCache(report);
 			processUpdateCache(report);
 			
-			if (isDumped()) {
+			if (isCancelled()) {
 				report.add(report.new ReportEntry(MessageType.WARNING, "Update cancelled by User.")); //TODO multi-language
 			}
 			else if (report.isSuccessAll()) {
@@ -144,7 +144,7 @@ public class UpdatingAgentsManager
 	
 	private void buildUpdateCache(UpdatingReport report) {
 		for (UpdatingAgent agent : agents_) {
-			if (isDumped()) {
+			if (isCancelled()) {
 				return;
 			}
 			agent.buildCache();
@@ -158,7 +158,7 @@ public class UpdatingAgentsManager
 		try
 		{
 			for (UpdateItem i : report.getCacheUpdates().values()) {
-				if (isDumped()) {
+				if (isCancelled()) {
 					break;
 				}
 				if (i.getOperation() == OperationType.UPDATE) {
@@ -239,7 +239,7 @@ public class UpdatingAgentsManager
 		return o;
 	}
 
-	public boolean isDumped()
+	public boolean isCancelled()
 	{
 		return asyncTask_ == null || asyncTask_.isCancelled();
 	}

@@ -14,10 +14,11 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 import dh.sunicon.ResultListAdapter;
+import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.Conversion;
 import dh.sunicon.datamodel.Corresponding;
-import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.datamodel.EnumValue;
+import dh.sunicon.datamodel.Unit;
 
 /**
  * data of a Row in the result list, it is only used by ResultListAdapter
@@ -274,12 +275,12 @@ public final class RowData implements Runnable
 	 * Add more security layer to make sure that the calculation will stop, it shoud be called before we dump this RowData
 	 * Warning: Once this methode is called, this object row data cannot be re-used to perform calculation
 	 */
-	public void dumpIt()
+	public void kill()
 	{
 		cancelCalculation_ = true;
 	}
 	
-	public boolean isDumped() {
+	public boolean isKilled() {
 		return cancelCalculation_ || Thread.currentThread().isInterrupted();
 	}
 	
@@ -291,7 +292,7 @@ public final class RowData implements Runnable
 	{
 		try
 		{
-			if (isDumped()) {
+			if (isKilled()) {
 				return;
 			}
 			
@@ -299,7 +300,7 @@ public final class RowData implements Runnable
 					|| (lastBaseValue_!=null && !lastBaseValue_.equals(baseValue_)) 
 					|| (lastBaseUnitId_!=null && !lastBaseUnitId_.equals(baseUnitId_)))
 			{
-				targetValue_ = computeTargetValue(baseValue_, baseUnitId_, targetUnitId_);				
+				targetValue_ = computeTargetValue(baseValue_);				
 				targetValueHtml_ = formatDouble(targetValue_);
 				lastBaseValue_ = baseValue_;
 			}
@@ -308,7 +309,7 @@ public final class RowData implements Runnable
 					|| (lastBaseValueEnumId_!=null && !lastBaseValueEnumId_.equals(baseValueEnumId_)) 
 					|| (lastBaseUnitId_!=null && !lastBaseUnitId_.equals(baseUnitId_)))
 			{
-				targetEnumValue_ = computeTargetValue(baseValueEnumId_, baseUnitId_, targetUnitId_);
+				targetEnumValue_ = computeTargetValue(baseValueEnumId_);
 				lastBaseValueEnumId_ = baseValueEnumId_;
 			}
 			
@@ -325,9 +326,9 @@ public final class RowData implements Runnable
 	 * @throws TimeoutException 
 	 * @throws ExecutionException 
 	 */
-	EnumValue computeTargetValue(long baseValueEnumId, long baseUnitId, long targetUnitId) throws IllegalAccessException, InterruptedException, ExecutionException, TimeoutException
+	EnumValue computeTargetValue(long baseValueEnumId) throws IllegalAccessException, InterruptedException, ExecutionException, TimeoutException
 	{
-		if (isDumped() || baseValueEnumId == -1)
+		if (isKilled() || baseValueEnumId == -1)
 		{
 			return null;
 		}
@@ -338,7 +339,7 @@ public final class RowData implements Runnable
 			return null;
 		}
 		
-		if (baseUnitId == targetUnitId) {
+		if (baseUnitId_ == targetUnitId_) {
 			return enumValues.get(baseValueEnumId);
 		}
 		
@@ -360,7 +361,7 @@ public final class RowData implements Runnable
 		ArrayList<Long> visitedEnumValue = new ArrayList<Long>();
 		visitedEnumValueQueue.offer(baseValueEnumId);
 		
-		while (!visitedEnumValueQueue.isEmpty() && !isDumped() && baseUnitId == baseUnitId_)
+		while (!visitedEnumValueQueue.isEmpty() && !isKilled())
 		{
 			long visitingEnumValue = visitedEnumValueQueue.poll();
 			visitedEnumValue.add(visitingEnumValue);
@@ -368,7 +369,7 @@ public final class RowData implements Runnable
 			// check if the target unit is reached
 			
 			EnumValue visitingEnumValueObj = enumValues.get(visitingEnumValue);
-			if (visitingEnumValueObj != null && visitingEnumValueObj.getUnitId() == targetUnitId)
+			if (visitingEnumValueObj != null && visitingEnumValueObj.getUnitId() == targetUnitId_)
 			{
 				//Log.v(TAG, String.format("Convert baseValueEnumId=%d from baseUnitId=%d to targetUnitId=%d, found enumId = %d", baseValueEnumId, baseUnitId, targetUnitId, visitingEnumValueObj.getId()));
 				return visitingEnumValueObj;
@@ -411,14 +412,14 @@ public final class RowData implements Runnable
 	 * @throws TimeoutException 
 	 * @throws ExecutionException 
 	 */
-	double computeTargetValue(double baseValue, long baseUnitId, long targetUnitId) throws IllegalAccessException, InterruptedException, ExecutionException, TimeoutException
+	double computeTargetValue(double baseValue) throws InterruptedException, ExecutionException, TimeoutException, IllegalAccessException
 	{
-		if (isDumped() || Double.isNaN(baseValue))
+		if (isKilled() || Double.isNaN(baseValue))
 		{
 			return Double.NaN;
 		}		
 		
-		if (baseUnitId == targetUnitId) {
+		if (baseUnitId_ == targetUnitId_) {
 			return baseValue;
 		}
 		
@@ -434,17 +435,75 @@ public final class RowData implements Runnable
 		
 		//Log.v(TAG, String.format("Start convert %f from baseUnitId=%d to targetUnitId=%d", baseValue, baseUnitId, targetUnitId));
 		
-		/* The trivial case, if there is a direct connection between baseUnitId and targetUnitId. To give a more accurate result for currency converter */
-		
-		for (Conversion conv : conversions)
+		//boost-up the calculation speed in case of currency 
+		if (categoryId_ == Category.CURRENCY_CATEGORY)
 		{
-			if (isDumped()) {
-				return Double.NaN;
-			} 
+			long optimizeCurrencyId = this.resultListAdapter_.getOptimizeCurrencyId();
 			
-			if (conv.getBaseUnitId() == baseUnitId && conv.getTargetUnitId() == targetUnitId)
+			Conversion convBaseOptimize = null;
+			Conversion convOptimizeTarget = null;
+			Conversion convBaseUsd = null;
+			Conversion convUsdTarget = null;
+			Conversion convBaseTarget = null;
+			
+			for (Conversion conv : conversions)
 			{
-				return conv.convert(baseValue, baseUnitId);
+				if (isKilled()) {
+					return Double.NaN;
+				} 
+				
+				if (conv.getBaseUnitId() == baseUnitId_ && conv.getTargetUnitId() == targetUnitId_)
+				{
+					//The trivial case: if there is a direct conversion between baseUnitId and targetUnitId 
+					//it usually happen when optimizeCurrencyId == baseUnitId_
+					return conv.convert(baseValue, baseUnitId_);
+				}
+				
+				if (conv.isIncidentEdgeOf(baseUnitId_))
+				{
+					if (conv.isIncidentEdgeOf(targetUnitId_)) {
+						convBaseTarget = conv;
+					}
+					if (conv.isIncidentEdgeOf(optimizeCurrencyId)) {
+						convBaseOptimize = conv;
+					}
+					if (conv.isIncidentEdgeOf(Unit.USD_UNIT)) {
+						convBaseUsd = conv;
+					}
+				}
+				if (conv.isIncidentEdgeOf(targetUnitId_)) 
+				{
+					if (conv.isIncidentEdgeOf(optimizeCurrencyId)) {
+						convOptimizeTarget = conv;
+					}
+					if (conv.isIncidentEdgeOf(Unit.USD_UNIT)) {
+						convUsdTarget = conv;
+					}
+				}
+			}
+			
+			//use inverse-rate conversions
+			
+			if (convBaseTarget!=null) {
+				Log.v("CURR", "compute: use reverse conversion");
+				return convBaseTarget.convert(baseValue, baseUnitId_);
+			}
+			
+			//use two-steps conversion
+			
+			if (convBaseOptimize != null && convOptimizeTarget != null)
+			{
+				Log.v("CURR", "compute: two-steps conversions cross currencyId = "+optimizeCurrencyId);
+				return convOptimizeTarget.convert(convBaseOptimize.convert(baseValue, baseUnitId_), optimizeCurrencyId);
+			}
+			
+			//last chance with USD
+			
+			if (optimizeCurrencyId != Unit.USD_UNIT) {
+				Log.v("CURR", "compute: two-steps conversions cross USD");
+				if (convBaseUsd!=null && convUsdTarget!=null) {
+					return convUsdTarget.convert(convBaseUsd.convert(baseValue, baseUnitId_), Unit.USD_UNIT);
+				}
 			}
 		}
 		
@@ -459,12 +518,12 @@ public final class RowData implements Runnable
 		boolean pathFound = false; //turn to true if we can build a path from baseUnitId to targetUnitId
 		
 		//add source to baseUnitId
-		visitedUnitQueue.offer(baseUnitId);
-		previous.put(baseUnitId, null);
+		visitedUnitQueue.offer(baseUnitId_);
+		previous.put(baseUnitId_, null);
 		
 //		long maxOp = 0;
 		
-		while (!visitedUnitQueue.isEmpty() && !isDumped() && baseUnitId == baseUnitId_)
+		while (!visitedUnitQueue.isEmpty() && !isKilled())
 		{
 			//long s4 = DatabaseHelper.getNow();
 			
@@ -474,7 +533,7 @@ public final class RowData implements Runnable
 //			long elapsed1 = DatabaseHelper.getNow() - s4;
 //			if (maxOp<elapsed1) maxOp = elapsed1;
 			
-			if (visitingUnit == targetUnitId)
+			if (visitingUnit == targetUnitId_)
 			{
 				pathFound = true;
 				break; //gotcha!
@@ -513,7 +572,7 @@ public final class RowData implements Runnable
 		}
 		
 		ArrayDeque<Conversion> path = new ArrayDeque<Conversion>();
-		long uid = targetUnitId;
+		long uid = targetUnitId_;
 		Conversion conv;
 		
 		do {
@@ -521,20 +580,20 @@ public final class RowData implements Runnable
 			path.addFirst(conv);
 			uid = conv.getOtherUnitId(uid); 
 		}
-		while (uid != baseUnitId && !isDumped() && baseUnitId == baseUnitId_);
+		while (uid != baseUnitId_ && !isKilled());
 		
 		/* use the path to convert the value */
 		
 		double returned = baseValue;
-		uid = baseUnitId;
-		while (!path.isEmpty() && !isDumped() && baseUnitId == baseUnitId_)
+		uid = baseUnitId_;
+		while (!path.isEmpty() && !isKilled())
 		{
 			conv = path.poll();
 			returned = conv.convert(returned, uid);
 			uid = conv.getOtherUnitId(uid);
 		}
 		
-		if (isDumped())
+		if (isKilled())
 		{
 			return Double.NaN;
 		}

@@ -479,6 +479,12 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		return conversionsLoadingRunner_.getEnumValues();
 	}
 	
+	public long getOptimizeCurrencyId() throws InterruptedException, ExecutionException, TimeoutException, IllegalAccessException
+	{
+		waitConversionLoadingRunner();
+		return conversionsLoadingRunner_.getOptimizeCurrencyId();
+	}
+	
 	private void waitConversionLoadingRunner() throws InterruptedException, ExecutionException, TimeoutException, IllegalAccessException
 	{
 		if (conversionsLoadingFuture_==null)

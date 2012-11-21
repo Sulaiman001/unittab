@@ -40,6 +40,7 @@ public final class ConversionsLoadingRunner implements Runnable
 	private volatile boolean cancelled_ = false;
 	//private CountDownLatch countDownLatch_ = new CountDownLatch(1);
 	
+	private long optimizeCurrencyId_ = -1;
 	private ArrayList<Conversion> conversions_;
 	private ArrayList<Corresponding> correspondings_;
 	private HashMap<Long, EnumValue> enumValues_;
@@ -115,7 +116,11 @@ public final class ConversionsLoadingRunner implements Runnable
 	{
 		return enumValues_;
 	}
-
+	public long getOptimizeCurrencyId()
+	{
+		return optimizeCurrencyId_;
+	}
+	
 	/**
 	 * Soft-destroy this object, never use it again after calling this methode.
 	 */
@@ -146,7 +151,7 @@ public final class ConversionsLoadingRunner implements Runnable
 			
 			if (categoryId_ == Category.CURRENCY_CATEGORY) 
 			{
-				readCurrencyConversions();
+				optimizeCurrencyId_ = readCurrencyConversions();
 				return;
 			}
 			
@@ -169,7 +174,6 @@ public final class ConversionsLoadingRunner implements Runnable
 			Log.w(TAG, ex);
 		}
 	}
-	
 	private void readConversions()
 	{
 		if (cancelled_) return;
@@ -249,9 +253,19 @@ public final class ConversionsLoadingRunner implements Runnable
 		}
 	}
 	
-	private void readCurrencyConversions()
+	/**
+	 * Populate the conversion data with 2 set
+	 * - a optimize-currency conversion set
+	 * - a USD conversion-set
+	 * The optimize-currency is often baseCurrency, but if the conversion-set of the base currency is out-date
+	 * we'll take the most-updated-currency conversion-set instead of the baseCurrency conversion-set.
+	 * if the optimize-currency is USD, so will will take only USD conversion-set
+	 * 
+	 * return optimize-currency Id, it will be use to boost the calculation process 
+	 */
+	private long readCurrencyConversions()
 	{
-		if (cancelled_) return;
+		if (cancelled_) return -1;
 		
 		//Log.d(TAG, "Begin loading currencies conversions of the currency unitId = "+baseUnitId_);
 
@@ -311,7 +325,9 @@ public final class ConversionsLoadingRunner implements Runnable
 			Log.w("CURR", "No conversion for Currency found!");
 		}
 		
-		Log.d("CURR", String.format("readCurrencyConversions END baseUnitId = %d - found %d conversion", baseUnitId_, conversions_.size()));
+		return optimizeBaseCurrencyId;
+		
+		//Log.d("CURR", String.format("readCurrencyConversions END baseUnitId = %d - found %d conversion", baseUnitId_, conversions_.size()));
 	}
 	
 	private void readConversionFromCursor(Cursor cur)
