@@ -1,171 +1,177 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:baselineAligned="true"
-    android:dividerPadding="5dp"
-    android:padding="5dp"
-    android:showDividers="middle" >
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
 
-    <TextView
+    <TableLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:text="General"
-        android:textColor="@color/category_fg"
-        android:textStyle="bold" />
+        android:baselineAligned="true"
+        android:dividerPadding="5dp"
+        android:padding="5dp"
+        android:showDividers="middle" >
 
-    <TableRow android:paddingLeft="20dp" >
-
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <TextView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" >
+            android:layout_marginBottom="10dp"
+            android:text="General"
+            android:textColor="@color/category_fg"
+            android:textStyle="bold" />
 
-            <TextView
+        <TableRow android:paddingLeft="20dp" >
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="5dp"
-                android:text="Precision" />
+                android:orientation="vertical" >
 
-            <TextView
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:text="Precision" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:text="(number of decimals)"
+                    android:textColor="@color/light_gray2" />
+            </LinearLayout>
+
+            <Spinner
+                android:id="@+id/precision"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="5dp"
-                android:text="(number of decimals places)"
-                android:textColor="@color/light_gray2" />
-        </LinearLayout>
+                android:layout_height="wrap_content" />
+        </TableRow>
 
-        <Spinner
-            android:id="@+id/precision"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </TableRow>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:layout_marginTop="15dp"
-        android:text="Currencies Rates Update"
-        android:textColor="@color/category_fg"
-        android:textStyle="bold" />
-
-    <TableRow android:paddingLeft="20dp" >
-
-        <LinearLayout
-            android:layout_width="wrap_content"
+        <TextView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" >
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="15dp"
+            android:text="Currencies Rates Update"
+            android:textColor="@color/category_fg"
+            android:textStyle="bold" />
 
-            <TextView
+        <TableRow android:paddingLeft="20dp" >
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="5dp"
-                android:text="Live update (L.U)" />
+                android:orientation="vertical" >
 
-            <TextView
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:text="Live update (L.U)" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:text="(when rates data expiry)"
+                    android:textColor="@color/light_gray2" />
+            </LinearLayout>
+
+            <Spinner
+                android:id="@+id/currencyLiveUpdateOption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </TableRow>
+
+        <TableRow android:paddingLeft="20dp" >
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="5dp"
-                android:text="(when rates data expiry)"
-                android:textColor="@color/light_gray2" />
-        </LinearLayout>
+                android:orientation="vertical" >
 
-        <Spinner
-            android:id="@+id/currencyLiveUpdateOption"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </TableRow>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:text="Rates data expiry after" />
 
-    <TableRow android:paddingLeft="20dp" >
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:text="(1s means always do L.U)"
+                    android:textColor="@color/light_gray2" />
+            </LinearLayout>
 
-        <LinearLayout
-            android:layout_width="wrap_content"
+            <Spinner
+                android:id="@+id/currencyExpiryTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </TableRow>
+
+        <TableRow android:paddingLeft="20dp" >
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:text="L.U only USD rates:" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:text="(less L.U, less accurate)"
+                    android:textColor="@color/light_gray2" />
+            </LinearLayout>
+
+            <Spinner
+                android:id="@+id/currencyUsdOnly"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </TableRow>
+
+        <TextView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical" >
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="15dp"
+            android:text="Developper"
+            android:textColor="@color/category_fg"
+            android:textStyle="bold" />
 
-            <TextView
+        <TableRow android:paddingLeft="20dp" >
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginRight="5dp"
-                android:text="Rates data expiry after" />
+                android:orientation="vertical" >
 
-            <TextView
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:text="Strict Mode" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:text="(show error dialog)"
+                    android:textColor="@color/light_gray2" />
+            </LinearLayout>
+
+            <CheckBox
+                android:id="@+id/strictMode"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="5dp"
-                android:text="(1s means always do L.U)"
-                android:textColor="@color/light_gray2" />
-        </LinearLayout>
+                android:layout_height="wrap_content" />
+        </TableRow>
+    </TableLayout>
 
-        <Spinner
-            android:id="@+id/currencyExpiryTime"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </TableRow>
-
-    <TableRow android:paddingLeft="20dp" >
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" >
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="5dp"
-                android:text="L.U only USD rates:" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="5dp"
-                android:text="(less L.U, less accurate)"
-                android:textColor="@color/light_gray2" />
-        </LinearLayout>
-
-        <Spinner
-            android:id="@+id/currencyUsdOnly"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </TableRow>
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="10dp"
-        android:layout_marginTop="15dp"
-        android:text="Developper"
-        android:textColor="@color/category_fg"
-        android:textStyle="bold" />
-
-    <TableRow android:paddingLeft="20dp" >
-
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical" >
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="5dp"
-                android:text="Strict Mode" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginRight="5dp"
-                android:text="(show error dialog)"
-                android:textColor="@color/light_gray2" />
-        </LinearLayout>
-
-        <CheckBox
-            android:id="@+id/strictMode"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </TableRow>
-
-</TableLayout>
+</ScrollView>

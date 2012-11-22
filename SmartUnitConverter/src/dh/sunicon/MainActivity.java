@@ -23,7 +23,7 @@ import dh.sunicon.workarounds.MyApplication;
 public class MainActivity extends FragmentActivity implements
 		TabHost.OnTabChangeListener
 {
-	public static final int DEFAULT_PRECISION = 12;
+	public static final int DEFAULT_PRECISION = 9;
 	public static final boolean DEFAULT_CURRENCY_USD_ONLY = true;
 	public static final boolean DEFAULT_STRICTMODE = false;
 	public static final long DEFAULT_CURRENCY_EXPIRY_TIME = 86400000L;
@@ -40,8 +40,6 @@ public class MainActivity extends FragmentActivity implements
 	private TabHost tabHost_;
 	private DatabaseHelper dbHelper_;
 	private int currentTabTag_;
-	private SettingFragment settingFragment_;
-	private ConverterFragment converterFragment_;
 	private SharedPreferences preferences_;
 
 	@Override
@@ -122,32 +120,32 @@ public class MainActivity extends FragmentActivity implements
 	{
 		try 
 		{
-			if (settingFragment_!=null && currentTabTag_ == R.id.settingTab) {
-				settingFragment_.savePrefs();
-				if (converterFragment_!=null) {
-					converterFragment_.onPreferencesChanged();
+			int placeHolder = Integer.parseInt(tag);
+			FragmentManager fm = getSupportFragmentManager();
+			
+			SettingFragment settingFragment = (SettingFragment) fm.findFragmentById(R.id.settingTab);
+			ConverterFragment converterFragment = (ConverterFragment) fm.findFragmentById(R.id.converterTab);;
+			
+			if (settingFragment!=null && currentTabTag_ == R.id.settingTab) {
+				settingFragment.savePrefs();
+				if (converterFragment!=null) {
+					converterFragment.onPreferencesChanged();
 				}
 			}
 			
-			//Toast.makeText(this, "onTabChanged: "+tag, Toast.LENGTH_SHORT).show();
-			int placeHolder = Integer.parseInt(tag);
-			
-			FragmentManager fm = getSupportFragmentManager();
 			Fragment fg = fm.findFragmentByTag(tag);
 			
 	        if (fg == null) 
 	        {
 	        	switch (placeHolder) {
 	        		case R.id.converterTab:
-	        			converterFragment_ = new ConverterFragment();
-	        			fg = converterFragment_;
+	        			fg = new ConverterFragment();
 	        			break;
 	        		case R.id.explorerTab:
 	        			fg = new ExplorerFragment();
 	        			break;
 	        		case R.id.settingTab:
-	        			settingFragment_ = new SettingFragment();
-	        			fg = settingFragment_;
+	        			fg = new SettingFragment();
 	        			break;
 	        		default: throw new UnsupportedOperationException();
 	        	}

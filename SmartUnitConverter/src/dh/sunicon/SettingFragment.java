@@ -1,7 +1,6 @@
 package dh.sunicon;
 
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -11,7 +10,6 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CheckBox;
 import android.widget.Spinner;
-import android.widget.TextView;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
@@ -116,17 +114,17 @@ public class SettingFragment extends Fragment
 		{
 			int liveUpdateOption = currencyLiveUpdateOption_.getSelectedItemPosition();
 			editor.putInt(MainActivity.OPTNAME_CURRENCY_LIVE_UPDATE, liveUpdateOption);
-			Log.v("Setting", "Saved setting "+MainActivity.OPTNAME_CURRENCY_LIVE_UPDATE+" "+Integer.toString(liveUpdateOption));
+			//Log.v("Setting", "Saved setting "+MainActivity.OPTNAME_CURRENCY_LIVE_UPDATE+" "+Integer.toString(liveUpdateOption));
 		}
 		{
 			long expiryTime = MAP_EXPIRY_TIME.get(currencyExpiryTime_.getSelectedItemPosition());
 			editor.putLong(MainActivity.OPTNAME_CURRENCY_EXPIRY_TIME, expiryTime);
-			Log.v("Setting", "Saved setting "+MainActivity.OPTNAME_CURRENCY_EXPIRY_TIME+" "+Long.toString(expiryTime));
+			//Log.v("Setting", "Saved setting "+MainActivity.OPTNAME_CURRENCY_EXPIRY_TIME+" "+Long.toString(expiryTime));
 		}
 		{
 			boolean usdOnly = currencyUsdOnly_.getSelectedItemPosition() == 0 ? true : false;
 			editor.putBoolean(MainActivity.OPTNAME_CURRENCY_USD_ONLY, usdOnly);
-			Log.v("Setting", "Saved setting "+MainActivity.OPTNAME_CURRENCY_USD_ONLY+" "+Boolean.toString(usdOnly));
+			//Log.v("Setting", "Saved setting "+MainActivity.OPTNAME_CURRENCY_USD_ONLY+" "+Boolean.toString(usdOnly));
 		}
 		{
 			int precision = Integer.parseInt((precisionSpinner_.getAdapter().getItem(precisionSpinner_.getSelectedItemPosition())).toString());
