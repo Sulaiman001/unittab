@@ -18,3 +18,59 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+
+-dontpreverify
+
+# Hold onto the mapping.text file, it can be used to unobfuscate stack traces in the developer console using the retrace tool
+-printmapping mapping.txt
+
+# Keep line numbers so they appear in the stack trace of the develeper console
+-keepattributes SourceFile,LineNumberTable 
+
+# The -optimizations option disables some arithmetic simplifications that Dalvik 1.0 and 1.5 can't handle.
+-optimizations !code/simplification/arithmetic 
+
+# Activities, services and broadcast receivers are specified in the manifest file so they won't be automatically included
+-keep public class * extends android.app.Activity
+-keep public class * extends android.app.Application
+-keep public class * extends android.app.Service
+-keep public class * extends android.content.BroadcastReceiver
+-keep public class * extends android.content.ContentProvider 
+
+# Custom view components might be accessed from your layout files
+-keep public class * extends android.view.View {
+	public <init>(android.content.Context);
+	public <init>(android.content.Context, android.util.AttributeSet);
+	public <init>(android.content.Context, android.util.AttributeSet, int);
+	public void set*(...);
+}
+
+# event handlers can be specified in the layout files e.g. android:onClick="nextButton_onClick", I borrowed this method name notation from .NET
+-keepclassmembers class * extends android.app.Activity {
+	public void *_*(android.view.View);
+}
+
+# Parcelable implementations are accessed by introspection
+-keepclassmembers class * implements android.os.Parcelable {
+    static android.os.Parcelable$Creator CREATOR;
+}
+
+# You might want to keep your annotations
+-keepattributes *Annotation*
+
+# I use Google Guava in my app
+# see http://code.google.com/p/guava-libraries/wiki/UsingProGuardWithGuava
+-libraryjars libs/jsr305-2.0.1.jar
+-dontwarn sun.misc.Unsafe
+
+-keepclasseswithmembers class com.google.common.base.internal.Finalizer{
+	<methods>;
+}
+
+
+#remove logs
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+}
