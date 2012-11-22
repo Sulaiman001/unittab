@@ -1,8 +1,5 @@
 package dh.sunicon;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 import org.json.JSONObject;
 
 import android.annotation.SuppressLint;
@@ -51,6 +48,7 @@ import dh.sunicon.currency.UpdatingReport.MessageType;
 import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.runnable.RowData;
+import dh.sunicon.workarounds.MyApplication;
 
 public class ConverterFragment extends ListFragment implements LoaderCallbacks<Cursor>
 {
@@ -82,6 +80,10 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	
 	private UnitHistoryManager unitHistory_;
 	private Handler mainThread_;
+	private boolean strictMode_ = false;
+	private SharedPreferences preferences_;
+	private int precision_;
+	
 	//private CountDownLatch spinnerLoadingLatch_;
 	
 	private boolean isActivityRunning_ = false;
@@ -112,6 +114,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			super.onActivityCreated(savedInstanceState);
 
 			dbHelper_ = ((MainActivity)getActivity()).getDatabaseHelper();
+			preferences_ =  ((MainActivity)getActivity()).getPreferences();
 			unitHistory_ = new UnitHistoryManager(dbHelper_);
 			
 			categoryLabel_ = (TextView)this.getView().findViewById(R.id.categoryLabel);
@@ -120,8 +123,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			
 			if (dbHelper_ == null)
 			{
-				Log.wtf(TAG, "dbHelper is null");
-				return;
+				throw new IllegalStateException("dbHelper is null");
 			}
 			
 			initBaseUnitPickerButton();
@@ -145,7 +147,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		}
 		catch (Exception ex)
 		{
-			Log.wtf(TAG, ex);
+			MyApplication.showErrorDialog(getFragmentManager(), null, ex);
 		}
 	}
 
@@ -157,21 +159,22 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 
 	/* this methode init the loader so it should be called in onActivityCreated */
 	private void restoreFromPreferences() {
-		Log.i(TAG + "-SR", "Restore State from Preference");
-		SharedPreferences preferences = this.getActivity().getPreferences(Activity.MODE_PRIVATE);
-		if (preferences == null)
+		//Log.i(TAG + "-SR", "Restore State from Preference");
+		if (preferences_ == null)
 		{
 			return;
 		}
 		try
 		{
-			categoryId_ = preferences.getLong("categoryId", -1);
-			baseUnitId_ = preferences.getLong("baseUnitId", -1);
-			String baseValue = preferences.getString("baseValue", null);
+			//precision_ = preferences_.getLong("precision", 12);dd
+			categoryId_ = preferences_.getLong("categoryId", -1);
+			baseUnitId_ = preferences_.getLong("baseUnitId", -1);
+			
+			String baseValue = preferences_.getString("baseValue", null);
 			
 			setBaseUnit(
-					preferences.getString("categoryName", null), 
-					preferences.getString("baseUnitName", null),
+					preferences_.getString("categoryName", null), 
+					preferences_.getString("baseUnitName", null),
 					categoryId_,
 					baseUnitId_);
 			
@@ -179,13 +182,15 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			setBaseValue(baseValue);
 			
 			//restore baseValueSpinnerItemPosition
-			spinnerPositionToRestore_ = preferences.getInt("spinnerPos", -1);
+			spinnerPositionToRestore_ = preferences_.getInt("spinnerPos", -1);
 			getLoaderManager().initLoader(VALUE_SPINNER_LOADER, null, this); //should be called in onActivityCreated
 			//setBaseValueSpinnerSelection(preferences.getInt("spinnerPos", -1));
+			
+			onPreferencesChanged();
 		}
 		catch (Exception ex)
 		{
-			Log.w(TAG, ex);
+			showError(ex);
 		}
 	}
 	
@@ -231,11 +236,11 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			
 			resultListAdapter_.invokeCalculation(false);
 			
-			Log.i(TAG + "-SR", "Restore Spinner selection "+savedState.getInt("baseValueSpinnerItemPosition"));
+			//Log.i(TAG + "-SR", "Restore Spinner selection "+savedState.getInt("baseValueSpinnerItemPosition"));
 		}
 		catch (Exception ex)
 		{
-			Log.w(TAG, ex);
+			showError(ex);
 		}
 		finally {
 			resumeEvents();
@@ -267,7 +272,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		}
 		catch (Exception ex)
 		{
-			Log.w(TAG, ex);
+			showError(ex);
 		}
 
 	}
@@ -276,8 +281,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	public void onPause()
 	{
 		super.onPause();
-		SharedPreferences preferences = this.getActivity().getPreferences(Activity.MODE_PRIVATE);
-		SharedPreferences.Editor editor = preferences.edit(); 
+		SharedPreferences.Editor editor = preferences_.edit(); 
 
 		editor.putLong("categoryId", categoryId_); 
 		editor.putLong("baseUnitId", baseUnitId_);
@@ -361,7 +365,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 							}
 							catch (Exception ex)
 							{
-								Log.w(TAG, ex);
+								showError(ex);
 							}
 						}
 					};
@@ -370,7 +374,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 				}
 				catch (Exception ex)
 				{
-					Log.w(TAG, ex);
+					showError(ex);
 				}
 			}
 		});
@@ -404,12 +408,13 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 					}
 					
 					//Log.d(TAG, "spinner changes position = "+position);
-					if (id>0)
+					if (id>0) {
 						getResultListAdapter().setBaseValue(null, id);
+					}
 				}
 				catch (Exception ex)
 				{
-					Log.w(TAG, ex);
+					showError(ex);
 				}
 			}
 
@@ -504,7 +509,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 							}
 							catch (Exception ex)
 							{
-								Log.w(TAG, ex);
+								showError(ex);
 							}
 						}
 					};
@@ -513,7 +518,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 				}
 				catch (Exception ex)
 				{
-					Log.w(TAG, ex);
+					showError(ex);
 				}
 			}
 		});
@@ -536,7 +541,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 				}
 				catch (Exception ex)
 				{
-					Log.w(TAG, ex);
+					showError(ex);
 				}
 			}
 		});
@@ -547,7 +552,12 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			@Override
 			public void onClick(View v)
 			{
-				targetUnitFilterEditor_.setText(null);
+				try {
+					targetUnitFilterEditor_.setText(null);
+				}
+				catch (Exception ex) {
+					showError(ex);
+				}
 			}
 		});
 	}
@@ -582,7 +592,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 				}
 				catch (Exception ex)
 				{
-					Log.w(TAG, ex);
+					showError(ex);
 				}	
 			}
 		});
@@ -606,7 +616,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 				}
 				catch (Exception ex)
 				{
-					Log.w(TAG, ex);
+					showError(ex);
 				}	
 			}
 		});
@@ -630,7 +640,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 				}
 				catch (Exception ex)
 				{
-					Log.w(TAG, ex);
+					showError(ex);
 				}	
 			}
 		});
@@ -650,9 +660,9 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 						currencyUpdater_.process(baseUnitId_);
 					}
 				}
-				catch (Exception e)
+				catch (Exception ex)
 				{
-					Log.w("CURR", e);
+					showError(ex);
 				}
 			}
 		});
@@ -737,7 +747,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		}
 		catch (Exception ex)
 		{
-			Log.w(TAG, ex);
+			showError(ex);
 		}	
 	}
 	
@@ -787,7 +797,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		}
 		catch (Exception ex)
 		{
-			Log.w(TAG, ex);
+			showError(ex);
 		}
 		return super.onContextItemSelected(item);
 	}
@@ -921,54 +931,44 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		eventsSuspendingLevel_--;
 	}
 	
-	private Timer setComputationStateTimer_;
+	private Runnable lastSetComputationStateRunnable_ = null;
+	
 	public void setComputationStateFinished(final boolean finished) {
 		
-		/* events absorber technique */
-
-		if (setComputationStateTimer_ != null) {
-			setComputationStateTimer_.cancel(); // cancel the old onTextChange
-												// event
+		if (lastSetComputationStateRunnable_ != null) {
+			mainThread_.removeCallbacks(lastSetComputationStateRunnable_);
 		}
-
-		// the timer is dumped, we must to create a new one
-		setComputationStateTimer_ = new Timer();
-
-		// schedule a task which will be execute in 500ms if the timer won't
-		// canceled due to other (possible future) onTextChanged event
-		setComputationStateTimer_.schedule(new TimerTask() {
+		
+		lastSetComputationStateRunnable_ = new Runnable()
+		{
 			@Override
-			public void run() {
-				if (ConverterFragment.this.getActivity() != null) 
-					ConverterFragment.this.getActivity().runOnUiThread(
-							new Runnable() {
-								@Override
-								public void run() {
-									try {
-										if (!isActivityRunning_) {
-											return;
-										}
-										if (resultListSwitcher_ != null) {
-											if (finished) {
-												// Log.v(TAG, "switch to result list");
-												if (resultListSwitcher_.getNextView() == getListView()) {
-													resultListSwitcher_.showNext();
-												}
-											} else {
-												// Log.v(TAG, "switch to progress bar");
-												if (resultListSwitcher_.getNextView() != getListView()) {
-													resultListSwitcher_.showNext();
-												}
-											}
-											// getListView().setVisibility(visible ? View.VISIBLE : View.GONE);
-										}
-									} catch (Exception ex) {
-										Log.w(TAG, ex);
-									}
-								}
-							});
+			public void run()
+			{
+				try {
+					if (!isActivityRunning_) {
+						return;
+					}
+					if (resultListSwitcher_ != null) {
+						if (finished) {
+							// Log.v(TAG, "switch to result list");
+							if (resultListSwitcher_.getNextView() == getListView()) {
+								resultListSwitcher_.showNext();
+							}
+						} else {
+							// Log.v(TAG, "switch to progress bar");
+							if (resultListSwitcher_.getNextView() != getListView()) {
+								resultListSwitcher_.showNext();
+							}
+						}
+						// getListView().setVisibility(visible ? View.VISIBLE : View.GONE);
+					}
+				} catch (Exception ex) {
+					showError(ex);
+				}
 			}
-		}, EVENTS_DELAY);
+		};
+		
+		mainThread_.postDelayed(lastSetComputationStateRunnable_, EVENTS_DELAY);
 	}
 
 	public ResultListAdapter getResultListAdapter()
@@ -981,11 +981,10 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	{
 		if (loaderId != VALUE_SPINNER_LOADER)
 		{
-			Log.w(TAG, "LoaderId not match VALUE_SPINNER_LOADER");
 			return null;
 		}
 		
-		Log.v(TAG + "-Loader", "onCreateLoader baseUnitId="+baseUnitId_);
+		//Log.v(TAG + "-Loader", "onCreateLoader baseUnitId="+baseUnitId_);
 		
 		Loader<Cursor> loader=
 		    new SQLiteCursorLoader(this.getActivity(), dbHelper_, 
@@ -1036,5 +1035,27 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	public CurrencyUpdater getCurrencyUpdater()
 	{
 		return currencyUpdater_;
+	}
+	
+	public void showError(Exception ex)
+	{
+		if (strictMode_) {
+			MyApplication.showErrorDialog(getFragmentManager(), null, ex);
+		}
+		else {
+			Log.w(TAG, ex);
+		}
+	}
+	public void onPreferencesChanged() {
+		if (preferences_!=null)
+		{
+			strictMode_ = preferences_.getBoolean(MainActivity.OPTNAME_STRICTMODE, MainActivity.DEFAULT_STRICTMODE);
+			precision_ = preferences_.getInt(MainActivity.OPTNAME_PRECISION, MainActivity.DEFAULT_PRECISION);
+		}
+	}
+
+	public int getPrecision()
+	{
+		return precision_;
 	}
 }

@@ -2,14 +2,11 @@ package dh.sunicon;
 
 import java.util.LinkedList;
 import java.util.Locale;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
@@ -473,7 +470,7 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
         	}
         }
         else {
-        	Log.d(TAG, "onLoadFinished "+loaderId);
+        	//Log.d(TAG, "onLoadFinished "+loaderId);
         	unitsOfCategory_.put(loaderId, cursor);
         }
 		notifyDataSetChanged();
@@ -491,7 +488,7 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
         	categoryCursor_ = null;
         }
         else {
-        	Log.d(TAG, "onLoaderReset "+loaderId);
+        	//Log.d(TAG, "onLoaderReset "+loaderId);
         	unitsOfCategory_.put(loaderId, null);
         }
         notifyDataSetChanged();

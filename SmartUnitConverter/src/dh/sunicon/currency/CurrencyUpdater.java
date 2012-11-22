@@ -1,5 +1,6 @@
 package dh.sunicon.currency;
 
+import dh.sunicon.MainActivity;
 import dh.sunicon.datamodel.Unit;
 import android.app.Activity;
 import android.content.SharedPreferences;
@@ -20,15 +21,6 @@ public class CurrencyUpdater
 {
 	private static final String TAG = CurrencyUpdater.class.getName();
 	
-	public static int OPT_ALL_NETWORK = 0;
-	public static int OPT_WIFI_ONLY = 1;
-	public static int OPT_NEVER = 2;
-	public static final String OPTNAME_CURRENCY_LIVE_UPDATE = "CurrencyLiveUpdateOption";
-	public static final String OPTNAME_CURRENCY_EXPIRY_TIME = "CurrencyLiveUpdateExpiryTime";
-	public static final String OPTNAME_CURRENCY_USD_ONLY = "CurrencyLiveUpdateUSDOnly";
-	public static final long DEFAULT_CURRENCY_EXPIRY_TIME = 86400000L;
-	public static final boolean DEFAULT_CURRENCY_USD_ONLY = true;
-	
 	private final Activity context_;
 	private final SharedPreferences preferences_;
 	private long currencyUnitIdOnProcess_ = -1;
@@ -36,7 +28,7 @@ public class CurrencyUpdater
 	
 	public CurrencyUpdater(Activity context){
 		context_ = context;
-		preferences_ = context_.getPreferences(Activity.MODE_PRIVATE);
+		preferences_ = ((MainActivity)context_).getPreferences();
 	}
 	
 	/**
@@ -113,7 +105,7 @@ public class CurrencyUpdater
 				UpdatingAgentsManager agentsManager = new UpdatingAgentsManager(context_, this);
 				agentsManager.setBeforeUpdateStarted(beforeUpdateStarted_);
 				
-				if (preferences_.getBoolean(OPTNAME_CURRENCY_USD_ONLY, DEFAULT_CURRENCY_USD_ONLY)) {
+				if (preferences_.getBoolean(MainActivity.OPTNAME_CURRENCY_USD_ONLY, MainActivity.DEFAULT_CURRENCY_USD_ONLY)) {
 					return agentsManager.importOnBackground(Unit.USD_UNIT);
 				}
 				else {

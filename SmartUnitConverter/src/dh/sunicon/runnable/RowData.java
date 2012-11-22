@@ -593,13 +593,14 @@ public final class RowData implements Runnable
 	 * @param d
 	 * @return
 	 */
-	public static String formatDouble(double d)
+	public String formatDouble(double d)
 	{
 		if (Double.isNaN(d))
 		{
 			return "-";
 		}
-		String s = String.format(Locale.US, "%.12g", d);
+		int precision = resultListAdapter_.getPrecision();
+		String s = String.format(Locale.US, "%."+precision+"g", d);
 		StringBuilder resu = new StringBuilder("<b>");
 		
 		int firstPoint = s.indexOf('.');

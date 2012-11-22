@@ -20,6 +20,19 @@
         <item>No</item>
     </string-array>
     
+     <string-array name="opt_precision">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+        <item>6</item>
+        <item>9</item>
+        <item>12</item>
+        <item>15</item>
+        <item>18</item>
+        <item>21</item>
+    </string-array>
+    
      <string name="explorer_warning_short">WARNING: Next update might reset everything here. Click for more info...</string>
      
      <string name="explorer_warning_full">

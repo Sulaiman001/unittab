@@ -565,6 +565,10 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		invokeGuiUpdateAfterCalculation();
 	}
 	
+	public int getPrecision()
+	{
+		return owner_.getPrecision();
+	}
 	/*
 	 * **** Inner classes ****
 	 */

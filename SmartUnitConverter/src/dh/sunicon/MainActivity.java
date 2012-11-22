@@ -18,15 +18,31 @@ import android.widget.TabHost;
 import android.widget.TabHost.TabSpec;
 import android.widget.TextView;
 import dh.sunicon.datamodel.DatabaseHelper;
+import dh.sunicon.workarounds.MyApplication;
 
 public class MainActivity extends FragmentActivity implements
 		TabHost.OnTabChangeListener
 {
+	public static final int DEFAULT_PRECISION = 12;
+	public static final boolean DEFAULT_CURRENCY_USD_ONLY = true;
+	public static final boolean DEFAULT_STRICTMODE = false;
+	public static final long DEFAULT_CURRENCY_EXPIRY_TIME = 86400000L;
+	public static final String OPTNAME_CURRENCY_USD_ONLY = "CurrencyLiveUpdateUSDOnly";
+	public static final String OPTNAME_CURRENCY_EXPIRY_TIME = "CurrencyLiveUpdateExpiryTime";
+	public static final String OPTNAME_CURRENCY_LIVE_UPDATE = "CurrencyLiveUpdateOption";
+	public static final String OPTNAME_PRECISION = "Precision";
+	public static final String OPTNAME_STRICTMODE = "StrictMode";
+	public static int OPT_NEVER = 2;
+	public static int OPT_WIFI_ONLY = 1;
+	public static int OPT_ALL_NETWORK = 0;
+	
 	private static final String TAG = MainActivity.class.getName();
 	private TabHost tabHost_;
 	private DatabaseHelper dbHelper_;
 	private int currentTabTag_;
 	private SettingFragment settingFragment_;
+	private ConverterFragment converterFragment_;
+	private SharedPreferences preferences_;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState)
@@ -35,6 +51,8 @@ public class MainActivity extends FragmentActivity implements
 		
 		dbHelper_ = new DatabaseHelper(this);
 		setContentView(R.layout.sunicon_main_tabhosts);
+		
+		preferences_ = getPreferences(Activity.MODE_PRIVATE);
 		
 		/* init tabHost */
 		
@@ -102,40 +120,60 @@ public class MainActivity extends FragmentActivity implements
 	 */
 	public void onTabChanged(String tag)
 	{
-		if (settingFragment_!=null && currentTabTag_ == R.id.settingTab) {
-			settingFragment_.savePrefs();
+		try 
+		{
+			if (settingFragment_!=null && currentTabTag_ == R.id.settingTab) {
+				settingFragment_.savePrefs();
+				if (converterFragment_!=null) {
+					converterFragment_.onPreferencesChanged();
+				}
+			}
+			
+			//Toast.makeText(this, "onTabChanged: "+tag, Toast.LENGTH_SHORT).show();
+			int placeHolder = Integer.parseInt(tag);
+			
+			FragmentManager fm = getSupportFragmentManager();
+			Fragment fg = fm.findFragmentByTag(tag);
+			
+	        if (fg == null) 
+	        {
+	        	switch (placeHolder) {
+	        		case R.id.converterTab:
+	        			converterFragment_ = new ConverterFragment();
+	        			fg = converterFragment_;
+	        			break;
+	        		case R.id.explorerTab:
+	        			fg = new ExplorerFragment();
+	        			break;
+	        		case R.id.settingTab:
+	        			settingFragment_ = new SettingFragment();
+	        			fg = settingFragment_;
+	        			break;
+	        		default: throw new UnsupportedOperationException();
+	        	}
+	        	        	
+	            fm.beginTransaction()
+	                    .replace(placeHolder, fg, tag)
+	                    .commit();
+	        }
+	        
+	        currentTabTag_ = placeHolder;
 		}
-		
-		//Toast.makeText(this, "onTabChanged: "+tag, Toast.LENGTH_SHORT).show();
-		int placeHolder = Integer.parseInt(tag);
-		
-		FragmentManager fm = getSupportFragmentManager();
-		Fragment fg = fm.findFragmentByTag(tag);
-		
-        if (fg == null) 
-        {
-        	switch (placeHolder) {
-        		case R.id.converterTab:
-        			fg = new ConverterFragment();
-        			break;
-        		case R.id.explorerTab:
-        			fg = new ExplorerFragment();
-        			break;
-        		case R.id.settingTab:
-        			settingFragment_ = new SettingFragment();
-        			fg = settingFragment_;
-        			break;
-        		default: throw new UnsupportedOperationException();
-        	}
-        	        	
-            fm.beginTransaction()
-                    .replace(placeHolder, fg, tag)
-                    .commit();
-        }
-        
-        currentTabTag_ = placeHolder;
+		catch (Exception ex) {
+			showError(ex);
+		}
 	}
 
+	public void showError(Exception ex)
+	{
+		if (preferences_.getBoolean(OPTNAME_STRICTMODE, DEFAULT_STRICTMODE)) {
+			MyApplication.showErrorDialog(getSupportFragmentManager(), null, ex);
+		}
+		else {
+			Log.w(TAG, ex);
+		}
+	}
+	
 	public DatabaseHelper getDatabaseHelper()
 	{
 		return dbHelper_;
@@ -153,8 +191,7 @@ public class MainActivity extends FragmentActivity implements
 			
 			/* save to preferences */
 			
-			SharedPreferences preferences = this.getPreferences(Activity.MODE_PRIVATE);
-			SharedPreferences.Editor editor = preferences.edit(); 
+			SharedPreferences.Editor editor = preferences_.edit(); 
 			editor.putLong("categoryId", categoryId); 
 			editor.putLong("baseUnitId", unitId);
 			editor.putString("categoryName", categoryName);
@@ -192,6 +229,12 @@ public class MainActivity extends FragmentActivity implements
 	public NetworkInfo getNetworkInfo() {
 	    ConnectivityManager cm = (ConnectivityManager)getSystemService(Context.CONNECTIVITY_SERVICE);
 	    return cm.getActiveNetworkInfo();
+	}
+	
+	
+	public SharedPreferences getPreferences()
+	{
+		return preferences_;
 	}
 	
 	/**

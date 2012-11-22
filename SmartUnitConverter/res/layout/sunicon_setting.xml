@@ -10,6 +10,43 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:text="General"
+        android:textColor="@color/category_fg"
+        android:textStyle="bold" />
+
+    <TableRow android:paddingLeft="20dp" >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
+                android:text="Precision" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
+                android:text="(number of decimals places)"
+                android:textColor="@color/light_gray2" />
+        </LinearLayout>
+
+        <Spinner
+            android:id="@+id/precision"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </TableRow>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="15dp"
         android:text="Currencies Rates Update"
         android:textColor="@color/category_fg"
         android:textStyle="bold" />
@@ -91,6 +128,42 @@
 
         <Spinner
             android:id="@+id/currencyUsdOnly"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </TableRow>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="15dp"
+        android:text="Developper"
+        android:textColor="@color/category_fg"
+        android:textStyle="bold" />
+
+    <TableRow android:paddingLeft="20dp" >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
+                android:text="Strict Mode" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
+                android:text="(show error dialog)"
+                android:textColor="@color/light_gray2" />
+        </LinearLayout>
+
+        <CheckBox
+            android:id="@+id/strictMode"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </TableRow>

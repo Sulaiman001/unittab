@@ -71,7 +71,7 @@ public class UpdatingAgentsManager
 		
 		UpdatingReport report = new UpdatingReport();
 		
-		if (currencyUpdaterOption == CurrencyUpdater.OPT_NEVER) {
+		if (currencyUpdaterOption == MainActivity.OPT_NEVER) {
 			report.add(report.new ReportEntry(MessageType.INFO, "Exchange rates live update is disabled.")); //TODO multi-language 
 			report.forceSuccessAll();
 			return report;
@@ -85,7 +85,7 @@ public class UpdatingAgentsManager
 		
 		NetworkInfo networkInfo = ((MainActivity)context_).getNetworkInfo();
 		
-		if (networkInfo!=null && currencyUpdaterOption == CurrencyUpdater.OPT_WIFI_ONLY) {
+		if (networkInfo!=null && currencyUpdaterOption == MainActivity.OPT_WIFI_ONLY) {
 			if (networkInfo.getType()!=ConnectivityManager.TYPE_WIFI) {
 				//only update on wifi
 				report.forceSuccessAll();
@@ -222,7 +222,7 @@ public class UpdatingAgentsManager
 	}
 	
 	private long getTimeToLive() {
-		long ttl = context_.getPreferences(Activity.MODE_PRIVATE).getLong(CurrencyUpdater.OPTNAME_CURRENCY_EXPIRY_TIME, 10*1000);
+		long ttl = context_.getPreferences(Activity.MODE_PRIVATE).getLong(MainActivity.OPTNAME_CURRENCY_EXPIRY_TIME, 10*1000);
 		Log.v("CURR", "Get TTL = "+ttl);
 		return ttl;
 	}
@@ -234,7 +234,7 @@ public class UpdatingAgentsManager
 	
 	private int getCurrencyUpdaterOption() {
 		SharedPreferences preferences_ = context_.getPreferences(Activity.MODE_PRIVATE);
-		int o = preferences_.getInt(CurrencyUpdater.OPTNAME_CURRENCY_LIVE_UPDATE, CurrencyUpdater.OPT_ALL_NETWORK);
+		int o = preferences_.getInt(MainActivity.OPTNAME_CURRENCY_LIVE_UPDATE, MainActivity.OPT_ALL_NETWORK);
 		Log.v("CURR", "Get Currency Updater Option = "+o);
 		return o;
 	}

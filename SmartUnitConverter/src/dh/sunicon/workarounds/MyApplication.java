@@ -23,10 +23,9 @@ public class MyApplication extends Application {
 	
 	public static void showErrorDialog(final FragmentManager fm, final String message, final Throwable ex) {
 		try {
-			Log.w("sunicon.err", ex);
+			Log.e("sunicon.err", message, ex);
 			if (Thread.currentThread() == Looper.getMainLooper().getThread()) {
-				ErrorDialogFragment dialog = ErrorDialogFragment.newInstance(message, ex);
-				dialog.show(fm, "ReportErrorDialog "+DatabaseHelper.getNow());
+				showErrorDialogOnMainThread(fm, message, ex);
 			}
 			else {
 				Handler mainThread = new Handler(Looper.getMainLooper());
@@ -34,8 +33,7 @@ public class MyApplication extends Application {
 					@Override
 					public void run() {
 						try {
-							ErrorDialogFragment dialog = ErrorDialogFragment.newInstance(message, ex);
-							dialog.show(fm, "ReportErrorDialog "+DatabaseHelper.getNow());
+							showErrorDialogOnMainThread(fm, message, ex);
 						}
 						catch (Exception ex1) {
 							Log.wtf("MyApp", ex1);
@@ -47,5 +45,12 @@ public class MyApplication extends Application {
 		catch (Exception ex2) {
 			Log.wtf("MyApp", ex2);
 		}
+	}
+
+	private static void showErrorDialogOnMainThread(final FragmentManager fm,
+			final String message, final Throwable ex)
+	{
+		ErrorDialogFragment dialog = ErrorDialogFragment.newInstance(message, ex);
+		dialog.show(fm, "ReportErrorDialog "+DatabaseHelper.getNow());
 	} 
 }
