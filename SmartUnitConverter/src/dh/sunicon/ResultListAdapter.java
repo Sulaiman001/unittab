@@ -333,6 +333,11 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 //			}
 //		}
 		
+		//invalid all targetValue
+		if (filter_!=null) {
+			filter_.clearAllTargetValues();
+		}
+		
 		invokeCalculation(true);
 	}
 	
@@ -823,5 +828,12 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			fullData_ = null;
 		}
 		
+		public void clearAllTargetValues()
+		{
+			for (RowData row : fullData_)
+			{
+				row.clearTargetValue();
+			}
+		}
 	}
 }
