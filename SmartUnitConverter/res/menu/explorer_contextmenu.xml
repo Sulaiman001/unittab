@@ -6,4 +6,7 @@
     <item
         android:id="@+id/selectAll"
         android:title="Enable All"/>
+    <item
+        android:id="@+id/cancel"
+        android:title="Cancel"/>
 </menu>
