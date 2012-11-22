@@ -35,12 +35,16 @@
                 android:text="Please uncheck categories, units and currencies which are not in used."
                 android:textAppearance="?android:attr/textAppearanceSmall" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/menu"
                 android:layout_width="36dp"
                 android:layout_height="36dp"
                 android:layout_alignParentRight="true"
-                android:background="@drawable/ic_menu_gray" />
+                android:background="@drawable/edittext_active"
+                android:contentDescription="Quick selection"
+                android:padding="5dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_menu_gray" />
         </RelativeLayout>
 
         <LinearLayout

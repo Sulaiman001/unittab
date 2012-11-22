@@ -20,9 +20,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import dh.sunicon.datamodel.Category;
@@ -36,7 +36,7 @@ public class ExplorerFragment extends Fragment
 	private ExpandableListView treeList_;
 	private UnitsCursorTreeAdapter unitCursorTreeAdapter_;
 	private EditText filterEdit_;
-	private Button menuButton_;
+	private ImageButton menuButton_;
 	private Handler mainThread_;
 	private ExecutorService updateThread_ = Executors.newSingleThreadExecutor();
 	private DatabaseHelper dbHelper_;
@@ -72,7 +72,7 @@ public class ExplorerFragment extends Fragment
 	}
 	
 	private void initMenuButton() {
-		menuButton_ = (Button)getView().findViewById(R.id.menu);
+		menuButton_ = (ImageButton)getView().findViewById(R.id.menu);
 		menuButton_.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
