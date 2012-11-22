@@ -123,15 +123,18 @@ public class MainActivity extends FragmentActivity implements
 			int placeHolder = Integer.parseInt(tag);
 			FragmentManager fm = getSupportFragmentManager();
 			
+			/* save setting */
+			
 			SettingFragment settingFragment = (SettingFragment) fm.findFragmentById(R.id.settingTab);
 			ConverterFragment converterFragment = (ConverterFragment) fm.findFragmentById(R.id.converterTab);;
-			
 			if (settingFragment!=null && currentTabTag_ == R.id.settingTab) {
 				settingFragment.savePrefs();
 				if (converterFragment!=null) {
 					converterFragment.onPreferencesChanged();
 				}
 			}
+			
+			/*switch to tab*/
 			
 			Fragment fg = fm.findFragmentByTag(tag);
 			
