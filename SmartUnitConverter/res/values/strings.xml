@@ -36,8 +36,8 @@
      <string name="explorer_warning_short">WARNING: Next update might reset everything. Click here for more info...</string>
      
      <string name="explorer_warning_full">
-         Features presented in this (explorer) tab are in beta state. They are functionals. 
-         But your setting might be lost in the future updates. 
+         Features presented in this (explorer) tab are in beta state. They ARE functional. 
+         But your setting MAY be lost in the future updates. 
          I will try to keep your setting. But I cannot guarantee (for now). 
          Anyway, these features are tested and functional. You can benefit them (until the next release).  
      </string>

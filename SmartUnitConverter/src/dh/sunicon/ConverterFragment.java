@@ -236,6 +236,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			
 			resultListAdapter_.invokeCalculation(false);
 			
+			strictMode_ = savedState.getBoolean("strictMode");
+			precision_ = savedState.getInt("precision");
 			//Log.i(TAG + "-SR", "Restore Spinner selection "+savedState.getInt("baseValueSpinnerItemPosition"));
 		}
 		catch (Exception ex)
@@ -265,6 +267,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			outState.putString("resultListAdapter", resultListAdapter_.serialize().toString());
 			outState.putBoolean("spinnerVisible", baseValueSwitcher_.getNextView() == baseValueEditor_);
 			outState.putLong("currencyUnitIdOnLoading", currencyUpdater_.getCurrencyUnitIdOnLoading());
+			outState.putBoolean("strictMode", strictMode_);
+			outState.putInt("precision", precision_);
 			
 			if (updateInProgressPanel_.getTag()!=null) {
 				outState.putSerializable("importationReport", (UpdatingReport) updateInProgressPanel_.getTag());
