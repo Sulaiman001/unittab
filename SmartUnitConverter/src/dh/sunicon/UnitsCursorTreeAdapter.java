@@ -312,8 +312,15 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
 		protected void publishResults(CharSequence constraint,
 				FilterResults results)
 		{
-			constraint_ = constraint;
-			owner_.getLoaderManager().restartLoader(CATEGORY_LOADER_ID, null, UnitsCursorTreeAdapter.this);
+			try {
+				constraint_ = constraint;
+				if (!owner_.isDetached()) {
+					owner_.getLoaderManager().restartLoader(CATEGORY_LOADER_ID, null, UnitsCursorTreeAdapter.this);
+				}
+			}
+			catch (Exception ex) {
+				Log.w("TAG", ex);
+			}
 		}
 		
 	};
