@@ -110,42 +110,42 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 		return unitName;
 	}
 	
-	private final int DELAY_RUN_QUERY = 500;
-	private Object lockLastConstraint_ = new Object();
-	private String lastConstraint_;
+//	private final int DELAY_RUN_QUERY = 500;
+//	private Object lockLastConstraint_ = new Object();
+//	private String lastConstraint_;
 	
 	@Override
 	public Cursor runQueryOnBackgroundThread(CharSequence constraint)
 	{
 		try
 		{
-			if (!TextUtils.isEmpty(constraint))
-			{
-				/* delayer events technique */
-				
-				if (constraint!=null)
-				{
-					synchronized (lockLastConstraint_)
-					{
-						lastConstraint_ = new String(constraint.toString());
-					}
-				}
-				
-				Thread.sleep(DELAY_RUN_QUERY);
-			
-				if (lastConstraint_!=null)
-				{
-					if (!lastConstraint_.equals(constraint))
-					{
-						/*
-						 * lastConstraint_ has been changed after 500ms 
-						 * => other runQueryOnBackgroundThread has been called
-						 * => no need to execute this one
-						 */ 
-						return null; 
-					}
-				}
-			}
+//			if (!TextUtils.isEmpty(constraint))
+//			{
+//				/* delayer events technique */
+//				
+//				if (constraint!=null)
+//				{
+//					synchronized (lockLastConstraint_)
+//					{
+//						lastConstraint_ = new String(constraint.toString());
+//					}
+//				}
+//				
+//				Thread.sleep(DELAY_RUN_QUERY);
+//			
+//				if (lastConstraint_!=null)
+//				{
+//					if (!lastConstraint_.equals(constraint))
+//					{
+//						/*
+//						 * lastConstraint_ has been changed after 500ms 
+//						 * => other runQueryOnBackgroundThread has been called
+//						 * => no need to execute this one
+//						 */ 
+//						return null; 
+//					}
+//				}
+//			}
 			
 			/* this is how you query for suggestions */
 			

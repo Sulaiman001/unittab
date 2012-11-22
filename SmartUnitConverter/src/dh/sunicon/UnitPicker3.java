@@ -256,7 +256,6 @@ public class UnitPicker3 extends FragmentActivity {
 				{
 					Log.w(TAG, ex);
 				}
-		
 			}
 		});
 	}

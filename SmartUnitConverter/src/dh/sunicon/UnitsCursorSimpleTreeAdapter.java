@@ -1,6 +1,7 @@
 package dh.sunicon;
 
 import java.util.LinkedList;
+import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -161,7 +162,7 @@ public class UnitsCursorSimpleTreeAdapter extends SimpleCursorTreeAdapter implem
 	}
 	
 	
-	private final int DELAY_RUN_QUERY = 500;
+	//private final int DELAY_RUN_QUERY = 500;
 	private Object lockLastConstraint_ = new Object();
 	private String lastConstraint_;
 	
@@ -170,32 +171,37 @@ public class UnitsCursorSimpleTreeAdapter extends SimpleCursorTreeAdapter implem
 	public Cursor runQueryOnBackgroundThread(CharSequence constraint) {
 		try
 		{
-			if (!TextUtils.isEmpty(constraint))
-			{
-				/* delayer events technique */
-				
-				if (constraint!=null)
-				{
-					synchronized (lockLastConstraint_)
-					{
-						lastConstraint_ = new String(constraint.toString());
-					}
-				}
-				
-				Thread.sleep(DELAY_RUN_QUERY);
+//			if (!TextUtils.isEmpty(constraint))
+//			{
+//				/* delayer events technique */
+//				
+//				if (constraint!=null)
+//				{
+//					synchronized (lockLastConstraint_)
+//					{
+//						lastConstraint_ = new String(constraint.toString());
+//					}
+//				}
+//				
+//				Thread.sleep(DELAY_RUN_QUERY);
+//			
+//				if (lastConstraint_!=null)
+//				{
+//					if (!lastConstraint_.equals(constraint))
+//					{
+//						/*
+//						 * lastConstraint_ has been changed after 500ms 
+//						 * => other runQueryOnBackgroundThread has been called
+//						 * => no need to execute this one
+//						 */ 
+//						return null; 
+//					}
+//				}
+//			}
 			
-				if (lastConstraint_!=null)
-				{
-					if (!lastConstraint_.equals(constraint))
-					{
-						/*
-						 * lastConstraint_ has been changed after 500ms 
-						 * => other runQueryOnBackgroundThread has been called
-						 * => no need to execute this one
-						 */ 
-						return null; 
-					}
-				}
+			synchronized (lockLastConstraint_)
+			{
+				lastConstraint_ = constraint != null ? constraint.toString() : "";
 			}
 			
 			/* this is how you query for suggestions */
@@ -215,7 +221,7 @@ public class UnitsCursorSimpleTreeAdapter extends SimpleCursorTreeAdapter implem
 			String wherePart = CAT_WHERE1_QUERY_PART;
 			LinkedList<String> selectionArgs = null;
 			
-			String filterText = constraint.toString().trim().toLowerCase();
+			String filterText = constraint.toString().trim().toLowerCase(Locale.US);
 			selectionArgs = new LinkedList<String>();
 			
 			final String[] words = filterText.split(" ");
@@ -260,7 +266,7 @@ public class UnitsCursorSimpleTreeAdapter extends SimpleCursorTreeAdapter implem
 		String wherePart = WHERE1_QUERY_PART;
 		LinkedList<String> selectionArgs = null;
 		
-		String filterText = constraint.toString().trim().toLowerCase();
+		String filterText = constraint.toString().trim().toLowerCase(Locale.US);
 		selectionArgs = new LinkedList<String>();
 		selectionArgs.add(Long.toString(categoryId));
 		
