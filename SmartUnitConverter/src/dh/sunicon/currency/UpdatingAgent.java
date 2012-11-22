@@ -211,6 +211,9 @@ public abstract class UpdatingAgent
 
 	public boolean isDumped()
 	{
+		if (testMode_) {
+			return false;
+		}
 		return asyncTask_.isCancelled();
 	}
 	
