@@ -33,17 +33,12 @@
         <item>21</item>
     </string-array>
     
-     <string name="explorer_warning_short">WARNING: Next update might reset everything here. Click for more info...</string>
+     <string name="explorer_warning_short">WARNING: Next update might reset everything. Click here for more info...</string>
      
      <string name="explorer_warning_full">
          Features presented in this (explorer) tab are in beta state. They are functionals. 
-         But I will not guarantee that your work (here) will maintained in the future updates. 
-         So do not spend too much time to play with these check boxes. 
-         Because you might need to redo all your work in the futures updates.
-         
-         I will try my best to keep your work here (the check-boxes state) in the futures updates. 
-         but I cannot guarantee that (for now). 
-         
-         Anyway, You can benefit these features (until the next release). They are tested and functional.  
+         But your setting might be lost in the future updates. 
+         I will try to keep your setting. But I cannot guarantee (for now). 
+         Anyway, these features are tested and functional. You can benefit them (until the next release).  
      </string>
 </resources>

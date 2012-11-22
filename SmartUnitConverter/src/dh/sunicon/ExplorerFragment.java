@@ -3,6 +3,7 @@ package dh.sunicon;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -19,10 +20,12 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.webkit.WebView.FindListener;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ExpandableListView;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.workarounds.MyApplication;
@@ -66,8 +69,8 @@ public class ExplorerFragment extends Fragment
 		initFilterEdit();
 		initTreeList();
 		initMenuButton();
+		initWarningBeta();
 	}
-	
 	
 	private void initMenuButton() {
 		menuButton_ = (Button)getView().findViewById(R.id.menu);
@@ -90,6 +93,26 @@ public class ExplorerFragment extends Fragment
 		});
 	}
 
+	private void initWarningBeta()
+	{
+		TextView warningMessage = (TextView) getView().findViewById(R.id.warningMessage);
+		
+		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
+				.setTitle("Notice") //TODO multi-language
+				.setMessage(getResources().getString(R.string.explorer_warning_full))
+				.setPositiveButton("OK", null);
+		final AlertDialog fullWarningDlg = builder.create();
+		fullWarningDlg.setCanceledOnTouchOutside(true);
+		warningMessage.setOnClickListener(new OnClickListener()
+		{
+			@Override
+			public void onClick(View v)
+			{
+				fullWarningDlg.show();
+			}
+		});
+	}
+	
 	private void initTreeList() {
 		treeList_ = (ExpandableListView)(getView().findViewById(R.id.treeList));
 
