@@ -521,17 +521,11 @@ public final class RowData implements Runnable
 		visitedUnitQueue.offer(baseUnitId_);
 		previous.put(baseUnitId_, null);
 		
-//		long maxOp = 0;
 		
 		while (!visitedUnitQueue.isEmpty() && !isKilled())
 		{
-			//long s4 = DatabaseHelper.getNow();
-			
 			long visitingUnit = visitedUnitQueue.poll();
 			visitedUnit.add(visitingUnit);
-			
-//			long elapsed1 = DatabaseHelper.getNow() - s4;
-//			if (maxOp<elapsed1) maxOp = elapsed1;
 			
 			if (visitingUnit == targetUnitId_)
 			{
@@ -549,20 +543,13 @@ public final class RowData implements Runnable
 					//check if it is not visited yet
 					if (!visitedUnitQueue.contains(neighborUnit) && !visitedUnit.contains(neighborUnit))
 					{
-						//long s5 = DatabaseHelper.getNow();
-						
 						//neighborUnit is not visited => add it to the queue
 						visitedUnitQueue.offer(neighborUnit);
 						previous.put(neighborUnit, conv);
-						
-//						long elapsed2 = DatabaseHelper.getNow() - s5;
-//						if (maxOp<elapsed2) maxOp = elapsed2;
 					}
 				}
 			}
 		}
-		
-		//long s1 = DatabaseHelper.getNow();
 		
 		/* play back (using previous list) to build the path and compute the value */
 		
@@ -597,13 +584,6 @@ public final class RowData implements Runnable
 		{
 			return Double.NaN;
 		}
-		
-//		long s2 = DatabaseHelper.getNow();
-		
-//		long elapsed = s2-s0;
-//		if (elapsed > 100) {
-//			Log.i(TAG, String.format("Finish convert to targetUnitId=%d (%d + %d = %d ms) maxOp=%d",  targetUnitId_, s1-s0, s2-s1, elapsed, maxOp));
-//		}
 		
 		return returned;
 	}

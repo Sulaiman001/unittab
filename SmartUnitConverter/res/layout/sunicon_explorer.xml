@@ -3,48 +3,61 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:paddingLeft="5dp"
-    android:paddingRight="5dp" >
+    android:orientation="vertical" >
 
-    <RelativeLayout
-        android:layout_width="fill_parent"
+    <TextView
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:paddingTop="2dp" >
+        android:background="@color/light_yellow"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:text="@string/explorer_warning_short" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_marginRight="36dp"
-            android:text="Please uncheck categories, units and currencies which are not in used."
-            android:textAppearance="?android:attr/textAppearanceSmall" />
-
-        <Button
-            android:id="@+id/menu"
-            android:layout_width="36dp"
-            android:layout_height="36dp"
-            android:layout_alignParentRight="true"
-            android:background="@drawable/ic_menu_gray"
-            />
-    </RelativeLayout>
-
-    <EditText
-        android:id="@+id/filterEdit"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:hint="Search"
-        android:imeOptions="actionDone"
-        android:inputType="textNoSuggestions|textFilter"
-        android:padding="5dp" />
-
-    <ExpandableListView
-        android:id="@+id/treeList"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:divider="@color/light_gray"
-        android:paddingTop="5dp" />
+        android:orientation="vertical"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp" >
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="2dp" >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_marginRight="36dp"
+                android:text="Please uncheck categories, units and currencies which are not in used."
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+
+            <Button
+                android:id="@+id/menu"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_alignParentRight="true"
+                android:background="@drawable/ic_menu_gray" />
+        </RelativeLayout>
+
+        <EditText
+            android:id="@+id/filterEdit"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:hint="Search"
+            android:imeOptions="actionDone"
+            android:inputType="textNoSuggestions|textFilter"
+            android:padding="5dp" />
+
+        <ExpandableListView
+            android:id="@+id/treeList"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="@color/light_gray"
+            android:paddingTop="5dp" />
+    </LinearLayout>
 
 </LinearLayout>

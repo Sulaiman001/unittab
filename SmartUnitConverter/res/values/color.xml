@@ -6,4 +6,5 @@
     <color name="light_red">#FFBBBB</color>
     <color name="light_yellow">#FFFFBB</color>
     <color name="light_green">#BBFFBB</color>
+    <color name="blue">#0000FF</color>
 </resources>
