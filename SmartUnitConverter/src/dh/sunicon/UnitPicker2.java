@@ -135,12 +135,12 @@ public class UnitPicker2 extends Activity {
     
     private void initCategoryAdapter()
     {
-    	Cursor categoryCursor = dbHelper_.getReadableDatabase().query(
-    			"category", 
-    			new String[]{"id as _id, name"}, 
-    			null, null, null, null, 
-    			"lower(name)", null);
-    	categoryAdapter_ = new SimpleCursorAdapter(this, R.layout.category_item, categoryCursor, new String[] {"name"}, new int[]{R.id.label}, 0);
+//    	Cursor categoryCursor = dbHelper_.getReadableDatabase().query(
+//    			"category", 
+//    			new String[]{"id as _id, name"}, 
+//    			null, null, null, null, 
+//    			"lower(name)", null);
+    	categoryAdapter_ = new SimpleCursorAdapter(this, R.layout.category_item, null, new String[] {"name"}, new int[]{R.id.label}, 0);
     	categoryAdapter_.setFilterQueryProvider(new FilterQueryProvider()
 		{
 			@Override
@@ -163,7 +163,8 @@ public class UnitPicker2 extends Activity {
 						null, null, 
 						"lower(name)", null);
 			}
-		});    	
+		}); 
+    	categoryAdapter_.getFilter().filter("");
     }
     
     private void initUnitAdapter()
