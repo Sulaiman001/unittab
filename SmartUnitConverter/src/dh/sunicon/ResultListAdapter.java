@@ -37,6 +37,7 @@ import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.datamodel.EnumValue;
 import dh.sunicon.runnable.ConversionsLoadingRunner;
 import dh.sunicon.runnable.RowData;
+import dh.sunicon.workarounds.DoubleFormatter;
 
 public class ResultListAdapter extends BaseAdapter implements Filterable
 {	
@@ -570,9 +571,9 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		invokeGuiUpdateAfterCalculation();
 	}
 	
-	public int getPrecision()
+	public DoubleFormatter getDoubleFormatter()
 	{
-		return owner_.getPrecision();
+		return owner_.getDoubleFormatter();
 	}
 	/*
 	 * **** Inner classes ****

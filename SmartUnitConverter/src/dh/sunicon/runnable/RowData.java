@@ -175,7 +175,7 @@ public final class RowData implements Runnable
 		}
 		else
 		{
-			return Double.toString(targetValue_);
+			return resultListAdapter_.getDoubleFormatter().format(targetValue_);
 		}
 	}
 	
@@ -301,7 +301,7 @@ public final class RowData implements Runnable
 					|| (lastBaseUnitId_!=null && !lastBaseUnitId_.equals(baseUnitId_)))
 			{
 				targetValue_ = computeTargetValue(baseValue_);				
-				targetValueHtml_ = formatDouble(targetValue_);
+				targetValueHtml_ = resultListAdapter_.getDoubleFormatter().formatHtml(targetValue_);
 				lastBaseValue_ = baseValue_;
 			}
 			
@@ -586,53 +586,6 @@ public final class RowData implements Runnable
 		}
 		
 		return returned;
-	}
-	
-	/**
-	 * Format 3.1416e+5 to "<b>3</b>.1416<b>e+5</b>" 
-	 * @param d
-	 * @return
-	 */
-	public String formatDouble(double d)
-	{
-		if (Double.isNaN(d))
-		{
-			return "-";
-		}
-		int precision = resultListAdapter_.getPrecision();
-		String s = String.format(Locale.US, "%."+precision+"g", d);
-		StringBuilder resu = new StringBuilder("<b>");
-		
-		int firstPoint = s.indexOf('.');
-		int firstComma = s.indexOf(',');
-		int p1 = Math.max(firstPoint, firstComma);
-		
-		if (p1>0) {
-			resu.append(s.substring(0, p1));
-			resu.append("</b>");
-		}
-		else {
-			p1 = 0;
-		}
-		
-		int p2 = s.lastIndexOf('e');
-		if (p2>0)
-		{
-			resu.append(s.substring(p1, p2));
-			resu.append("<b>");
-			resu.append(s.substring(p2, s.length()));
-			resu.append("</b>");
-		}
-		else
-		{
-			resu.append(s.substring(p1, s.length()));
-			if (p1==0)
-			{
-				resu.append("</b>");
-			}
-		}
-		
-		return resu.toString();
 	}
 
 	public void clearTargetValue() {

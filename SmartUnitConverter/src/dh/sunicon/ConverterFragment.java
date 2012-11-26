@@ -48,6 +48,7 @@ import dh.sunicon.currency.UpdatingReport.MessageType;
 import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.DatabaseHelper;
 import dh.sunicon.runnable.RowData;
+import dh.sunicon.workarounds.DoubleFormatter;
 import dh.sunicon.workarounds.MyApplication;
 
 public class ConverterFragment extends ListFragment implements LoaderCallbacks<Cursor>
@@ -84,9 +85,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	private SharedPreferences preferences_;
 	private int precision_;
 	
-	//private CountDownLatch spinnerLoadingLatch_;
-	
 	private boolean isActivityRunning_ = false;
+	private DoubleFormatter doubleFormatter_ = new DoubleFormatter(MainActivity.DEFAULT_PRECISION);
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) 
@@ -166,7 +166,6 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		}
 		try
 		{
-			//precision_ = preferences_.getLong("precision", 12);dd
 			categoryId_ = preferences_.getLong("categoryId", -1);
 			baseUnitId_ = preferences_.getLong("baseUnitId", -1);
 			
@@ -1058,8 +1057,9 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		}
 	}
 
-	public int getPrecision()
+	public DoubleFormatter getDoubleFormatter()
 	{
-		return precision_;
+		doubleFormatter_.setPrecision(precision_);
+		return doubleFormatter_;
 	}
 }
