@@ -180,56 +180,69 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	@Override
 	public long getItemId(int position)
 	{
-		if (data_ == null || data_.isEmpty()) {
+		try {
+			if (data_ == null || data_.isEmpty()) {
+				return -1;
+			}
+			RowData cr = data_.get(position);
+			return cr.getUnitId();
+		}
+		catch (Exception ex){
+			Log.w(TAG, ex);
 			return -1;
 		}
-		RowData cr = data_.get(position);
-		return cr.getUnitId();
 	}
 
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent)
 	{
-		/* create (or get) view */
-
-		View v;
-		TextView valueLabel;
-		TextView unitLabel;
-
-		if (convertView == null)
-		{
-			// create new view
-			v = inflater_.inflate(R.layout.value_unit_item, parent, false);
-			valueLabel = (TextView) v.findViewById(R.id.valueLabel);
-			unitLabel = (TextView) v.findViewById(R.id.unitLabel);
-			TextView[] viewsHolder = new TextView[] { valueLabel, unitLabel };
-			v.setTag(viewsHolder);
+		try {
+		
+			/* create (or get) view */
+	
+			View v;
+			TextView valueLabel;
+			TextView unitLabel;
+	
+			if (convertView == null)
+			{
+				// create new view
+				v = inflater_.inflate(R.layout.value_unit_item, parent, false);
+				valueLabel = (TextView) v.findViewById(R.id.valueLabel);
+				unitLabel = (TextView) v.findViewById(R.id.unitLabel);
+				TextView[] viewsHolder = new TextView[] { valueLabel, unitLabel };
+				v.setTag(viewsHolder);
+			}
+			else
+			{
+				// view already created, extract the children views
+				v = convertView;
+				TextView[] viewsHolder = (TextView[]) v.getTag();
+				valueLabel = viewsHolder[0];
+				unitLabel = viewsHolder[1];
+			}
+	
+			/* bind value to view */
+	
+			RowData cr = null;
+			if (data_ != null && position < data_.size()) {
+				cr = data_.get(position);
+			}
+			if (cr != null) {
+				valueLabel.setText(Html.fromHtml(cr.getValueHtmlized()));
+				unitLabel.setText(Html.fromHtml(cr.getUnitNameHtmlized()));
+			}
+			else {
+				valueLabel.setText("-");
+				unitLabel.setText("-");
+			}
+	
+			return v;
 		}
-		else
-		{
-			// view already created, extract the children views
-			v = convertView;
-			TextView[] viewsHolder = (TextView[]) v.getTag();
-			valueLabel = viewsHolder[0];
-			unitLabel = viewsHolder[1];
+		catch (Exception ex){
+			Log.w(TAG, ex);
+			return null;
 		}
-
-		/* bind value to view */
-
-		RowData cr = null;
-		if (data_ != null && position < data_.size()) {
-			cr = data_.get(position);
-		}
-		if (cr != null) {
-			valueLabel.setText(Html.fromHtml(cr.getValueHtmlized()));
-			unitLabel.setText(Html.fromHtml(cr.getUnitNameHtmlized()));
-		}
-		else {
-			valueLabel.setText("-");
-			unitLabel.setText("-");
-		}
-
-		return v;
 	}
 	
 	@Override
