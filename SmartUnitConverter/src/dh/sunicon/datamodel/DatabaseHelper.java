@@ -2,6 +2,7 @@ package dh.sunicon.datamodel;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Locale;
 
 import android.content.Context;
 
@@ -9,7 +10,7 @@ import com.readystatesoftware.sqliteasset.SQLiteAssetHelper;
 
 public class DatabaseHelper extends SQLiteAssetHelper
 {
-	public static final SimpleDateFormat DateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	public static final SimpleDateFormat DateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US);
 	public static final int CURRENCY_COUNT = 165;
 	
 	private static final String DATABASE_NAME = "SmartUnitConverter.db";

@@ -1,6 +1,7 @@
 package dh.sunicon;
 
 import java.util.LinkedList;
+import java.util.Locale;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -179,7 +180,7 @@ public class UnitsCursorAdapter extends CursorAdapter implements
 			String wherePart = WHERE1_QUERY_PART;
 			LinkedList<String> selectionArgs = null;
 			
-			String filterText = constraint.toString().trim().toLowerCase();
+			String filterText = constraint.toString().trim().toLowerCase(Locale.US);
 			selectionArgs = new LinkedList<String>();
 			
 			final String[] words = filterText.split(" ");

@@ -20,7 +20,6 @@
             android:id="@+id/categoryLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_span="2"
             android:text="Heat Transfer Coefficient"
             android:textColor="@color/category_fg"
             android:textSize="14sp" />

@@ -85,7 +85,6 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	private SharedPreferences preferences_;
 	private int precision_;
 	private int precisionInt_;
-	private CharSequence lastBaseValueSet_ = null;
 	private CharSequence lastBaseValueTyping_ = null;
 	
 	private boolean isActivityRunning_ = false;
@@ -242,10 +241,10 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			precision_ = savedState.getInt("precision");
 			precisionInt_ = savedState.getInt("precisionInt");
 			
-			lastBaseValueSet_= savedState.getCharSequence("lastBaseValueSet");
 			lastBaseValueTyping_ = savedState.getCharSequence("lastBaseValueTyping");
 			
 			setBaseValue(lastBaseValueTyping_);
+			resultListAdapter_.setBaseUnitId(categoryId_, baseUnitId_);
 //			if (lastBaseValueSet_ != lastBaseValueTyping_) {
 //				Log.d(TAG, "lastBaseValueSet != lastBaseValueTyping");
 //				
@@ -285,7 +284,6 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			outState.putBoolean("strictMode", strictMode_);
 			outState.putInt("precision", precision_);
 			outState.putInt("precisionInt", precisionInt_);
-			outState.putCharSequence("lastBaseValueSet", lastBaseValueSet_);
 			outState.putCharSequence("lastBaseValueTyping", lastBaseValueTyping_);
 			
 			if (updateInProgressPanel_.getTag()!=null) {
@@ -913,7 +911,6 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	
 	private void setBaseValue(CharSequence s) throws IllegalAccessException
 	{
-		lastBaseValueSet_ = s;
 		if (TextUtils.isEmpty(s))
 		{
 			getResultListAdapter().setBaseValue(Double.NaN, null);

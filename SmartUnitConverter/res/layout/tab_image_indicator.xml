@@ -13,6 +13,7 @@
         android:background="@drawable/tab_bg_selector"
         android:gravity="center"
         android:padding="5dip"
+        android:contentDescription="Settings"
         android:src="@drawable/ic_setting"
         />
 

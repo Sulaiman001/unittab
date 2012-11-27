@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Locale;
 
 import android.text.TextUtils;
 import dh.sunicon.datamodel.DatabaseHelper;
@@ -37,7 +38,7 @@ public class UpdatingReport implements Serializable
 				return "Done"; //TODO multi-language
 			}
 			
-			return String.format("Updated rates for %d/%d currencies.", updatedCount_, DatabaseHelper.CURRENCY_COUNT);
+			return String.format(Locale.US,"Updated rates for %d/%d currencies.", updatedCount_, DatabaseHelper.CURRENCY_COUNT);
 		}
 	}
 	

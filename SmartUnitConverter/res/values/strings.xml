@@ -41,7 +41,7 @@
         <item>15</item>
     </string-array>
 
-    <string name="explorer_warning_short">WARNING: Next update might reset everything. Click here for more info...</string>
+    <string name="explorer_warning_short">WARNING: Next update might reset everything. Click here for more info&#8230;</string>
     <string name="explorer_warning_full">
         Features presented in this (explorer) tab are in beta state. They ARE functional. 
         Your setting will take effect the next time you select the concerned Units / Categories.
