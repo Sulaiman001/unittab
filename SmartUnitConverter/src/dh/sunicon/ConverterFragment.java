@@ -85,6 +85,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	private SharedPreferences preferences_;
 	private int precision_;
 	private int precisionInt_;
+	private CharSequence lastBaseValueSet_ = null;
+	private CharSequence lastBaseValueTyping_ = null;
 	
 	private boolean isActivityRunning_ = false;
 	private DoubleFormatter doubleFormatter_ = new DoubleFormatter(MainActivity.DEFAULT_PRECISION_INT, MainActivity.DEFAULT_PRECISION);
@@ -240,6 +242,15 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			precision_ = savedState.getInt("precision");
 			precisionInt_ = savedState.getInt("precisionInt");
 			
+			lastBaseValueSet_= savedState.getCharSequence("lastBaseValueSet");
+			lastBaseValueTyping_ = savedState.getCharSequence("lastBaseValueTyping");
+			
+			setBaseValue(lastBaseValueTyping_);
+//			if (lastBaseValueSet_ != lastBaseValueTyping_) {
+//				Log.d(TAG, "lastBaseValueSet != lastBaseValueTyping");
+//				
+//			}
+			
 			//Log.i(TAG + "-SR", "Restore Spinner selection "+savedState.getInt("baseValueSpinnerItemPosition"));
 		}
 		catch (Exception ex)
@@ -255,6 +266,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	public void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		Log.i(TAG + "-SR", "Save State"); 
+		
+		
 		try
 		{
 			outState.putCharSequence("categoryLabelText", categoryLabel_.getText());
@@ -272,6 +285,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			outState.putBoolean("strictMode", strictMode_);
 			outState.putInt("precision", precision_);
 			outState.putInt("precisionInt", precisionInt_);
+			outState.putCharSequence("lastBaseValueSet", lastBaseValueSet_);
+			outState.putCharSequence("lastBaseValueTyping", lastBaseValueTyping_);
 			
 			if (updateInProgressPanel_.getTag()!=null) {
 				outState.putSerializable("importationReport", (UpdatingReport) updateInProgressPanel_.getTag());
@@ -348,6 +363,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 					{
 						return;
 					}
+					
+					lastBaseValueTyping_ = s;
 										
 					setComputationStateFinished(false); //hide the list while waiting and perform calculation
 					
@@ -896,6 +913,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	
 	private void setBaseValue(CharSequence s) throws IllegalAccessException
 	{
+		lastBaseValueSet_ = s;
 		if (TextUtils.isEmpty(s))
 		{
 			getResultListAdapter().setBaseValue(Double.NaN, null);
