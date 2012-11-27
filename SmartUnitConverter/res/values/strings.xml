@@ -49,5 +49,9 @@
         I will try to keep your setting. But I cannot guarantee (for now). 
         Anyway, these features are tested and functional. You can benefit them (until the next release).
 	</string>
+	<string name="notice_setting">
+	    Most configuration changes will be applied the next time you select the concerned units/categories. Swith to other unit of other category to make sure your configuration is applied.
+	</string>
+    
 
 </resources>
