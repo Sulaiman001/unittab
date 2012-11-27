@@ -28,6 +28,7 @@ public class SettingFragment extends Fragment
 	private Spinner currencyLiveUpdateOption_;
 	private Spinner currencyUsdOnly_;
 	private Spinner precisionSpinner_;
+	private Spinner precisionIntSpinner_;
 	private CheckBox strictModeCheckBox_;
 	
 	@Override
@@ -52,6 +53,7 @@ public class SettingFragment extends Fragment
 		initCurrencyExpiryTime();
 		initCurrencyUsdOnly();
 		initPrecision();
+		initPrecisionInt();
 		initStrictMode();
 		
 		restoreFromPreferences();
@@ -89,7 +91,14 @@ public class SettingFragment extends Fragment
 		precisionSpinner_ = (Spinner) getView().findViewById(R.id.precision);
 		precisionSpinner_.setAdapter(adapter);
 	}
-	
+	private void initPrecisionInt()
+	{
+		final ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this.getActivity(),
+		        R.array.opt_precision_int, android.R.layout.simple_spinner_item);
+		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		precisionIntSpinner_ = (Spinner) getView().findViewById(R.id.precisionInt);
+		precisionIntSpinner_.setAdapter(adapter);
+	}
 	private void initStrictMode()
 	{
 		strictModeCheckBox_ = (CheckBox) getView().findViewById(R.id.strictMode);
@@ -131,6 +140,10 @@ public class SettingFragment extends Fragment
 			editor.putInt(MainActivity.OPTNAME_PRECISION, precision);
 		}
 		{
+			int precisionInt = Integer.parseInt((precisionIntSpinner_.getAdapter().getItem(precisionIntSpinner_.getSelectedItemPosition())).toString());
+			editor.putInt(MainActivity.OPTNAME_PRECISION_INT, precisionInt);
+		}
+		{
 			editor.putBoolean(MainActivity.OPTNAME_STRICTMODE, strictModeCheckBox_.isChecked());
 		}
 		editor.commit();
@@ -166,6 +179,20 @@ public class SettingFragment extends Fragment
 			}
 			
 			precisionSpinner_.setSelection(precisionPos);
+		}
+		{
+			int precisionInt = preferences_.getInt(MainActivity.OPTNAME_PRECISION_INT, MainActivity.DEFAULT_PRECISION_INT);
+			
+			//find the equivalent position on the spinner 
+			int precisionIntPos = 0;
+			String[] arr = getResources().getStringArray(R.array.opt_precision_int);
+			String precisionIntStr = Integer.toString(precisionInt);
+			for (precisionIntPos = 0; precisionIntPos<arr.length; precisionIntPos++) {
+				if (precisionIntStr.equals(arr[precisionIntPos])) {
+					break;
+				}
+			}
+			precisionIntSpinner_.setSelection(precisionIntPos);
 		}
 		{
 			strictModeCheckBox_.setChecked(preferences_.getBoolean(MainActivity.OPTNAME_STRICTMODE, MainActivity.DEFAULT_STRICTMODE));

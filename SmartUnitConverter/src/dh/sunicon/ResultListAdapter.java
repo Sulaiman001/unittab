@@ -540,6 +540,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		if (data_ == null || data_.isEmpty())
 		{
 			Log.w(TAG, "RowData list is empty");
+			notifyDataSetInvalidated();
 			((ConverterFragment)owner_).setComputationStateFinished(true);
 			return;
 		}

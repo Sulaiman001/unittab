@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <string name="app_name">Smart Unit Converter</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_unit_picker">Smart Unit Picker</string>
     <string name="title_activity_unit_picker2">Standard Unit Picker</string>
+
     <string-array name="opt_currency_live_update">
         <item>All network</item>
         <item>Wifi only</item>
@@ -15,12 +17,11 @@
         <item>1 day</item>
         <item>1 week</item>
     </string-array>
-     <string-array name="opt_currency_usd_only">
+    <string-array name="opt_currency_usd_only">
         <item>Yes</item>
         <item>No</item>
     </string-array>
-    
-     <string-array name="opt_precision">
+    <string-array name="opt_precision">
         <item>0</item>
         <item>1</item>
         <item>2</item>
@@ -32,13 +33,21 @@
         <item>18</item>
         <item>21</item>
     </string-array>
-    
-     <string name="explorer_warning_short">WARNING: Next update might reset everything. Click here for more info...</string>
-     
-     <string name="explorer_warning_full">
-         Features presented in this (explorer) tab are in beta state. They ARE functional. 
-         But your setting MAY be lost in the future updates. 
-         I will try to keep your setting. But I cannot guarantee (for now). 
-         Anyway, these features are tested and functional. You can benefit them (until the next release).  
-     </string>
+    <string-array name="opt_precision_int">
+        <item>4</item>
+        <item>6</item>
+        <item>9</item>
+        <item>12</item>
+        <item>15</item>
+    </string-array>
+
+    <string name="explorer_warning_short">WARNING: Next update might reset everything. Click here for more info...</string>
+    <string name="explorer_warning_full">
+        Features presented in this (explorer) tab are in beta state. They ARE functional. 
+        Your setting will take effect the next time you select the concerned Units / Categories.
+        But your setting MAY be lost in the future updates. 
+        I will try to keep your setting. But I cannot guarantee (for now). 
+        Anyway, these features are tested and functional. You can benefit them (until the next release).
+	</string>
+
 </resources>

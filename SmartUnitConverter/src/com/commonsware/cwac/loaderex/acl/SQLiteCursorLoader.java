@@ -19,13 +19,16 @@ package com.commonsware.cwac.loaderex.acl;
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.Arrays;
+
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 public class SQLiteCursorLoader extends AbstractCursorLoader {
+	private static final String TAG =  "SQLiteCursorLoader";
   SQLiteOpenHelper db=null;
   String rawQuery=null;
   String[] args=null;
@@ -51,7 +54,13 @@ public class SQLiteCursorLoader extends AbstractCursorLoader {
    */
   @Override
   protected Cursor buildCursor() {
-    return(db.getReadableDatabase().rawQuery(rawQuery, args));
+	  try {
+		  return(db.getReadableDatabase().rawQuery(rawQuery, args));
+	  }
+	  catch (Exception ex) {
+		  Log.w(TAG, ex);
+	  }
+	  return null;
   }
 
   /**

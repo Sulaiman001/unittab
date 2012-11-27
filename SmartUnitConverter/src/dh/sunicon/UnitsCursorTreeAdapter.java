@@ -462,43 +462,57 @@ public class UnitsCursorTreeAdapter extends BaseExpandableListAdapter implements
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor)
 	{
-		int loaderId = loader.getId();
-
-		//swap the cursor
-		if (loaderId == CATEGORY_LOADER_ID) {
-			LoaderManager loaderManager = owner_.getLoaderManager();
+		if (cursor == null) {
+			return;
+		}
+		try {
 			
-        	categoryCursor_ = cursor;
-        	while (categoryCursor_.moveToNext()) {
-        		int categoryId = cursor.getInt(0);
-        		if (loaderManager.getLoader(categoryId) !=null) {
-        			loaderManager.restartLoader(categoryId, null, this);
-        		}
-        	}
-        }
-        else {
-        	//Log.d(TAG, "onLoadFinished "+loaderId);
-        	unitsOfCategory_.put(loaderId, cursor);
-        }
-		notifyDataSetChanged();
+			int loaderId = loader.getId();
+	
+			//swap the cursor
+			if (loaderId == CATEGORY_LOADER_ID) {
+				LoaderManager loaderManager = owner_.getLoaderManager();
+				
+	        	categoryCursor_ = cursor;
+	        	while (categoryCursor_.moveToNext()) {
+	        		int categoryId = cursor.getInt(0);
+	        		if (loaderManager.getLoader(categoryId) !=null) {
+	        			loaderManager.restartLoader(categoryId, null, this);
+	        		}
+	        	}
+	        }
+	        else {
+	        	//Log.d(TAG, "onLoadFinished "+loaderId);
+	        	unitsOfCategory_.put(loaderId, cursor);
+	        }
+			notifyDataSetChanged();
+		}
+		catch (Exception ex) {
+			Log.w(TAG, ex);
+		}
 	}
 
 	@Override
 	public void onLoaderReset(Loader<Cursor> loader)
 	{
-		// This is called when the last Cursor provided to onLoadFinished()
-        // above is about to be closed.  We need to make sure we are no
-        // inter using it.
-		int loaderId = loader.getId();
-		
-        if (loaderId == CATEGORY_LOADER_ID) {
-        	categoryCursor_ = null;
-        }
-        else {
-        	//Log.d(TAG, "onLoaderReset "+loaderId);
-        	unitsOfCategory_.put(loaderId, null);
-        }
-        notifyDataSetChanged();
+		try {
+			// This is called when the last Cursor provided to onLoadFinished()
+	        // above is about to be closed.  We need to make sure we are no
+	        // inter using it.
+			int loaderId = loader.getId();
+			
+	        if (loaderId == CATEGORY_LOADER_ID) {
+	        	categoryCursor_ = null;
+	        }
+	        else {
+	        	//Log.d(TAG, "onLoaderReset "+loaderId);
+	        	unitsOfCategory_.put(loaderId, null);
+	        }
+	        notifyDataSetChanged();
+		}
+		catch (Exception ex) {
+			Log.w(TAG, ex);
+		}
 	}
 	
 	private ContentChangingTask<Object,Void,Void> invokeSetEnableCateogryOrUnit(final int categoryId, final int unitId, final boolean enabled) {

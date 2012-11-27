@@ -31,13 +31,41 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginRight="5dp"
-                    android:text="Precision" />
+                    android:text="Max. Integer" />
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginRight="5dp"
-                    android:text="(affect result length)"
+                    android:text="(Precision - integer part)"
+                    android:textColor="@color/light_gray2" />
+            </LinearLayout>
+
+            <Spinner
+                android:id="@+id/precisionInt"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </TableRow>
+        
+        <TableRow android:paddingLeft="20dp" >
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="vertical" >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:text="Max. Fraction" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="5dp"
+                    android:text="(Precision - decimal part)"
                     android:textColor="@color/light_gray2" />
             </LinearLayout>
 
@@ -124,7 +152,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginRight="5dp"
-                    android:text="L.U only USD rates:" />
+                    android:text="L.U only USD rates" />
 
                 <TextView
                     android:layout_width="wrap_content"

@@ -23,36 +23,40 @@ import com.google.common.base.Strings;
  */
 public class DoubleFormatter
 {
-	private static final double EXP_UP = 1e9; //in my experience: EXP_UP should not be greater than 1e17
 	private static final double EXP_DOWN = 1.e-3;
-	private int precision_;
+	private double EXP_UP; // always = 10^maxInteger
+	private int maxInteger_;
+	private int maxFraction_;
 	private NumberFormat nfBelow_; 
 	private NumberFormat nfNormal_;
 	private NumberFormat nfAbove_;
 	
 	private enum NumberFormatKind {Below, Normal, Above}
 	
-	public DoubleFormatter(int precision)
+	public DoubleFormatter(int maxInteger, int maxFraction)
 	{
-		setPrecision(precision);
+		setPrecision(maxInteger, maxFraction);
 	}
 	
-	public void setPrecision(int precision)
+	public void setPrecision(int maxInteger, int maxFraction)
 	{
-		Preconditions.checkArgument(precision>=0);
+		Preconditions.checkArgument(maxFraction>=0);
+		Preconditions.checkArgument(maxInteger>0 && maxInteger<17);
 		
-		if (precision == precision_) {
+		if (maxFraction == maxFraction_ && maxInteger_ == maxInteger) {
 			return;
 		}
 		
-		precision_ = precision;
+		maxFraction_ = maxFraction;
+		maxInteger_ = maxInteger;
+		EXP_UP =  Math.pow(10, maxInteger);
 		nfBelow_ = createNumberFormat(NumberFormatKind.Below);
 		nfNormal_ = createNumberFormat(NumberFormatKind.Normal);
 		nfAbove_ = createNumberFormat(NumberFormatKind.Above);
 	}
 
 	private NumberFormat createNumberFormat(NumberFormatKind kind) {
-		final String sharpByPrecision = Strings.repeat("#", precision_); //if you do not use Guava library, replace with createSharp(precision);
+		final String sharpByPrecision = Strings.repeat("#", maxFraction_); //if you do not use Guava library, replace with createSharp(precision);
 		NumberFormat f = NumberFormat.getInstance(Locale.US);
 		
 		//Apply banker's rounding:  this is the rounding mode that statistically minimizes cumulative error when applied repeatedly over a sequence of calculations
@@ -79,7 +83,7 @@ public class DoubleFormatter
 			//use exponent format if v is out side of [EXP_DOWN,EXP_UP]
 			
 			if (kind == NumberFormatKind.Normal) {
-				if (precision_ == 0) {
+				if (maxFraction_ == 0) {
 					df.applyPattern("#,##0");
 				}
 				else {
@@ -87,7 +91,7 @@ public class DoubleFormatter
 				}
 			}
 			else {
-				if (precision_ == 0) {
+				if (maxFraction_ == 0) {
 					df.applyPattern("0E0");
 				}
 				else {
@@ -146,7 +150,7 @@ public class DoubleFormatter
 	@Deprecated
 	public String formatInefficient(double v) {
 
-		final String sharpByPrecision = Strings.repeat("#", precision_); //if you do not use Guava library, replace with createSharp(precision);
+		final String sharpByPrecision = Strings.repeat("#", maxFraction_); //if you do not use Guava library, replace with createSharp(precision);
 		
 		final double absv = Math.abs(v);
 		

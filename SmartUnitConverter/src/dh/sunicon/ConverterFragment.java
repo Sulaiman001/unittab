@@ -84,9 +84,10 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	private boolean strictMode_ = false;
 	private SharedPreferences preferences_;
 	private int precision_;
+	private int precisionInt_;
 	
 	private boolean isActivityRunning_ = false;
-	private DoubleFormatter doubleFormatter_ = new DoubleFormatter(MainActivity.DEFAULT_PRECISION);
+	private DoubleFormatter doubleFormatter_ = new DoubleFormatter(MainActivity.DEFAULT_PRECISION_INT, MainActivity.DEFAULT_PRECISION);
 	
 	@Override
 	public void onCreate(Bundle savedInstanceState) 
@@ -237,6 +238,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			
 			strictMode_ = savedState.getBoolean("strictMode");
 			precision_ = savedState.getInt("precision");
+			precisionInt_ = savedState.getInt("precisionInt");
+			
 			//Log.i(TAG + "-SR", "Restore Spinner selection "+savedState.getInt("baseValueSpinnerItemPosition"));
 		}
 		catch (Exception ex)
@@ -268,6 +271,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			outState.putLong("currencyUnitIdOnLoading", currencyUpdater_.getCurrencyUnitIdOnLoading());
 			outState.putBoolean("strictMode", strictMode_);
 			outState.putInt("precision", precision_);
+			outState.putInt("precisionInt", precisionInt_);
 			
 			if (updateInProgressPanel_.getTag()!=null) {
 				outState.putSerializable("importationReport", (UpdatingReport) updateInProgressPanel_.getTag());
@@ -1000,39 +1004,53 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	@Override
 	public void onLoadFinished(Loader<Cursor> loader, Cursor cursor)
 	{
-		baseValueSpinnerAdapter_.changeCursor(cursor);
-		if (cursor.getCount()>0)
-	    {
-			Log.v(TAG + "-Loader", "onLoadFinished set switch to spinner & restore position="+spinnerPositionToRestore_);
-
-			//switch to the spinner
-			if (baseValueSwitcher_.getNextView() == baseValueSpinner_)
-			{
-				baseValueSwitcher_.showNext();
+		try {
+			if (cursor == null) {
+				return;
 			}
 			
-			//restore position if needed
-			if (spinnerPositionToRestore_>=0) {
-		    	baseValueSpinner_.setSelection(spinnerPositionToRestore_);
-		    	spinnerPositionToRestore_ = -1;
+			baseValueSpinnerAdapter_.changeCursor(cursor);
+			if (cursor.getCount()>0)
+		    {
+				Log.v(TAG + "-Loader", "onLoadFinished set switch to spinner & restore position="+spinnerPositionToRestore_);
+	
+				//switch to the spinner
+				if (baseValueSwitcher_.getNextView() == baseValueSpinner_)
+				{
+					baseValueSwitcher_.showNext();
+				}
+				
+				//restore position if needed
+				if (spinnerPositionToRestore_>=0) {
+			    	baseValueSpinner_.setSelection(spinnerPositionToRestore_);
+			    	spinnerPositionToRestore_ = -1;
+			    }
 		    }
-	    }
-		else
-		{
-			Log.v(TAG + "-Loader", "onLoadFinished set switch to editor");
-			
-			//switch to the editor
-			if (baseValueSwitcher_.getNextView() == baseValueEditor_)
+			else
 			{
-				baseValueSwitcher_.showNext();
+				Log.v(TAG + "-Loader", "onLoadFinished set switch to editor");
+				
+				//switch to the editor
+				if (baseValueSwitcher_.getNextView() == baseValueEditor_)
+				{
+					baseValueSwitcher_.showNext();
+				}
 			}
+		}
+		catch (Exception ex) {
+			showError(ex);
 		}
 	}
 
 	@Override
 	public void onLoaderReset(Loader<Cursor> loader)
 	{
-		baseValueSpinnerAdapter_.changeCursor(null);
+		try {
+			baseValueSpinnerAdapter_.changeCursor(null);
+		}
+		catch (Exception ex) {
+			showError(ex);
+		}
 	}
 
 	public CurrencyUpdater getCurrencyUpdater()
@@ -1054,12 +1072,13 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		{
 			strictMode_ = preferences_.getBoolean(MainActivity.OPTNAME_STRICTMODE, MainActivity.DEFAULT_STRICTMODE);
 			precision_ = preferences_.getInt(MainActivity.OPTNAME_PRECISION, MainActivity.DEFAULT_PRECISION);
+			precisionInt_ = preferences_.getInt(MainActivity.OPTNAME_PRECISION_INT, MainActivity.DEFAULT_PRECISION_INT);
 		}
 	}
 
 	public DoubleFormatter getDoubleFormatter()
 	{
-		doubleFormatter_.setPrecision(precision_);
+		doubleFormatter_.setPrecision(precisionInt_, precision_);
 		return doubleFormatter_;
 	}
 }

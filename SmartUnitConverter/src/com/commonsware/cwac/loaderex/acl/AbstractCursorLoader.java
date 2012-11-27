@@ -61,6 +61,10 @@ abstract public class AbstractCursorLoader extends AsyncTaskLoader<Cursor> {
       return;
     }
     
+    if (cursor == null) {
+    	return;
+    }
+    
     Cursor oldCursor=lastCursor;
     lastCursor=cursor;
 
