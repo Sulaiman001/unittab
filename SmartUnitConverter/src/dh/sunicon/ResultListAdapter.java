@@ -272,21 +272,22 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		
 		if (sameCategory && baseUnitId == baseUnitId_)
 		{
-			((ConverterFragment)owner_).setComputationStateFinished(true);
+			owner_.setComputationStateFinished(true);
 			return; //nothing changed
 		}
 	
-		((ConverterFragment)owner_).setComputationStateFinished(false);
+		owner_.setComputationStateFinished(false);
 		
 		categoryId_ = categoryId;
 		baseUnitId_ = baseUnitId;
 		
 		/*read all conversion of the category*/
+
 		
 		/* replace old conversionsLoadingRunner_ by a new one. No need to lock conversionsLoadingRunner_ because this code runs on main thread */
 		if (conversionsLoadingRunner_ != null)
 			conversionsLoadingRunner_.dumpIt();
-		conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, categoryId_, baseUnitId_);
+		conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, categoryId_, baseUnitId_, owner_.useOnlyUsdRates());
 		conversionsLoadingFuture_ = conversionsLoadingThread_.submit(conversionsLoadingRunner_);
 		
 		if (sameCategory) {
@@ -325,7 +326,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		else
 		{
 			Log.w(TAG, "Ignore calculation because the baseValue has not been changed");
-			((ConverterFragment)owner_).setComputationStateFinished(true);
+			owner_.setComputationStateFinished(true);
 		}
 	}
 
@@ -336,27 +337,17 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		
 		Log.v(TAG, "reComputeAll");
 		
-		((ConverterFragment)owner_).setComputationStateFinished(false);
+		owner_.setComputationStateFinished(false);
 		
 		/* refresh Conversions. No need to lock conversionsLoadingRunner_ because this code runs on main thread */
 		
 		if (conversionsLoadingRunner_ != null)
 			conversionsLoadingRunner_.dumpIt();
-		conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, categoryId_, baseUnitId_);
+		conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, categoryId_, baseUnitId_, owner_.useOnlyUsdRates());
 		conversionsLoadingFuture_ = conversionsLoadingThread_.submit(conversionsLoadingRunner_);
-		
-//		/* re-calculate target value */
-//
-//		if (data_!= null)
-//		{
-//			for (RowData rowdata : data_)
-//			{
-//				rowdata.clearTargetValue(); //reset target value
-//				rowdata.setBase(baseValue_, baseValueEnumId_, baseUnitId_); //recalcule target value
-//			}
-//		}
-		
+	
 		//invalid all targetValue
+		
 		if (filter_!=null) {
 			filter_.clearAllTargetValues();
 		}
@@ -393,7 +384,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 								{
 									notifyDataSetChanged();
 								}
-								((ConverterFragment)owner_).setComputationStateFinished(true);
+								owner_.setComputationStateFinished(true);
 							}
 							catch (Exception ex)
 							{
@@ -583,7 +574,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		{
 			Log.w(TAG, "RowData list is empty");
 			notifyDataSetInvalidated();
-			((ConverterFragment)owner_).setComputationStateFinished(true);
+			owner_.setComputationStateFinished(true);
 			return;
 		}
 		
@@ -597,7 +588,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			return;
 		}
 		
-		((ConverterFragment)owner_).setComputationStateFinished(false);
+		owner_.setComputationStateFinished(false);
 
 		cancelCalculation();
 		

@@ -1102,7 +1102,16 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			precisionInt_ = preferences_.getInt(MainActivity.OPTNAME_PRECISION_INT, MainActivity.DEFAULT_PRECISION_INT);
 		}
 	}
-
+	public boolean useOnlyUsdRates() {
+		if (preferences_!=null) {
+			return preferences_.getBoolean(MainActivity.OPTNAME_CURRENCY_USD_ONLY, MainActivity.DEFAULT_CURRENCY_USD_ONLY);
+		}
+		else {
+			return MainActivity.DEFAULT_CURRENCY_USD_ONLY;
+		}
+	}
+	
+	
 	public DoubleFormatter getDoubleFormatter()
 	{
 		doubleFormatter_.setPrecision(precisionInt_, precision_);

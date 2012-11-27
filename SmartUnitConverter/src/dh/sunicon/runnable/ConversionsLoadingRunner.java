@@ -8,6 +8,7 @@ import org.json.JSONObject;
 
 import android.database.Cursor;
 import android.util.Log;
+import dh.sunicon.MainActivity;
 import dh.sunicon.currency.UpdatingAgentsManager;
 import dh.sunicon.datamodel.Category;
 import dh.sunicon.datamodel.Conversion;
@@ -38,19 +39,19 @@ public final class ConversionsLoadingRunner implements Runnable
 	private final long baseUnitId_;
 	
 	private volatile boolean cancelled_ = false;
-	//private CountDownLatch countDownLatch_ = new CountDownLatch(1);
 	
 	private long optimizeCurrencyId_ = -1;
+	private boolean forceUseUsdRates_ = MainActivity.DEFAULT_CURRENCY_USD_ONLY;
 	private ArrayList<Conversion> conversions_;
 	private ArrayList<Corresponding> correspondings_;
 	private HashMap<Long, EnumValue> enumValues_;
 	
-	public ConversionsLoadingRunner(DatabaseHelper dbHelper, long categoryId, long baseUnitId)
+	public ConversionsLoadingRunner(DatabaseHelper dbHelper, long categoryId, long baseUnitId, boolean forceUseUsdRates)
 	{
 		dbHelper_ = dbHelper;
 		categoryId_ = categoryId;
 		baseUnitId_ = baseUnitId;
-		//countDownLatch_ = new CountDownLatch(1);
+		forceUseUsdRates_ = forceUseUsdRates;
 	}
 	
 	public ConversionsLoadingRunner(DatabaseHelper dbHelper, JSONObject savedState) throws JSONException
@@ -58,17 +59,8 @@ public final class ConversionsLoadingRunner implements Runnable
 		dbHelper_ = dbHelper;
 		categoryId_ = savedState.getLong("categoryId");
 		baseUnitId_ = savedState.getLong("baseUnitId");
-		//countDownLatch_ = new CountDownLatch(1);
-//		if (!finished_)
-//		{
-//			countDownLatch_ = new CountDownLatch(1);
-//		}
-//		else
-//		{
-//			countDownLatch_ = new CountDownLatch(0);
-//			conversions_ = new ArrayList<Conversion>();
-//			JSONArray jsonConversions = 
-//		}
+		optimizeCurrencyId_ = savedState.getLong("optimizeCurrencyId");
+		forceUseUsdRates_ = savedState.getBoolean("forceUseUsdRates");
 	}
 	
 	public JSONObject serialize() throws JSONException {
@@ -76,6 +68,8 @@ public final class ConversionsLoadingRunner implements Runnable
 		
 		json.put("categoryId", categoryId_);
 		json.put("baseUnitId", baseUnitId_);
+		json.put("optimizeCurrencyId", optimizeCurrencyId_);
+		json.put("forceUseUsdRates", forceUseUsdRates_);
 //		json.put("finished", finished_);
 //
 //		if (!finished_) {
@@ -151,7 +145,7 @@ public final class ConversionsLoadingRunner implements Runnable
 			
 			if (categoryId_ == Category.CURRENCY_CATEGORY) 
 			{
-				optimizeCurrencyId_ = readCurrencyConversions();
+				optimizeCurrencyId_ = readCurrencyConversions(forceUseUsdRates_);
 				return;
 			}
 			
@@ -263,7 +257,7 @@ public final class ConversionsLoadingRunner implements Runnable
 	 * 
 	 * return optimize-currency Id, it will be use to boost the calculation process 
 	 */
-	private long readCurrencyConversions()
+	private long readCurrencyConversions(boolean forceUseOnlyUsdRates)
 	{
 		if (cancelled_) return -1;
 		
@@ -278,7 +272,8 @@ public final class ConversionsLoadingRunner implements Runnable
 		//Get the conversions from the optimizeBaseCurrencyId
 		
 		//Get the conversions from optimizeBaseCurrencyId
-		long optimizeBaseCurrencyId = choseBetweenMostRecentCurrencyAnd(baseUnitId_);
+		
+		long optimizeBaseCurrencyId = forceUseOnlyUsdRates ? Unit.USD_UNIT : choseBetweenMostRecentCurrencyAnd(baseUnitId_);
 		{
 			Cursor cur1 = dbHelper_.getReadableDatabase().rawQuery("SELECT * FROM conversion WHERE base = ?", new String[]{Long.toString(optimizeBaseCurrencyId)});
 			try
@@ -384,7 +379,7 @@ public final class ConversionsLoadingRunner implements Runnable
 					long mostRecentCurrencyUpdateDate = cur1.getLong(cur1.getColumnIndex("i"));
 					long preferedCurrencyUpdateDate = UpdatingAgentsManager.getLastUpdate(dbHelper_, preferedCurrencyId);
 					
-					if ((mostRecentCurrencyUpdateDate - preferedCurrencyUpdateDate) > 7 * MILIS_PER_DAY) {
+					if ((mostRecentCurrencyUpdateDate - preferedCurrencyUpdateDate) > 3 * MILIS_PER_DAY) {
 						Log.w("CURR", "Use the Conversion-set of the most recent currency ("+Long.toString(mostRecentCurrencyId)+") with two-step conversion");
 						return mostRecentCurrencyId;
 					}
@@ -395,6 +390,11 @@ public final class ConversionsLoadingRunner implements Runnable
 			cur1.close();
 		}
 		return preferedCurrencyId; 
+	}
+
+	public void setUseOnlyUsdRates(boolean forceUseUsdRates)
+	{
+		this.forceUseUsdRates_ = forceUseUsdRates;
 	}
 	
 }
