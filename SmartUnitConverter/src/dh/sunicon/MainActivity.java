@@ -208,7 +208,7 @@ public class MainActivity extends FragmentActivity implements
 			try {
 				convfg.setBaseUnit(categoryName, unitName, 
 						categoryId, unitId);
-			} catch (IllegalAccessException e) {
+			} catch (Exception e) {
 				Log.w(TAG, e);
 			}
 			

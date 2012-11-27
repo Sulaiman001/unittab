@@ -18,6 +18,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import com.google.common.base.Preconditions;
+
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Looper;
@@ -118,17 +120,20 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				}
 				data_ = new ArrayList<RowData>();
 				for (int i = 0; i<n; i++) {
-					data_.add(
-						new RowData(
-								this,
-								jsonRowData.getJSONObject(i))
-					);
+					RowData r = new RowData(this,jsonRowData.getJSONObject(i));
+					if (r.getCategoryId()!=categoryId_) {
+						Log.w(TAG+"-FD", String.format("RowDatas and category mismatched detected rowsCat=%d <> cat=%d", r.getCategoryId(), categoryId_));
+						invokeFillData();
+						break;
+					}
+					data_.add(r);
 				}
 			}
 		}
 		else {
 			invokeFillData();
 		}
+		
 	}
 	
 	public JSONObject serialize() throws JSONException
@@ -261,6 +266,8 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		if (!onGuiThread())
 			throw new IllegalAccessException("this methode must be called from UI Thread.");
 		
+		Log.d(TAG+"-FD", String.format("setBaseUnit category=%d baseUnit=%d", categoryId, baseUnitId));
+		
 		boolean sameCategory = (categoryId == categoryId_);
 		
 		if (sameCategory && baseUnitId == baseUnitId_)
@@ -268,8 +275,6 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			((ConverterFragment)owner_).setComputationStateFinished(true);
 			return; //nothing changed
 		}
-		
-		Log.d(TAG, String.format("setBaseUnit category = %d baseUnit = %d", categoryId, baseUnitId));
 	
 		((ConverterFragment)owner_).setComputationStateFinished(false);
 		
@@ -284,12 +289,10 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		conversionsLoadingRunner_ = new ConversionsLoadingRunner(dbHelper_, categoryId_, baseUnitId_);
 		conversionsLoadingFuture_ = conversionsLoadingThread_.submit(conversionsLoadingRunner_);
 		
-		if (sameCategory ) {
+		if (sameCategory) {
 			invokeCalculation(false);
 		}
 		else {
-			data_ = null;
-			
 			/*fill the list with related target unit (of the same category)*/
 			invokeFillData();
 		}
@@ -369,34 +372,40 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			@Override
 			public void run()
 			{
-				awaitCalculation();
-				if (owner_.getActivity() == null)
-				{
-					return;
-				}
-				owner_.getActivity().runOnUiThread(new Runnable()
-				{
-					@Override
-					public void run()
+				try {
+					awaitCalculation();
+					if (owner_.getActivity() == null)
 					{
-						try
-						{
-							if (data_!=null && data_.size() > 0)
-							{
-								notifyDataSetChanged();
-							}
-							else
-							{
-								notifyDataSetInvalidated();
-							}
-							((ConverterFragment)owner_).setComputationStateFinished(true);
-						}
-						catch (Exception ex)
-						{
-							Log.w(TAG, ex);
-						}
+						return;
 					}
-				});
+					owner_.getActivity().runOnUiThread(new Runnable()
+					{
+						@Override
+						public void run()
+						{
+							try
+							{
+								if (data_==null || data_.isEmpty())
+								{
+									notifyDataSetInvalidated();
+								}
+								else
+								{
+									notifyDataSetChanged();
+								}
+								((ConverterFragment)owner_).setComputationStateFinished(true);
+							}
+							catch (Exception ex)
+							{
+								Log.w(TAG, ex);
+							}
+						}
+					});
+				}
+				catch (Exception ex)
+				{
+					Log.w(TAG, ex);
+				}
 			}
 		});
 	}
@@ -478,6 +487,12 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 				futRe.cancel(true);
 			}
 			
+			if (data_ == null || data_.isEmpty()) {
+				notifyDataSetInvalidated();
+			} 
+			else {
+				notifyDataSetChanged();
+			}
 			//Log.d(TAG, "cancel calculation "+(DatabaseHelper.getNow() - startTime)+"ms");
 		}
 		catch (Exception ex)
@@ -539,11 +554,19 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	
 	private void invokeFillData()
 	{
-		Log.d(TAG, "InvokeFillData");
+		Log.d(TAG+"-FD", String.format("InvokeFillData category=%d, baseUnit=%d", categoryId_, baseUnitId_));
 		cancelCalculation();
+		
 		data_ = null;
+		notifyDataSetInvalidated();
+		
 		if (fillDataTask_ != null) {
-			fillDataTask_.cancel(true);
+			try {
+				fillDataTask_.cancel(true);
+			}
+			catch (Exception ex) {
+				Log.w(TAG, "Cancel old FillDataTask failed.", ex);
+			}
 		}
 		fillDataTask_ = new FillDataTask();
 		fillDataTask_.execute(categoryId_, baseUnitId_);
@@ -561,6 +584,16 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			Log.w(TAG, "RowData list is empty");
 			notifyDataSetInvalidated();
 			((ConverterFragment)owner_).setComputationStateFinished(true);
+			return;
+		}
+		
+		notifyDataSetChanged();
+		
+		long dataRowCategory = data_.get(0).getCategoryId();
+
+		//Preconditions.checkState(data_.get(0).getCategoryId() == categoryId_, "RowDatas and Category mismatches");
+		if (dataRowCategory != categoryId_) {
+			Log.w(TAG+"-FD", String.format("RowDatas and Category mismatches rowDataCat = %d <> currentCat = %d",dataRowCategory, categoryId_));
 			return;
 		}
 		
@@ -691,8 +724,21 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 		{
 			try
 			{
-				Log.i(TAG, "FillData finish catId="+categoryId_);
+				Log.d(TAG, "FillData finish catId="+categoryId_);
+				
+				if (result!=null && !result.isEmpty()) {
+					Preconditions.checkState(result.get(0).getCategoryId() == categoryId_, "Mismatch RowDatas and Category");
+				}
+				
 				data_ = result;
+				
+				if (data_ == null || data_.isEmpty()) {
+					notifyDataSetInvalidated();
+				}
+				else {
+					notifyDataSetChanged();
+				}
+				
 				if (filter_!=null) {
 					filter_.resetFilter();
 				}
@@ -839,7 +885,7 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 			{
 				invokeCalculation(false);
 			}
-			catch (IllegalAccessException e)
+			catch (Exception e)
 			{
 				Log.w(TAG, e);
 			}
