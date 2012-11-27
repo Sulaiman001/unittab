@@ -171,12 +171,18 @@ public class ResultListAdapter extends BaseAdapter implements Filterable
 	@Override
 	public Object getItem(int position)
 	{
+		if (data_ == null || data_.isEmpty() || position<0) {
+			return null;
+		}
 		return data_.get(position);
 	}
 
 	@Override
 	public long getItemId(int position)
 	{
+		if (data_ == null || data_.isEmpty()) {
+			return -1;
+		}
 		RowData cr = data_.get(position);
 		return cr.getUnitId();
 	}
