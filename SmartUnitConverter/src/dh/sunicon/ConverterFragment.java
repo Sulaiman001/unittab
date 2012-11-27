@@ -83,8 +83,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	private Handler mainThread_;
 	private boolean strictMode_ = false;
 	private SharedPreferences preferences_;
-	private int precision_;
-	private int precisionInt_;
+	private int precision_ = MainActivity.DEFAULT_PRECISION;
+	private int precisionInt_ = MainActivity.DEFAULT_PRECISION_INT;
 	private CharSequence lastBaseValueTyping_ = null;
 	
 	private boolean isActivityRunning_ = false;
@@ -141,6 +141,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			if (savedInstanceState != null)
 			{
 				restoreFromBundles(savedInstanceState);
+				onPreferencesChanged();
 			}
 			else
 			{
@@ -184,7 +185,12 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			
 			//restore baseValueSpinnerItemPosition
 			spinnerPositionToRestore_ = preferences_.getInt("spinnerPos", -1);
-			getLoaderManager().initLoader(VALUE_SPINNER_LOADER, null, this); //should be called in onActivityCreated
+			if (getLoaderManager().getLoader(VALUE_SPINNER_LOADER) == null) {
+				getLoaderManager().initLoader(VALUE_SPINNER_LOADER, null, this); //should be called in onActivityCreated
+			}
+			else {
+				getLoaderManager().restartLoader(VALUE_SPINNER_LOADER, null, this);
+			}
 			//setBaseValueSpinnerSelection(preferences.getInt("spinnerPos", -1));
 			
 			onPreferencesChanged();
@@ -212,10 +218,16 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			
 			//restore baseValueSpinnerItemPosition
 			spinnerPositionToRestore_ = savedState.getInt("baseValueSpinnerItemPosition");
-			getLoaderManager().initLoader(VALUE_SPINNER_LOADER, null, this); //should be called in onActivityCreated
+			
 			if (savedState.getBoolean("spinnerVisible") && baseValueSwitcher_.getNextView() == baseValueSpinner_)
 			{
 				baseValueSwitcher_.showNext();
+			}
+			if (getLoaderManager().getLoader(VALUE_SPINNER_LOADER) == null) {
+				getLoaderManager().initLoader(VALUE_SPINNER_LOADER, null, this); //should be called in onActivityCreated
+			}
+			else {
+				getLoaderManager().restartLoader(VALUE_SPINNER_LOADER, null, this);
 			}
 			
 			//restore resultListAdapter_
@@ -235,8 +247,6 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 				updateCurrencyNotificationBar();
 			}
 			
-			resultListAdapter_.invokeCalculation(false);
-			
 			strictMode_ = savedState.getBoolean("strictMode");
 			precision_ = savedState.getInt("precision");
 			precisionInt_ = savedState.getInt("precisionInt");
@@ -245,6 +255,8 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			
 			setBaseValue(lastBaseValueTyping_);
 			resultListAdapter_.setBaseUnitId(categoryId_, baseUnitId_);
+			resultListAdapter_.invokeCalculation(false);
+			
 //			if (lastBaseValueSet_ != lastBaseValueTyping_) {
 //				Log.d(TAG, "lastBaseValueSet != lastBaseValueTyping");
 //				
