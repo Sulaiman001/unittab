@@ -23,8 +23,8 @@ import dh.sunicon.workarounds.MyApplication;
 public class MainActivity extends FragmentActivity implements
 		TabHost.OnTabChangeListener
 {
-	public static final int DEFAULT_PRECISION = 6;
-	public static final int DEFAULT_PRECISION_INT = 6;
+	public static final int DEFAULT_PRECISION = 9;
+	public static final int DEFAULT_PRECISION_INT = 9;
 	public static final boolean DEFAULT_CURRENCY_USD_ONLY = false;
 	public static final boolean DEFAULT_STRICTMODE = false;
 	public static final long DEFAULT_CURRENCY_EXPIRY_TIME = 86400000L;
