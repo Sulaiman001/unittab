@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Smart Unit Converter</string>
+    <string name="app_name">UnitTab - Unit Converter</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_unit_picker">Smart Unit Picker</string>
     <string name="title_activity_unit_picker2">Standard Unit Picker</string>
@@ -50,7 +50,7 @@
         Anyway, these features are tested and functional. You can benefit them (until the next release).
 	</string>
 	<string name="notice_setting">
-	    Most configuration changes will be applied the next time you select the concerned units/categories. Swith to other unit of other category to make sure your configuration is applied.
+	    Most configuration changes will be applied the next time you select the concerned units/categories. Switch to other unit of other category to make sure your configuration is applied.
 	</string>
     
 
