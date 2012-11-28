@@ -87,6 +87,34 @@
                     android:layout_height="wrap_content" />
             </TableRow>
 
+            <TableRow android:paddingLeft="20dp" >
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="vertical" >
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="5dp"
+                        android:text="Input Delay" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="5dp"
+                        android:text="(Delay before calc.)"
+                        android:textColor="@color/light_gray2" />
+                </LinearLayout>
+
+                <Spinner
+                    android:id="@+id/inputDelay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </TableRow>
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

@@ -29,6 +29,7 @@ public class SettingFragment extends Fragment
 	private Spinner currencyUsdOnly_;
 	private Spinner precisionSpinner_;
 	private Spinner precisionIntSpinner_;
+	private Spinner inputDelay_;
 	private CheckBox strictModeCheckBox_;
 	
 	@Override
@@ -49,56 +50,28 @@ public class SettingFragment extends Fragment
 		
 		preferences_ = ((MainActivity)this.getActivity()).getPreferences();
 		
-		initCurrencyLiveUpdateOption();
-		initCurrencyExpiryTime();
-		initCurrencyUsdOnly();
-		initPrecision();
-		initPrecisionInt();
+		currencyLiveUpdateOption_= initSpinnerSetting(R.id.currencyLiveUpdateOption, R.array.opt_currency_live_update);
+		currencyExpiryTime_ = initSpinnerSetting(R.id.currencyExpiryTime, R.array.opt_currency_expiry_time);
+		currencyUsdOnly_= initSpinnerSetting(R.id.currencyUsdOnly, R.array.opt_currency_usd_only);
+		precisionSpinner_ = initSpinnerSetting(R.id.precision, R.array.opt_precision);
+		precisionIntSpinner_ = initSpinnerSetting(R.id.precisionInt, R.array.opt_precision_int);
+		inputDelay_ = initSpinnerSetting(R.id.inputDelay, R.array.opt_input_delay);
+		
 		initStrictMode();
 		
 		restoreFromPreferences();
 	}
 	
-	private void initCurrencyLiveUpdateOption()
+	private Spinner initSpinnerSetting(int spinnerResId, int stringsArrayResId)
 	{
 		final ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this.getActivity(),
-		        R.array.opt_currency_live_update, android.R.layout.simple_spinner_item);
+				stringsArrayResId, android.R.layout.simple_spinner_item);
 		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		currencyLiveUpdateOption_ = (Spinner) getView().findViewById(R.id.currencyLiveUpdateOption);
-		currencyLiveUpdateOption_.setAdapter(adapter);
+		Spinner spinner = (Spinner) getView().findViewById(spinnerResId);
+		spinner.setAdapter(adapter);
+		return spinner;
 	}
-	private void initCurrencyExpiryTime()
-	{
-		final ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this.getActivity(),
-		        R.array.opt_currency_expiry_time, android.R.layout.simple_spinner_item);
-		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		currencyExpiryTime_ = (Spinner) getView().findViewById(R.id.currencyExpiryTime);
-		currencyExpiryTime_.setAdapter(adapter);
-	}
-	private void initCurrencyUsdOnly()
-	{
-		final ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this.getActivity(),
-		        R.array.opt_currency_usd_only, android.R.layout.simple_spinner_item);
-		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		currencyUsdOnly_ = (Spinner) getView().findViewById(R.id.currencyUsdOnly);
-		currencyUsdOnly_.setAdapter(adapter);
-	}
-	private void initPrecision()
-	{
-		final ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this.getActivity(),
-		        R.array.opt_precision, android.R.layout.simple_spinner_item);
-		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		precisionSpinner_ = (Spinner) getView().findViewById(R.id.precision);
-		precisionSpinner_.setAdapter(adapter);
-	}
-	private void initPrecisionInt()
-	{
-		final ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this.getActivity(),
-		        R.array.opt_precision_int, android.R.layout.simple_spinner_item);
-		adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-		precisionIntSpinner_ = (Spinner) getView().findViewById(R.id.precisionInt);
-		precisionIntSpinner_.setAdapter(adapter);
-	}
+	
 	private void initStrictMode()
 	{
 		strictModeCheckBox_ = (CheckBox) getView().findViewById(R.id.strictMode);
@@ -144,6 +117,10 @@ public class SettingFragment extends Fragment
 			editor.putInt(MainActivity.OPTNAME_PRECISION_INT, precisionInt);
 		}
 		{
+			int inputDelay = Integer.parseInt((inputDelay_.getAdapter().getItem(inputDelay_.getSelectedItemPosition())).toString());
+			editor.putInt(MainActivity.OPTNAME_INPUT_DELAY, inputDelay);
+		}
+		{
 			editor.putBoolean(MainActivity.OPTNAME_STRICTMODE, strictModeCheckBox_.isChecked());
 		}
 		editor.commit();
@@ -166,38 +143,35 @@ public class SettingFragment extends Fragment
 			currencyUsdOnly_.setSelection(usdOnly ? 0 : 1);
 		}
 		{
-			int precision = preferences_.getInt(MainActivity.OPTNAME_PRECISION, MainActivity.DEFAULT_PRECISION);
-			
-			//find the equivalent position on the spinner 
-			int precisionPos = 0;
-			String[] arr = getResources().getStringArray(R.array.opt_precision);
-			String precisionStr = Integer.toString(precision);
-			for (precisionPos = 0; precisionPos<arr.length; precisionPos++) {
-				if (precisionStr.equals(arr[precisionPos])) {
-					break;
-				}
-			}
-			
-			precisionSpinner_.setSelection(precisionPos);
+			restoreSpinner(precisionSpinner_,MainActivity.OPTNAME_PRECISION, MainActivity.DEFAULT_PRECISION, R.array.opt_precision);
 		}
 		{
-			int precisionInt = preferences_.getInt(MainActivity.OPTNAME_PRECISION_INT, MainActivity.DEFAULT_PRECISION_INT);
-			
-			//find the equivalent position on the spinner 
-			int precisionIntPos = 0;
-			String[] arr = getResources().getStringArray(R.array.opt_precision_int);
-			String precisionIntStr = Integer.toString(precisionInt);
-			for (precisionIntPos = 0; precisionIntPos<arr.length; precisionIntPos++) {
-				if (precisionIntStr.equals(arr[precisionIntPos])) {
-					break;
-				}
-			}
-			precisionIntSpinner_.setSelection(precisionIntPos);
+			restoreSpinner(precisionIntSpinner_,MainActivity.OPTNAME_PRECISION_INT, MainActivity.DEFAULT_PRECISION_INT, R.array.opt_precision_int);
+		}
+		{
+			restoreSpinner(inputDelay_,MainActivity.OPTNAME_INPUT_DELAY, MainActivity.DEFAULT_INPUT_DELAY, R.array.opt_input_delay);
 		}
 		{
 			strictModeCheckBox_.setChecked(preferences_.getBoolean(MainActivity.OPTNAME_STRICTMODE, MainActivity.DEFAULT_STRICTMODE));
 		}
 		Log.v("Setting", "restoreFromPreferences");
+	}
+	
+	//MainActivity.OPTNAME_PRECISION, MainActivity.DEFAULT_PRECISION, R.array.opt_precision, 
+	private void restoreSpinner(Spinner spinner, String optName, int optDefaultValue, int stringsArrayResId) {
+		int value = preferences_.getInt(optName, optDefaultValue);
+		
+		//find the equivalent position of value on the spinner 
+		int pos = 0;
+		String[] arr = getResources().getStringArray(stringsArrayResId);
+		String precisionStr = Integer.toString(value);
+		for (pos = 0; pos<arr.length; pos++) {
+			if (precisionStr.equals(arr[pos])) {
+				break;
+			}
+		}
+		
+		spinner.setSelection(pos);
 	}
 	
 }

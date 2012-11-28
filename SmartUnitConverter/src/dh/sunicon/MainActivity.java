@@ -25,6 +25,7 @@ public class MainActivity extends FragmentActivity implements
 {
 	public static final int DEFAULT_PRECISION = 9;
 	public static final int DEFAULT_PRECISION_INT = 9;
+	public static final int DEFAULT_INPUT_DELAY = 100;
 	public static final boolean DEFAULT_CURRENCY_USD_ONLY = false;
 	public static final boolean DEFAULT_STRICTMODE = false;
 	public static final long DEFAULT_CURRENCY_EXPIRY_TIME = 86400000L;
@@ -33,6 +34,7 @@ public class MainActivity extends FragmentActivity implements
 	public static final String OPTNAME_CURRENCY_LIVE_UPDATE = "CurrencyLiveUpdateOption";
 	public static final String OPTNAME_PRECISION = "Precision";
 	public static final String OPTNAME_PRECISION_INT = "PrecisionInt";
+	public static final String OPTNAME_INPUT_DELAY = "InputDelay";
 	public static final String OPTNAME_STRICTMODE = "StrictMode";
 	public static int OPT_NEVER = 2;
 	public static int OPT_WIFI_ONLY = 1;

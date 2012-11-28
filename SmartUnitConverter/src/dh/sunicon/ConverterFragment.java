@@ -55,7 +55,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 {
 	static final String TAG = ConverterFragment.class.getName();
 	static final int VALUE_SPINNER_LOADER = 0;
-	public static final long EVENTS_DELAY = 500L;
+	private static final int DELAY_PROGRESS_BAR = 300;
 	private DatabaseHelper dbHelper_;
 	private TextView categoryLabel_;
 	private ViewSwitcher baseValueSwitcher_;
@@ -85,6 +85,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 	private SharedPreferences preferences_;
 	private int precision_ = MainActivity.DEFAULT_PRECISION;
 	private int precisionInt_ = MainActivity.DEFAULT_PRECISION_INT;
+	private int inputDelay_ = MainActivity.DEFAULT_INPUT_DELAY;
 	private CharSequence lastBaseValueTyping_ = null;
 	
 	private boolean isActivityRunning_ = false;
@@ -250,6 +251,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			strictMode_ = savedState.getBoolean("strictMode");
 			precision_ = savedState.getInt("precision");
 			precisionInt_ = savedState.getInt("precisionInt");
+			inputDelay_ = savedState.getInt("inputDelay");
 			
 			lastBaseValueTyping_ = savedState.getCharSequence("lastBaseValueTyping");
 			
@@ -296,6 +298,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			outState.putBoolean("strictMode", strictMode_);
 			outState.putInt("precision", precision_);
 			outState.putInt("precisionInt", precisionInt_);
+			outState.putInt("inputDelay", inputDelay_);
 			outState.putCharSequence("lastBaseValueTyping", lastBaseValueTyping_);
 			
 			if (updateInProgressPanel_.getTag()!=null) {
@@ -404,7 +407,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 						}
 					};
 					
-					mainThread_.postDelayed(lastRunnable_, EVENTS_DELAY);
+					mainThread_.postDelayed(lastRunnable_, inputDelay_);
 				}
 				catch (Exception ex)
 				{
@@ -548,7 +551,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 						}
 					};
 					
-					mainThread_.postDelayed(lastRunnable_, EVENTS_DELAY);
+					mainThread_.postDelayed(lastRunnable_, inputDelay_);
 				}
 				catch (Exception ex)
 				{
@@ -1002,7 +1005,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			}
 		};
 		
-		mainThread_.postDelayed(lastSetComputationStateRunnable_, EVENTS_DELAY);
+		mainThread_.postDelayed(lastSetComputationStateRunnable_, DELAY_PROGRESS_BAR);
 	}
 
 	public ResultListAdapter getResultListAdapter()
@@ -1100,6 +1103,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			strictMode_ = preferences_.getBoolean(MainActivity.OPTNAME_STRICTMODE, MainActivity.DEFAULT_STRICTMODE);
 			precision_ = preferences_.getInt(MainActivity.OPTNAME_PRECISION, MainActivity.DEFAULT_PRECISION);
 			precisionInt_ = preferences_.getInt(MainActivity.OPTNAME_PRECISION_INT, MainActivity.DEFAULT_PRECISION_INT);
+			inputDelay_ = preferences_.getInt(MainActivity.OPTNAME_INPUT_DELAY, MainActivity.DEFAULT_INPUT_DELAY);
 		}
 	}
 	public boolean useOnlyUsdRates() {
