@@ -204,7 +204,8 @@ public class ExplorerFragment extends Fragment
 	}
 	
 	static final long[] commonsCategories = new long[] {
-		47, 96, 4, 1, 93, Category.CURRENCY_CATEGORY, 3, 13, 80, 32, 85
+		1, 3, 4, 7, 10, Category.CURRENCY_CATEGORY, 13, 32, 45,
+		47, 50, 70, 71, 80, 85, 89, 93, 96
 	};
 	static final long[] commonsCurrencies = new long[] {
 		1249,1255,1256,1257,1259,1260,1261,1262,1263,1265,
