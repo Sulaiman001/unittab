@@ -196,7 +196,10 @@ public class ExplorerFragment extends Fragment
         	invokeSelectAll();
         	return true;
         case R.id.selectCommuns:
-        	invokeSelectCommuns();
+        	invokeSelectCommuns(false);
+        	return true;
+        case R.id.selectCommunsOnly:
+        	invokeSelectCommuns(true);
         	return true;
         default:
         	return super.onContextItemSelected(item);
@@ -265,18 +268,20 @@ public class ExplorerFragment extends Fragment
 		});
 	}
 	
-	private void invokeSelectCommuns() {
+	private void invokeSelectCommuns(final boolean disableOthers) {
 		updateThread_.submit(new Runnable() {
 			@Override
 			public void run() {
 				SQLiteDatabase db = dbHelper_.getWritableDatabase();
 				db.beginTransaction();
 				try {
-					//un select all
-					ContentValues cvsFalse = new ContentValues();
-					cvsFalse.put("enabled", false);
-					db.update("category", cvsFalse, null, null);
-					db.update("unit", cvsFalse, "categoryId="+Category.CURRENCY_CATEGORY, null);
+					if (disableOthers) {
+						//un select all
+						ContentValues cvsFalse = new ContentValues();
+						cvsFalse.put("enabled", false);
+						db.update("category", cvsFalse, null, null);
+						db.update("unit", cvsFalse, "categoryId="+Category.CURRENCY_CATEGORY, null);
+					}
 					
 					//select  
 					ContentValues cvsTrue = new ContentValues();

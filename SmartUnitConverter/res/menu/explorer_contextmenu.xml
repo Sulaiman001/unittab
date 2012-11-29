@@ -2,7 +2,10 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
     <item
         android:id="@+id/selectCommuns"
-        android:title="Enable Commons units only"/>
+        android:title="Enable Commons units"/>
+    <item
+        android:id="@+id/selectCommunsOnly"
+        android:title="Enable ONLY Commons units"/>
     <item
         android:id="@+id/selectAll"
         android:title="Enable All"/>
