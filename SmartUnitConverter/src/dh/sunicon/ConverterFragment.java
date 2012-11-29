@@ -1042,7 +1042,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 			baseValueSpinnerAdapter_.changeCursor(cursor);
 			if (cursor.getCount()>0)
 		    {
-				Log.v(TAG + "-Loader", "onLoadFinished set switch to spinner & restore position="+spinnerPositionToRestore_);
+				//Log.v(TAG + "-Loader", "onLoadFinished set switch to spinner & restore position="+spinnerPositionToRestore_);
 	
 				//switch to the spinner
 				if (baseValueSwitcher_.getNextView() == baseValueSpinner_)
@@ -1058,7 +1058,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		    }
 			else
 			{
-				Log.v(TAG + "-Loader", "onLoadFinished set switch to editor");
+				//Log.v(TAG + "-Loader", "onLoadFinished set switch to editor");
 				
 				//switch to the editor
 				if (baseValueSwitcher_.getNextView() == baseValueEditor_)
