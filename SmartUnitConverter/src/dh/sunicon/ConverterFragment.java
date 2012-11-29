@@ -55,7 +55,7 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 {
 	static final String TAG = ConverterFragment.class.getName();
 	static final int VALUE_SPINNER_LOADER = 0;
-	private static final int DELAY_PROGRESS_BAR = 300;
+//	private static final int DELAY_PROGRESS_BAR = 300;
 	private DatabaseHelper dbHelper_;
 	private TextView categoryLabel_;
 	private ViewSwitcher baseValueSwitcher_;
@@ -968,44 +968,44 @@ public class ConverterFragment extends ListFragment implements LoaderCallbacks<C
 		eventsSuspendingLevel_--;
 	}
 	
-	private Runnable lastSetComputationStateRunnable_ = null;
+//	private Runnable lastSetComputationStateRunnable_ = null;
 	
 	public void setComputationStateFinished(final boolean finished) {
 		
-		if (lastSetComputationStateRunnable_ != null) {
-			mainThread_.removeCallbacks(lastSetComputationStateRunnable_);
-		}
-		
-		lastSetComputationStateRunnable_ = new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				try {
-					if (!isActivityRunning_) {
-						return;
-					}
-					if (resultListSwitcher_ != null) {
-						if (finished) {
-							// Log.v(TAG, "switch to result list");
-							if (resultListSwitcher_.getNextView() == getListView()) {
-								resultListSwitcher_.showNext();
-							}
-						} else {
-							// Log.v(TAG, "switch to progress bar");
-							if (resultListSwitcher_.getNextView() != getListView()) {
-								resultListSwitcher_.showNext();
-							}
-						}
-						// getListView().setVisibility(visible ? View.VISIBLE : View.GONE);
-					}
-				} catch (Exception ex) {
-					showError(ex);
-				}
-			}
-		};
-		
-		mainThread_.postDelayed(lastSetComputationStateRunnable_, DELAY_PROGRESS_BAR);
+//		if (lastSetComputationStateRunnable_ != null) {
+//			mainThread_.removeCallbacks(lastSetComputationStateRunnable_);
+//		}
+//		
+//		lastSetComputationStateRunnable_ = new Runnable()
+//		{
+//			@Override
+//			public void run()
+//			{
+//				try {
+//					if (!isActivityRunning_) {
+//						return;
+//					}
+//					if (resultListSwitcher_ != null) {
+//						if (finished) {
+//							// Log.v(TAG, "switch to result list");
+//							if (resultListSwitcher_.getNextView() == getListView()) {
+//								resultListSwitcher_.showNext();
+//							}
+//						} else {
+//							// Log.v(TAG, "switch to progress bar");
+//							if (resultListSwitcher_.getNextView() != getListView()) {
+//								resultListSwitcher_.showNext();
+//							}
+//						}
+//						// getListView().setVisibility(visible ? View.VISIBLE : View.GONE);
+//					}
+//				} catch (Exception ex) {
+//					showError(ex);
+//				}
+//			}
+//		};
+//		
+//		mainThread_.postDelayed(lastSetComputationStateRunnable_, DELAY_PROGRESS_BAR);
 	}
 
 	public ResultListAdapter getResultListAdapter()
