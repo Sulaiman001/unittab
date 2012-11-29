@@ -32,6 +32,7 @@ import dh.sunicon.datamodel.DatabaseHelper;
 
 public class UnitPicker3 extends FragmentActivity {
 	private static final String TAG = UnitPicker3.class.toString();
+	private static final int EVENT_DELAY = 200;
 	
 	private EditText filterEdit_;
 	private ViewSwitcher listSwitcher_;
@@ -194,10 +195,17 @@ public class UnitPicker3 extends FragmentActivity {
 			public void onChangeCursor(Cursor c) {
 				try
 				{
-					//expand all list
+					//expand all list if there are not many
 					int count = c.getCount();
-					for (int i = 0; i < count; i++)
-					    treeList_.expandGroup(i);
+					if (count<70) {
+						for (int i = 0; i < count; i++) {
+//							Category cat = unitCursorTreeAdapter_.getCategoryByPosition(i);
+//							if (cat!=null && cat.getId() == Category.CURRENCY_CATEGORY) {
+//								continue; //Never expand the currency category
+//							}
+						    treeList_.expandGroup(i);
+						}
+					}
 				}
 				catch (Exception ex)
 				{
@@ -228,7 +236,7 @@ public class UnitPicker3 extends FragmentActivity {
 				
 				try
 				{
-					listSwitcher_.setVisibility(View.GONE);
+					//listSwitcher_.setVisibility(View.GONE);
 					
 					if (lastRunnable_ != null) {
 						mainThread_.removeCallbacks(lastRunnable_);
@@ -240,7 +248,7 @@ public class UnitPicker3 extends FragmentActivity {
 							try
 							{
 								switchList(listToggle_.isChecked(), s);
-								listSwitcher_.setVisibility(View.VISIBLE);
+								//listSwitcher_.setVisibility(View.VISIBLE);
 							}
 							catch (Exception ex)
 							{
@@ -249,7 +257,7 @@ public class UnitPicker3 extends FragmentActivity {
 						}
 					};
 					
-					mainThread_.postDelayed(lastRunnable_, 500);
+					mainThread_.postDelayed(lastRunnable_, EVENT_DELAY);
 					
 				}
 				catch (Exception ex)
