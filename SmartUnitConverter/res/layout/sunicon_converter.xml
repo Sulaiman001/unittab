@@ -43,7 +43,7 @@
                 android:layout_margin="0dp"
                 android:hint="value"
                 android:imeOptions="actionDone"
-                android:inputType="numberDecimal"
+                android:inputType="numberDecimal|numberSigned"
                 android:maxLength="16"
                 android:padding="5dp" />
 

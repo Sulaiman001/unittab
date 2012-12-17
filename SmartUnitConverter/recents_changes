@@ -1,0 +1,40 @@
+1.5.7
+- Enable negative value
+
+1.5.6
+- Speed up the calculation (Give a good rate here if you are impressed).
+- New: increase [Setting > Input Delay] to save battery life (trade off on-fly calculation speed).
+- New or Normal users are recommended to select [Explorer > Menu > Enable Commons units]
+
+1.5.5
+- Shorten application name: UnitTab
+
+1.5.4
+- add Notice in Setting.
+- increase default precision.
+
+1.5.3
+- If user chose "L.U Only Usd": Sunicon will force two-steps conversions (same as other Currency Converter)
+
+1.5.2
+- Improve: numbers format and precision settings.
+
+1.5.0 (big update)
+- New: 160+ Currencies Exchange (See description)
+(New: require Network Access to get currencies rates)
+- New: Enable / Disable unused categories & units (to improve filtering)
+(By default, only 10+ categories and 90 currencies are enabled).
+- New: Setting Panel: allow to Change the precision level
+- Improve interface on landscape mode
+
+1.2.5
+- New icon
+- Unit Picker in Tree Mode / List Mode
+- Fix Tab Header
+
+1.2.0
+- Add traditional unit picker
+- Enhance unit filtering
+
+1.0.0
+- First released

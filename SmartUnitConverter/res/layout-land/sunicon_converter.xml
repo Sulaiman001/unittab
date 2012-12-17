@@ -67,7 +67,7 @@
                 android:ellipsize="start"
                 android:hint="value"
                 android:imeOptions="actionDone"
-                android:inputType="numberDecimal"
+                android:inputType="numberDecimal|numberSigned"
                 android:maxLength="16"
                 android:padding="8dp" />
 
