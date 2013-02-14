@@ -10,16 +10,25 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 /**
+ * Convert a double to a beautiful String (US-local):
+ * 
+ * double horribleNumber = 3598945.141658554548844; 
+ * DoubleFormatter df = new DoubleFormatter(4,6);
+ * String beautyDisplay = df.format(horribleNumber);
+ * String beautyLabel = df.formatHtml(horribleNumber);
+ * 
  * Manipulate 3 instances of NumberFormat to efficiently format a great number of double values.
- * avoid to create an object NumberFormat each time.
+ * (avoid to create an object NumberFormat each call of format()).
  * 
  * 3 instances of NumberFormat will be reused to format a value v:
  * 
- * if v<EXP_DOWN, uses nfBelow
- * if EXP_DOWN<=v<=EXP_UP, uses nfNormal
- * if EXP_UP<v, uses nfAbove
+ * if v < EXP_DOWN, uses nfBelow
+ * if EXP_DOWN <= v <= EXP_UP, uses nfNormal
+ * if EXP_UP < v, uses nfAbove
  * 
- * nfBelow, nfNormal and nfAbove will be generated base on the precision_ parameter. 
+ * nfBelow, nfNormal and nfAbove will be generated base on the precision_ parameter.
+ * 
+ * @author: DUONG Phu-Hiep
  */
 public class DoubleFormatter
 {
@@ -137,9 +146,7 @@ public class DoubleFormatter
 	 * This is the base alogrithm: create a instance of NumberFormat for the value, then format it. It should
 	 * not be used to format a great numbers of value 
 	 * 
-	 * We will never use this methode, it is here only to understanding
-	 * 
-	 * Algo principal:
+	 * We will never use this methode, it is here only to understanding the Algo principal:
 	 * 
 	 * format v to string. precision_ is numbers of digits after decimal. 
 	 * if EXP_DOWN <= abs(v) <= EXP_UP, display the normal format: 124.45678
@@ -190,6 +197,10 @@ public class DoubleFormatter
 		return f.format(v);
 	}
 	
+	/**
+	 * Convert "3.1416e+12" to "<b>3</b>.1416e<b>+12</b>"
+	 * It is a html format of a number which highlight the integer and exponent part
+	 */
 	private static String htmlize(String s)
 	{
 		StringBuilder resu = new StringBuilder("<b>");
