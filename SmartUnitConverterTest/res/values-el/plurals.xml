@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="minutes_delay">
+        <item quantity="other">%d λεπτά καθυστέρηση</item>
+        <item quantity="zero">χωρίς καθυστέρηση</item>
+        <item quantity="one">%d λεπτό καθυστέρηση</item>
+        <item quantity="two">%d λεπτά καθυστέρηση</item>
+        <item quantity="few">%d λεπτά καθυστέρηση</item>
+        <item quantity="many">%d λετπά καθυστέρηση</item>
+    </plurals>
+    <plurals name="card_count">
+        <item quantity="other">%d κάρτες</item>
+        <item quantity="zero">Όχι κάρτες</item>
+        <item quantity="one">%d κάρτα</item>
+        <item quantity="two">%d κάρτες</item>
+        <item quantity="few">%d κάρτες</item>
+        <item quantity="many">%d κάρτες</item>
+    </plurals>
+</resources>

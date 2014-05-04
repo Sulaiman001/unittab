@@ -1,0 +1,99 @@
+// The default, top-level corpus must be first.
+// Each corpus has the following fields:
+//   - CorpusIdentifier(Required):  The ID of the corpus.
+//                                  Usually, this should match the "tbm" query param, but if for
+//                                  some external reason the "tbm" value must change, only update
+//                                  WebSearchPattern and do not modify CorpusIdentifier, as its
+//                                  initial value will still be referenced in Java code.
+//   - Icon(Required):              A URL to fetch the corpus icon.
+//   - WebSearchPattern(Required):  A URL pattern used to fetch results for this corpus. Params:
+//                                     1: URL Scheme (i.e http or https)
+//                                     2: URL Authority (e.g. www.google.com)
+//   - UrlPath(Required):           A URL path to recognise clicks which should go to this corpus.
+//   - UrlAuthority(Optional):      A URL authority to recognize clicks which
+//                                  should go to this corpus. (E.g. images.google.com).
+//   - UrlParams(Optional):         URL parameters which need to be present for a URL to be a query
+//                                  on this corpus.
+//   - RequiresLocation(Optional):  Whether device location is required to show this corpus.
+//   - SupportedLocales(Optional):  A list of locales which support this corpus.
+[
+  {
+    "CorpusIdentifier": "",
+    "Icon": "android.resource://com.google.android.googlequicksearchbox/drawable/ic_search_web",
+    "Name": "android.resource://com.google.android.googlequicksearchbox/string/corpus_name_websearch",
+    "WebSearchPattern": "%1$s://%2$s/search",
+    "QueryParams": { "tbm" : "" },
+    "UrlPath": "/m"
+  },
+  {
+    "CorpusIdentifier": "isch",
+    "Icon": "android.resource://com.google.android.googlequicksearchbox/drawable/ic_search_images",
+    "Name": "android.resource://com.google.android.googlequicksearchbox/string/corpus_name_websearch_images",
+    "WebSearchPattern": "%1$s://%2$s/search",
+    "QueryParams": { "tbm" : "isch", "safe" : "images" },
+    "UrlPath": "/m",
+    "UrlAuthority": "images.google.com",
+    "UrlParams": { "site": "images" }
+  },
+  {
+    "CorpusIdentifier": "plcs",
+    "GoogleAPIIncludeLocation": true,
+    "GoogleAPIURL": "%1$s://ajax.googleapis.com/ajax/services/search/local",
+    "Icon": "android.resource://com.google.android.googlequicksearchbox/drawable/ic_search_places",
+    "Name": "android.resource://com.google.android.googlequicksearchbox/string/corpus_name_websearch_places",
+    "WebSearchPattern": "%1$s://%2$s/search",
+    "QueryParams": { "tbm" : "plcs" },
+    "RequiresLocation": true,
+    "UrlPath": "/m/local"
+  },
+  {
+    "CorpusIdentifier": "nws",
+    "GoogleAPIURL": "%1$s://ajax.googleapis.com/ajax/services/search/news",
+    "Icon": "android.resource://com.google.android.googlequicksearchbox/drawable/ic_search_news",
+    "Name": "android.resource://com.google.android.googlequicksearchbox/string/corpus_name_websearch_news",
+    "WebSearchPattern": "%1$s://%2$s/search",
+    "QueryParams": { "tbm" : "nws" },
+    "UrlPath": "/m/news"
+  },
+  {
+    "CorpusIdentifier": "shop",
+    "Icon": "android.resource://com.google.android.googlequicksearchbox/drawable/ic_search_shopping",
+    "Name": "android.resource://com.google.android.googlequicksearchbox/string/corpus_name_websearch_shopping",
+    "WebSearchPattern": "%1$s://%2$s/search",
+    "QueryParams": { "tbm" : "shop" },
+    "SupportedLocales": ["de_DE", "en_GB", "en_US"],
+    "UrlPath": "/m/products"
+  },
+  {
+    "CorpusIdentifier": "vid",
+    "Icon": "android.resource://com.google.android.googlequicksearchbox/drawable/ic_search_movies",
+    "Name": "android.resource://com.google.android.googlequicksearchbox/string/corpus_name_websearch_videos",
+    "WebSearchPattern": "%1$s://%2$s/search",
+    "QueryParams": { "tbm" : "vid" },
+    "UrlPath": "/m/video"
+  },
+  {
+    "CorpusIdentifier": "blg",
+    "Icon": "android.resource://com.google.android.googlequicksearchbox/drawable/ic_search_blogs",
+    "Name": "android.resource://com.google.android.googlequicksearchbox/string/corpus_name_websearch_blogs",
+    "WebSearchPattern": "%1$s://%2$s/search",
+    "QueryParams": { "tbm" : "blg" },
+    "UrlPath": "/m/blogs"
+  },
+  {
+    "CorpusIdentifier": "dsc",
+    "Icon": "android.resource://com.google.android.googlequicksearchbox/drawable/ic_search_discussions",
+    "Name": "android.resource://com.google.android.googlequicksearchbox/string/corpus_name_websearch_discussions",
+    "WebSearchPattern": "%1$s://%2$s/search",
+    "QueryParams": { "tbm" : "dsc" },
+    "UrlPath": "/m/discussions"
+  },
+  {
+    "CorpusIdentifier": "bks",
+    "Icon": "android.resource://com.google.android.googlequicksearchbox/drawable/ic_search_books",
+    "Name": "android.resource://com.google.android.googlequicksearchbox/string/corpus_name_websearch_books",
+    "WebSearchPattern": "%1$s://%2$s/search",
+    "QueryParams": { "tbm" : "bks" },
+    "UrlPath": "/m/books"
+  }
+]

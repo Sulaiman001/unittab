@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="minutes_delay">
+        <item quantity="other">التأخير: %d دقيقة</item>
+        <item quantity="zero">بلا تأخير</item>
+        <item quantity="one">التأخير: %d دقيقة</item>
+        <item quantity="two">التأخير: %d دقيقة</item>
+        <item quantity="few">التأخير: %d دقيقة</item>
+        <item quantity="many">التأخير: %d دقيقة</item>
+    </plurals>
+    <plurals name="card_count">
+        <item quantity="other">%d من البطاقات</item>
+        <item quantity="zero">ليست هناك بطاقات</item>
+        <item quantity="one">%d بطاقة</item>
+        <item quantity="two">بطاقتان (%d)</item>
+        <item quantity="few">%d بطاقات</item>
+        <item quantity="many">%d بطاقة</item>
+    </plurals>
+</resources>

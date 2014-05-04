@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="corpus_name_summons">태블릿</string>
+    <string name="search_sources">태블릿 검색</string>
+    <string name="search_phone_or_tablet">태블릿 검색</string>
+</resources>

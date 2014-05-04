@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_window_focused="false" android:color="@color/suggest_footer_primary_text_normal" />
+    <item android:state_pressed="true" android:color="@color/suggest_footer_primary_text_inverse" />
+    <item android:state_selected="true" android:color="@color/suggest_footer_primary_text_inverse" />
+    <item android:color="@color/suggest_footer_primary_text_inverse" android:state_activated="true" />
+    <item android:color="@color/suggest_footer_primary_text_normal" />
+</selector>

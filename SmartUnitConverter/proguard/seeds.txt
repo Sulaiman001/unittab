@@ -1,0 +1,300 @@
+android.support.v4.app.BackStackState
+android.support.v4.app.BackStackState: android.os.Parcelable$Creator CREATOR
+android.support.v4.app.Fragment$SavedState
+android.support.v4.app.Fragment$SavedState: android.os.Parcelable$Creator CREATOR
+android.support.v4.app.FragmentActivity
+android.support.v4.app.FragmentActivity: FragmentActivity()
+android.support.v4.app.FragmentManagerState
+android.support.v4.app.FragmentManagerState: android.os.Parcelable$Creator CREATOR
+android.support.v4.app.FragmentState
+android.support.v4.app.FragmentState: android.os.Parcelable$Creator CREATOR
+android.support.v4.content.ModernAsyncTask$Status: android.support.v4.content.ModernAsyncTask$Status[] values()
+android.support.v4.content.ModernAsyncTask$Status: android.support.v4.content.ModernAsyncTask$Status valueOf(java.lang.String)
+android.support.v4.view.PagerTabStrip
+android.support.v4.view.PagerTabStrip: PagerTabStrip(android.content.Context)
+android.support.v4.view.PagerTabStrip: PagerTabStrip(android.content.Context,android.util.AttributeSet)
+android.support.v4.view.PagerTabStrip: void setTabIndicatorColor(int)
+android.support.v4.view.PagerTabStrip: void setTabIndicatorColorResource(int)
+android.support.v4.view.PagerTabStrip: int getTabIndicatorColor()
+android.support.v4.view.PagerTabStrip: void setPadding(int,int,int,int)
+android.support.v4.view.PagerTabStrip: void setTextSpacing(int)
+android.support.v4.view.PagerTabStrip: void setBackgroundDrawable(android.graphics.drawable.Drawable)
+android.support.v4.view.PagerTabStrip: void setBackgroundColor(int)
+android.support.v4.view.PagerTabStrip: void setBackgroundResource(int)
+android.support.v4.view.PagerTabStrip: void setDrawFullUnderline(boolean)
+android.support.v4.view.PagerTabStrip: boolean getDrawFullUnderline()
+android.support.v4.view.PagerTabStrip: int getMinHeight()
+android.support.v4.view.PagerTitleStrip
+android.support.v4.view.PagerTitleStrip: void setSingleLineAllCaps(android.widget.TextView)
+android.support.v4.view.PagerTitleStrip: PagerTitleStrip(android.content.Context)
+android.support.v4.view.PagerTitleStrip: PagerTitleStrip(android.content.Context,android.util.AttributeSet)
+android.support.v4.view.PagerTitleStrip: void setTextSpacing(int)
+android.support.v4.view.PagerTitleStrip: int getTextSpacing()
+android.support.v4.view.PagerTitleStrip: void setNonPrimaryAlpha(float)
+android.support.v4.view.PagerTitleStrip: void setTextColor(int)
+android.support.v4.view.PagerTitleStrip: void setTextSize(int,float)
+android.support.v4.view.PagerTitleStrip: void setGravity(int)
+android.support.v4.view.PagerTitleStrip: int getMinHeight()
+android.support.v4.view.ViewPager
+android.support.v4.view.ViewPager: ViewPager(android.content.Context)
+android.support.v4.view.ViewPager: ViewPager(android.content.Context,android.util.AttributeSet)
+android.support.v4.view.ViewPager: void setScrollState(int)
+android.support.v4.view.ViewPager: void setAdapter(android.support.v4.view.PagerAdapter)
+android.support.v4.view.ViewPager: android.support.v4.view.PagerAdapter getAdapter()
+android.support.v4.view.ViewPager: void setOnAdapterChangeListener(android.support.v4.view.ViewPager$OnAdapterChangeListener)
+android.support.v4.view.ViewPager: void setCurrentItem(int)
+android.support.v4.view.ViewPager: void setCurrentItem(int,boolean)
+android.support.v4.view.ViewPager: int getCurrentItem()
+android.support.v4.view.ViewPager: void setOnPageChangeListener(android.support.v4.view.ViewPager$OnPageChangeListener)
+android.support.v4.view.ViewPager: int getOffscreenPageLimit()
+android.support.v4.view.ViewPager: void setOffscreenPageLimit(int)
+android.support.v4.view.ViewPager: void setPageMargin(int)
+android.support.v4.view.ViewPager: int getPageMargin()
+android.support.v4.view.ViewPager: void setPageMarginDrawable(android.graphics.drawable.Drawable)
+android.support.v4.view.ViewPager: void setPageMarginDrawable(int)
+android.support.v4.view.ViewPager: void setScrollingCacheEnabled(boolean)
+android.support.v4.view.ViewPager$SavedState
+android.support.v4.view.ViewPager$SavedState: android.os.Parcelable$Creator CREATOR
+com.google.common.base.AbstractIterator$State: com.google.common.base.AbstractIterator$State[] values()
+com.google.common.base.AbstractIterator$State: com.google.common.base.AbstractIterator$State valueOf(java.lang.String)
+com.google.common.base.CaseFormat: com.google.common.base.CaseFormat[] values()
+com.google.common.base.CaseFormat: com.google.common.base.CaseFormat valueOf(java.lang.String)
+com.google.common.base.Functions$IdentityFunction: com.google.common.base.Functions$IdentityFunction[] values()
+com.google.common.base.Functions$IdentityFunction: com.google.common.base.Functions$IdentityFunction valueOf(java.lang.String)
+com.google.common.base.Functions$ToStringFunction: com.google.common.base.Functions$ToStringFunction[] values()
+com.google.common.base.Functions$ToStringFunction: com.google.common.base.Functions$ToStringFunction valueOf(java.lang.String)
+com.google.common.base.Predicates$ObjectPredicate: com.google.common.base.Predicates$ObjectPredicate[] values()
+com.google.common.base.Predicates$ObjectPredicate: com.google.common.base.Predicates$ObjectPredicate valueOf(java.lang.String)
+com.google.common.base.Suppliers$SupplierFunction: com.google.common.base.Suppliers$SupplierFunction[] values()
+com.google.common.base.Suppliers$SupplierFunction: com.google.common.base.Suppliers$SupplierFunction valueOf(java.lang.String)
+com.google.common.base.internal.Finalizer
+com.google.common.base.internal.Finalizer: java.lang.ref.ReferenceQueue startFinalizer(java.lang.Class,java.lang.Object)
+com.google.common.base.internal.Finalizer: Finalizer(java.lang.Class,java.lang.Object)
+com.google.common.base.internal.Finalizer: void run()
+com.google.common.base.internal.Finalizer: void cleanUp(java.lang.ref.Reference)
+com.google.common.base.internal.Finalizer: java.lang.reflect.Method getFinalizeReferentMethod()
+com.google.common.base.internal.Finalizer: java.lang.reflect.Field getInheritableThreadLocalsField()
+com.google.common.base.internal.Finalizer: void <clinit>()
+com.google.common.cache.CacheBuilder$NullListener: com.google.common.cache.CacheBuilder$NullListener[] values()
+com.google.common.cache.CacheBuilder$NullListener: com.google.common.cache.CacheBuilder$NullListener valueOf(java.lang.String)
+com.google.common.cache.CacheBuilder$OneWeigher: com.google.common.cache.CacheBuilder$OneWeigher[] values()
+com.google.common.cache.CacheBuilder$OneWeigher: com.google.common.cache.CacheBuilder$OneWeigher valueOf(java.lang.String)
+com.google.common.cache.LocalCache$EntryFactory: com.google.common.cache.LocalCache$EntryFactory[] values()
+com.google.common.cache.LocalCache$EntryFactory: com.google.common.cache.LocalCache$EntryFactory valueOf(java.lang.String)
+com.google.common.cache.LocalCache$NullEntry: com.google.common.cache.LocalCache$NullEntry[] values()
+com.google.common.cache.LocalCache$NullEntry: com.google.common.cache.LocalCache$NullEntry valueOf(java.lang.String)
+com.google.common.cache.LocalCache$Strength: com.google.common.cache.LocalCache$Strength[] values()
+com.google.common.cache.LocalCache$Strength: com.google.common.cache.LocalCache$Strength valueOf(java.lang.String)
+com.google.common.cache.RemovalCause: com.google.common.cache.RemovalCause[] values()
+com.google.common.cache.RemovalCause: com.google.common.cache.RemovalCause valueOf(java.lang.String)
+com.google.common.collect.AbstractIterator$State: com.google.common.collect.AbstractIterator$State[] values()
+com.google.common.collect.AbstractIterator$State: com.google.common.collect.AbstractIterator$State valueOf(java.lang.String)
+com.google.common.collect.BoundType: com.google.common.collect.BoundType[] values()
+com.google.common.collect.BoundType: com.google.common.collect.BoundType valueOf(java.lang.String)
+com.google.common.collect.Constraints$NotNullConstraint: com.google.common.collect.Constraints$NotNullConstraint[] values()
+com.google.common.collect.Constraints$NotNullConstraint: com.google.common.collect.Constraints$NotNullConstraint valueOf(java.lang.String)
+com.google.common.collect.GenericMapMaker$NullListener: com.google.common.collect.GenericMapMaker$NullListener[] values()
+com.google.common.collect.GenericMapMaker$NullListener: com.google.common.collect.GenericMapMaker$NullListener valueOf(java.lang.String)
+com.google.common.collect.Interners$WeakInterner$Dummy: com.google.common.collect.Interners$WeakInterner$Dummy[] values()
+com.google.common.collect.Interners$WeakInterner$Dummy: com.google.common.collect.Interners$WeakInterner$Dummy valueOf(java.lang.String)
+com.google.common.collect.MapConstraints$NotNullMapConstraint: com.google.common.collect.MapConstraints$NotNullMapConstraint[] values()
+com.google.common.collect.MapConstraints$NotNullMapConstraint: com.google.common.collect.MapConstraints$NotNullMapConstraint valueOf(java.lang.String)
+com.google.common.collect.MapMaker$RemovalCause: com.google.common.collect.MapMaker$RemovalCause[] values()
+com.google.common.collect.MapMaker$RemovalCause: com.google.common.collect.MapMaker$RemovalCause valueOf(java.lang.String)
+com.google.common.collect.MapMakerInternalMap$EntryFactory: com.google.common.collect.MapMakerInternalMap$EntryFactory[] values()
+com.google.common.collect.MapMakerInternalMap$EntryFactory: com.google.common.collect.MapMakerInternalMap$EntryFactory valueOf(java.lang.String)
+com.google.common.collect.MapMakerInternalMap$NullEntry: com.google.common.collect.MapMakerInternalMap$NullEntry[] values()
+com.google.common.collect.MapMakerInternalMap$NullEntry: com.google.common.collect.MapMakerInternalMap$NullEntry valueOf(java.lang.String)
+com.google.common.collect.MapMakerInternalMap$Strength: com.google.common.collect.MapMakerInternalMap$Strength[] values()
+com.google.common.collect.MapMakerInternalMap$Strength: com.google.common.collect.MapMakerInternalMap$Strength valueOf(java.lang.String)
+com.google.common.collect.SortedLists$KeyAbsentBehavior: com.google.common.collect.SortedLists$KeyAbsentBehavior[] values()
+com.google.common.collect.SortedLists$KeyAbsentBehavior: com.google.common.collect.SortedLists$KeyAbsentBehavior valueOf(java.lang.String)
+com.google.common.collect.SortedLists$KeyPresentBehavior: com.google.common.collect.SortedLists$KeyPresentBehavior[] values()
+com.google.common.collect.SortedLists$KeyPresentBehavior: com.google.common.collect.SortedLists$KeyPresentBehavior valueOf(java.lang.String)
+com.google.common.collect.TreeMultiset$Aggregate: com.google.common.collect.TreeMultiset$Aggregate[] values()
+com.google.common.collect.TreeMultiset$Aggregate: com.google.common.collect.TreeMultiset$Aggregate valueOf(java.lang.String)
+com.google.common.hash.BloomFilterStrategies: com.google.common.hash.BloomFilterStrategies[] values()
+com.google.common.hash.BloomFilterStrategies: com.google.common.hash.BloomFilterStrategies valueOf(java.lang.String)
+com.google.common.hash.Funnels$ByteArrayFunnel: com.google.common.hash.Funnels$ByteArrayFunnel[] values()
+com.google.common.hash.Funnels$ByteArrayFunnel: com.google.common.hash.Funnels$ByteArrayFunnel valueOf(java.lang.String)
+com.google.common.hash.Funnels$IntegerFunnel: com.google.common.hash.Funnels$IntegerFunnel[] values()
+com.google.common.hash.Funnels$IntegerFunnel: com.google.common.hash.Funnels$IntegerFunnel valueOf(java.lang.String)
+com.google.common.hash.Funnels$LongFunnel: com.google.common.hash.Funnels$LongFunnel[] values()
+com.google.common.hash.Funnels$LongFunnel: com.google.common.hash.Funnels$LongFunnel valueOf(java.lang.String)
+com.google.common.hash.Funnels$StringFunnel: com.google.common.hash.Funnels$StringFunnel[] values()
+com.google.common.hash.Funnels$StringFunnel: com.google.common.hash.Funnels$StringFunnel valueOf(java.lang.String)
+com.google.common.primitives.Booleans$LexicographicalComparator: com.google.common.primitives.Booleans$LexicographicalComparator[] values()
+com.google.common.primitives.Booleans$LexicographicalComparator: com.google.common.primitives.Booleans$LexicographicalComparator valueOf(java.lang.String)
+com.google.common.primitives.Chars$LexicographicalComparator: com.google.common.primitives.Chars$LexicographicalComparator[] values()
+com.google.common.primitives.Chars$LexicographicalComparator: com.google.common.primitives.Chars$LexicographicalComparator valueOf(java.lang.String)
+com.google.common.primitives.Doubles$LexicographicalComparator: com.google.common.primitives.Doubles$LexicographicalComparator[] values()
+com.google.common.primitives.Doubles$LexicographicalComparator: com.google.common.primitives.Doubles$LexicographicalComparator valueOf(java.lang.String)
+com.google.common.primitives.Floats$LexicographicalComparator: com.google.common.primitives.Floats$LexicographicalComparator[] values()
+com.google.common.primitives.Floats$LexicographicalComparator: com.google.common.primitives.Floats$LexicographicalComparator valueOf(java.lang.String)
+com.google.common.primitives.Ints$LexicographicalComparator: com.google.common.primitives.Ints$LexicographicalComparator[] values()
+com.google.common.primitives.Ints$LexicographicalComparator: com.google.common.primitives.Ints$LexicographicalComparator valueOf(java.lang.String)
+com.google.common.primitives.Longs$LexicographicalComparator: com.google.common.primitives.Longs$LexicographicalComparator[] values()
+com.google.common.primitives.Longs$LexicographicalComparator: com.google.common.primitives.Longs$LexicographicalComparator valueOf(java.lang.String)
+com.google.common.primitives.Shorts$LexicographicalComparator: com.google.common.primitives.Shorts$LexicographicalComparator[] values()
+com.google.common.primitives.Shorts$LexicographicalComparator: com.google.common.primitives.Shorts$LexicographicalComparator valueOf(java.lang.String)
+com.google.common.primitives.SignedBytes$LexicographicalComparator: com.google.common.primitives.SignedBytes$LexicographicalComparator[] values()
+com.google.common.primitives.SignedBytes$LexicographicalComparator: com.google.common.primitives.SignedBytes$LexicographicalComparator valueOf(java.lang.String)
+com.google.common.primitives.UnsignedBytes$LexicographicalComparatorHolder$PureJavaComparator: com.google.common.primitives.UnsignedBytes$LexicographicalComparatorHolder$PureJavaComparator[] values()
+com.google.common.primitives.UnsignedBytes$LexicographicalComparatorHolder$PureJavaComparator: com.google.common.primitives.UnsignedBytes$LexicographicalComparatorHolder$PureJavaComparator valueOf(java.lang.String)
+com.google.common.primitives.UnsignedBytes$LexicographicalComparatorHolder$UnsafeComparator: com.google.common.primitives.UnsignedBytes$LexicographicalComparatorHolder$UnsafeComparator[] values()
+com.google.common.primitives.UnsignedBytes$LexicographicalComparatorHolder$UnsafeComparator: com.google.common.primitives.UnsignedBytes$LexicographicalComparatorHolder$UnsafeComparator valueOf(java.lang.String)
+com.google.common.primitives.UnsignedInts$LexicographicalComparator: com.google.common.primitives.UnsignedInts$LexicographicalComparator[] values()
+com.google.common.primitives.UnsignedInts$LexicographicalComparator: com.google.common.primitives.UnsignedInts$LexicographicalComparator valueOf(java.lang.String)
+com.google.common.primitives.UnsignedLongs$LexicographicalComparator: com.google.common.primitives.UnsignedLongs$LexicographicalComparator[] values()
+com.google.common.primitives.UnsignedLongs$LexicographicalComparator: com.google.common.primitives.UnsignedLongs$LexicographicalComparator valueOf(java.lang.String)
+com.google.common.reflect.TypeToken$TypeFilter: com.google.common.reflect.TypeToken$TypeFilter[] values()
+com.google.common.reflect.TypeToken$TypeFilter: com.google.common.reflect.TypeToken$TypeFilter valueOf(java.lang.String)
+com.google.common.reflect.Types$ClassOwnership: com.google.common.reflect.Types$ClassOwnership[] values()
+com.google.common.reflect.Types$ClassOwnership: com.google.common.reflect.Types$ClassOwnership valueOf(java.lang.String)
+com.google.common.reflect.Types$JavaVersion: com.google.common.reflect.Types$JavaVersion[] values()
+com.google.common.reflect.Types$JavaVersion: com.google.common.reflect.Types$JavaVersion valueOf(java.lang.String)
+com.google.common.util.concurrent.CycleDetectingLockFactory$Policies: com.google.common.util.concurrent.CycleDetectingLockFactory$Policies[] values()
+com.google.common.util.concurrent.CycleDetectingLockFactory$Policies: com.google.common.util.concurrent.CycleDetectingLockFactory$Policies valueOf(java.lang.String)
+com.google.common.util.concurrent.Service$State: com.google.common.util.concurrent.Service$State[] values()
+com.google.common.util.concurrent.Service$State: com.google.common.util.concurrent.Service$State valueOf(java.lang.String)
+dh.sunicon.MainActivity
+dh.sunicon.MainActivity: MainActivity()
+dh.sunicon.R$animator: int fadein
+dh.sunicon.R$animator: int fadeout
+dh.sunicon.R$array: int opt_currency_expiry_time
+dh.sunicon.R$array: int opt_currency_live_update
+dh.sunicon.R$array: int opt_currency_usd_only
+dh.sunicon.R$array: int opt_input_delay
+dh.sunicon.R$array: int opt_precision
+dh.sunicon.R$array: int opt_precision_int
+dh.sunicon.R$color: int blue
+dh.sunicon.R$color: int category_fg
+dh.sunicon.R$color: int light_gray
+dh.sunicon.R$color: int light_gray2
+dh.sunicon.R$color: int light_green
+dh.sunicon.R$color: int light_red
+dh.sunicon.R$color: int light_yellow
+dh.sunicon.R$drawable: int droplist
+dh.sunicon.R$drawable: int edittext_active
+dh.sunicon.R$drawable: int edittext_blue_colorstate
+dh.sunicon.R$drawable: int edittext_disabled
+dh.sunicon.R$drawable: int ic_launcher
+dh.sunicon.R$drawable: int ic_menu_gray
+dh.sunicon.R$drawable: int ic_setting
+dh.sunicon.R$drawable: int list_selector
+dh.sunicon.R$drawable: int oval_blue
+dh.sunicon.R$drawable: int tab_bg_selected
+dh.sunicon.R$drawable: int tab_bg_selector
+dh.sunicon.R$drawable: int tab_bg_unselected
+dh.sunicon.R$drawable: int tab_divider
+dh.sunicon.R$drawable: int tab_indicator_selector
+dh.sunicon.R$drawable: int tab_text_selector
+dh.sunicon.R$id: int backButton
+dh.sunicon.R$id: int baseUnitPicker2Button
+dh.sunicon.R$id: int baseUnitPickerButton
+dh.sunicon.R$id: int baseValueSwitcher
+dh.sunicon.R$id: int cancel
+dh.sunicon.R$id: int categoryLabel
+dh.sunicon.R$id: int categoryList
+dh.sunicon.R$id: int check
+dh.sunicon.R$id: int checkProgressSwitcher
+dh.sunicon.R$id: int clearTargetUnitFilterButton
+dh.sunicon.R$id: int converterTab
+dh.sunicon.R$id: int copyUnitNameItem
+dh.sunicon.R$id: int copyValueAndUnitItem
+dh.sunicon.R$id: int copyValueItem
+dh.sunicon.R$id: int currencyExpiryTime
+dh.sunicon.R$id: int currencyLiveUpdateOption
+dh.sunicon.R$id: int currencyLoadingLabel
+dh.sunicon.R$id: int currencyLoadingProgressBar
+dh.sunicon.R$id: int currencyUsdOnly
+dh.sunicon.R$id: int explorerTab
+dh.sunicon.R$id: int filterCategoryEditor
+dh.sunicon.R$id: int filterEdit
+dh.sunicon.R$id: int filterUnitEditor
+dh.sunicon.R$id: int flatList
+dh.sunicon.R$id: int inputDelay
+dh.sunicon.R$id: int label
+dh.sunicon.R$id: int listSwitcher
+dh.sunicon.R$id: int listToggle
+dh.sunicon.R$id: int mainView
+dh.sunicon.R$id: int menu
+dh.sunicon.R$id: int precision
+dh.sunicon.R$id: int precisionInt
+dh.sunicon.R$id: int progress
+dh.sunicon.R$id: int progressbar
+dh.sunicon.R$id: int resultListSwitcher
+dh.sunicon.R$id: int selectAll
+dh.sunicon.R$id: int selectCommuns
+dh.sunicon.R$id: int selectCommunsOnly
+dh.sunicon.R$id: int setUnitAsBaseItem
+dh.sunicon.R$id: int settingTab
+dh.sunicon.R$id: int spinnerLabelItem
+dh.sunicon.R$id: int strictMode
+dh.sunicon.R$id: int targetUnitFilterEditor
+dh.sunicon.R$id: int treeList
+dh.sunicon.R$id: int unitLabel
+dh.sunicon.R$id: int unitList
+dh.sunicon.R$id: int updateInProgressPanel
+dh.sunicon.R$id: int valueEditor
+dh.sunicon.R$id: int valueLabel
+dh.sunicon.R$id: int valueSpinner
+dh.sunicon.R$id: int warningMessage
+dh.sunicon.R$layout: int category_check_item
+dh.sunicon.R$layout: int category_item
+dh.sunicon.R$layout: int category_item2
+dh.sunicon.R$layout: int progressbar_item
+dh.sunicon.R$layout: int report_dialog
+dh.sunicon.R$layout: int spinner_item
+dh.sunicon.R$layout: int sunicon_converter
+dh.sunicon.R$layout: int sunicon_explorer
+dh.sunicon.R$layout: int sunicon_main_tabhosts
+dh.sunicon.R$layout: int sunicon_setting
+dh.sunicon.R$layout: int tab_image_indicator
+dh.sunicon.R$layout: int tab_label_indicator
+dh.sunicon.R$layout: int unit_category_item
+dh.sunicon.R$layout: int unit_check_item
+dh.sunicon.R$layout: int unit_item
+dh.sunicon.R$layout: int unit_item2
+dh.sunicon.R$layout: int unit_picker2
+dh.sunicon.R$layout: int unit_picker3
+dh.sunicon.R$layout: int value_unit_item
+dh.sunicon.R$menu: int explorer_contextmenu
+dh.sunicon.R$menu: int result_list_contextmenu
+dh.sunicon.R$string: int app_name
+dh.sunicon.R$string: int explorer_warning_full
+dh.sunicon.R$string: int explorer_warning_short
+dh.sunicon.R$string: int menu_settings
+dh.sunicon.R$string: int notice_setting
+dh.sunicon.R$string: int title_activity_unit_picker
+dh.sunicon.R$string: int title_activity_unit_picker2
+dh.sunicon.R$style: int AppTheme
+dh.sunicon.R$style: int NoTitleDialog
+dh.sunicon.R$style: int autocompletetextview_blue
+dh.sunicon.R$style: int button_clear
+dh.sunicon.R$style: int edittext_blue
+dh.sunicon.R$style: int spinner_blue
+dh.sunicon.UnitPicker2
+dh.sunicon.UnitPicker2: UnitPicker2()
+dh.sunicon.UnitPicker3
+dh.sunicon.UnitPicker3: UnitPicker3()
+dh.sunicon.currency.UpdatingReport$MessageType: dh.sunicon.currency.UpdatingReport$MessageType[] values()
+dh.sunicon.currency.UpdatingReport$MessageType: dh.sunicon.currency.UpdatingReport$MessageType valueOf(java.lang.String)
+dh.sunicon.currency.UpdatingReport$OperationType: dh.sunicon.currency.UpdatingReport$OperationType[] values()
+dh.sunicon.currency.UpdatingReport$OperationType: dh.sunicon.currency.UpdatingReport$OperationType valueOf(java.lang.String)
+dh.sunicon.workarounds.CheckableLinearLayout
+dh.sunicon.workarounds.CheckableLinearLayout: CheckableLinearLayout(android.content.Context)
+dh.sunicon.workarounds.CheckableLinearLayout: CheckableLinearLayout(android.content.Context,android.util.AttributeSet)
+dh.sunicon.workarounds.CheckableLinearLayout: void setChecked(boolean)
+dh.sunicon.workarounds.CheckableLinearLayout$SavedState
+dh.sunicon.workarounds.CheckableLinearLayout$SavedState: android.os.Parcelable$Creator CREATOR
+dh.sunicon.workarounds.DoubleFormatter$NumberFormatKind: dh.sunicon.workarounds.DoubleFormatter$NumberFormatKind[] values()
+dh.sunicon.workarounds.DoubleFormatter$NumberFormatKind: dh.sunicon.workarounds.DoubleFormatter$NumberFormatKind valueOf(java.lang.String)
+dh.sunicon.workarounds.MyApplication
+dh.sunicon.workarounds.MyApplication: MyApplication()
+dh.sunicon.workarounds.TabPatchView
+dh.sunicon.workarounds.TabPatchView: TabPatchView(android.content.Context)
+dh.sunicon.workarounds.TabPatchView: TabPatchView(android.content.Context,android.util.AttributeSet)
+dh.sunicon.workarounds.TabPatchView: TabPatchView(android.content.Context,android.util.AttributeSet,int)
+javax.annotation.meta.When: javax.annotation.meta.When[] values()
+javax.annotation.meta.When: javax.annotation.meta.When valueOf(java.lang.String)

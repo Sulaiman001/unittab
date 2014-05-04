@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="minutes_delay">
+        <item quantity="other">%d Minuten Verspätung</item>
+        <item quantity="zero">Keine Verspätung</item>
+        <item quantity="one">%d Minute Verspätung</item>
+        <item quantity="two">%d Minuten Verspätung</item>
+        <item quantity="few">%d Minuten Verspätung</item>
+        <item quantity="many">%d Minuten Verspätung</item>
+    </plurals>
+    <plurals name="card_count">
+        <item quantity="other">%d Karten</item>
+        <item quantity="zero">Keine Karten</item>
+        <item quantity="one">%d Karte</item>
+        <item quantity="two">%d Karten</item>
+        <item quantity="few">%d Karten</item>
+        <item quantity="many">%d Karten</item>
+    </plurals>
+</resources>

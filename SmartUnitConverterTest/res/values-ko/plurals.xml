@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="minutes_delay">
+        <item quantity="other">%d분 지연됨</item>
+        <item quantity="zero">지연되지 않음</item>
+        <item quantity="one">%d분 지연됨</item>
+        <item quantity="two">%d분 지연됨</item>
+        <item quantity="few">%d분 지연됨</item>
+        <item quantity="many">%d분 지연됨</item>
+    </plurals>
+    <plurals name="card_count">
+        <item quantity="other">카드 %d장</item>
+        <item quantity="zero">카드 없음</item>
+        <item quantity="one">카드 %d장</item>
+        <item quantity="two">카드 %d장</item>
+        <item quantity="few">카드 %d장</item>
+        <item quantity="many">카드 %d장</item>
+    </plurals>
+</resources>

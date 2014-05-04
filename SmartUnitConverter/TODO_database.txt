@@ -1,0 +1,19 @@
+TODO add category:
+
+43	Hex./Dec./Bin.	0
+76	Steam Tables	0
+86	TOEFL Scores	0
+
+TODO add unit:
+
+91	7	ClothingW		0
+580	43	ASCII Table		0
+916	69	Ring Size		0
+917	70	ShoeM		0
+918	71	ShoeW		0
+941	76	Steam Tables		0
+962	86	TOEFL Score Comparison		0
+
+
+
+

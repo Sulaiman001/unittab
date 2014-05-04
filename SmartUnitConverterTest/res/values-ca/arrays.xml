@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="action_local_directions_travel_mode">
+        <item>Indicacions en cotxe a:</item>
+        <item>Indicacions a peu a:</item>
+        <item>Indicacions de trànsit a:</item>
+        <item>Indicacions en bici a:</item>
+    </string-array>
+    <string-array name="action_local_navigate_travel_mode">
+        <item>En vehicle cap a:</item>
+        <item>A peu a:</item>
+    </string-array>
+    <string-array name="local_results_markers">
+        <item>A</item>
+        <item>B</item>
+        <item>C</item>
+        <item>D</item>
+        <item>E</item>
+        <item>F</item>
+        <item>G</item>
+        <item>H</item>
+        <item>I</item>
+        <item>J</item>
+        <item>K</item>
+        <item>L</item>
+        <item>M</item>
+        <item>N</item>
+        <item>O</item>
+        <item>P</item>
+        <item>Q</item>
+        <item>R</item>
+        <item>S</item>
+        <item>T</item>
+        <item>U</item>
+        <item>V</item>
+        <item>W</item>
+        <item>X</item>
+        <item>Y</item>
+        <item>Z</item>
+    </string-array>
+    <string-array name="languageNames">
+        <item>Afrikaans (Sud-àfrica)</item>
+        <item>Àrab (Algèria)</item>
+        <item>Àrab (Egipte)</item>
+        <item>Àrab (Iraq)</item>
+        <item>Àrab (Israel)</item>
+        <item>Àrab (Jordània)</item>
+        <item>Àrab (Kuwait)</item>
+        <item>Àrab (Líban)</item>
+        <item>Àrab (Líbia)</item>
+        <item>Àrab (Marroc)</item>
+        <item>Àrab (Qatar)</item>
+        <item>Àrab (Aràbia Saudita)</item>
+        <item>Àrab (Sudan)</item>
+        <item>Àrab (Síria)</item>
+        <item>Àrab (Tunísia)</item>
+        <item>Àrab (Emirats Àrabs Units)</item>
+        <item>Àrab (Iemen)</item>
+        <item>Bielorús (Bielorússia)</item>
+        <item>Bengalí (Bangla Desh)</item>
+        <item>Búlgar (Bulgària)</item>
+        <item>Català (Espanya)</item>
+        <item>Xinès, mandarí (Xina, simplificat)</item>
+        <item>Xinès, mandarí (Hong Kong, simplificat)</item>
+        <item>Xinès, mandarí (Hong Kong, tradicional)</item>
+        <item>Xinès, mandarí (Singapur, simplificat)</item>
+        <item>Xinès, mandarí (Taiwan, simplificat)</item>
+        <item>Xinès, mandarí (Taiwan, tradicional)</item>
+        <item>Xinès, yue (Xina, simplificat)</item>
+        <item>Xinès, yue (Hong Kong, tradicional)</item>
+        <item>Croat (Croàcia)</item>
+        <item>Txec (República Txeca)</item>
+        <item>Danès (Dinamarca)</item>
+        <item>Holandès (Bèlgica)</item>
+        <item>Neerlandès (Països Baixos)</item>
+        <item>Anglès (general)</item>
+        <item>Anglès (Austràlia)</item>
+        <item>Anglès (Bangla Desh)</item>
+        <item>Anglès (Canadà)</item>
+        <item>Anglès (Hong Kong)</item>
+        <item>Anglès (Índia)</item>
+        <item>Anglès (Irlanda)</item>
+        <item>Anglès (Kenya)</item>
+        <item>Anglès (Malàisia)</item>
+        <item>Anglès (Nova Zelanda)</item>
+        <item>Anglès (Nigèria)</item>
+        <item>Anglès (Pakistan)</item>
+        <item>Anglès (Filipines)</item>
+        <item>Anglès (Singapur)</item>
+        <item>Anglès (Sud-àfrica)</item>
+        <item>Anglès (Sudan)</item>
+        <item>Anglès (Tanzània)</item>
+        <item>Anglès (Uganda)</item>
+        <item>Anglès (Regne Unit)</item>
+        <item>Anglès (Estats Units)</item>
+        <item>Estonià (Estònia)</item>
+        <item>Filipí (Filipines)</item>
+        <item>Finès (Finlàndia)</item>
+        <item>Francès (Bèlgica)</item>
+        <item>Francès (Canadà)</item>
+        <item>Francès (França)</item>
+        <item>Francès (Suïssa)</item>
+        <item>Gallec (Espanya)</item>
+        <item>Alemany (Àustria)</item>
+        <item>Alemany (Alemanya)</item>
+        <item>Alemany (Suïssa)</item>
+        <item>Alemany (Liechtenstein)</item>
+        <item>Grec (Grècia)</item>
+        <item>Hebreu (Israel)</item>
+        <item>Hindi (Índia)</item>
+        <item>Hongarès (Hongria)</item>
+        <item>Islandès (Islàndia)</item>
+        <item>Indonesi (Indonèsia)</item>
+        <item>Irlandès (Irlanda)</item>
+        <item>Ndebele (Sud-àfrica)</item>
+        <item>Xhosa (Sud-àfrica)</item>
+        <item>Zulu (Sud-àfrica)</item>
+        <item>Italià (Itàlia)</item>
+        <item>Italià (Suïssa)</item>
+        <item>Japonès (Japó)</item>
+        <item>Coreà (Corea del Sud)</item>
+        <item>Letó (Letònia)</item>
+        <item>Lituà (Lituània)</item>
+        <item>Malai (Malàisia)</item>
+        <item>Malai (Singapur)</item>
+        <item>Noruec Bokmål (Noruega)</item>
+        <item>Noruec Nynorsk (Noruega)</item>
+        <item>Persa (Iran)</item>
+        <item>Polonès (Polònia)</item>
+        <item>Portuguès (Angola)</item>
+        <item>Portuguès (Brasil)</item>
+        <item>Portuguès (Portugal)</item>
+        <item>Romanès (Romania)</item>
+        <item>Rus (Bielorússia)</item>
+        <item>Rus (Rússia)</item>
+        <item>Sepedi (Sud-àfrica)</item>
+        <item>Serbi (Sèrbia, ciríl·lic)</item>
+        <item>Sesotho (Sud-àfrica)</item>
+        <item>Setswana (Sud-àfrica)</item>
+        <item>Swazi (Sud-àfrica)</item>
+        <item>Eslovac (Eslovàquia)</item>
+        <item>Eslovè (Eslovènia)</item>
+        <item>Espanyol (Argentina)</item>
+        <item>Espanyol (Bolívia)</item>
+        <item>Espanyol (Xile)</item>
+        <item>Espanyol (Colòmbia)</item>
+        <item>Espanyol (Costa Rica)</item>
+        <item>Espanyol (Cuba)</item>
+        <item>Espanyol (República Dominicana)</item>
+        <item>Espanyol (Equador)</item>
+        <item>Espanyol (El Salvador)</item>
+        <item>Espanyol (Guatemala)</item>
+        <item>Espanyol (Hondures)</item>
+        <item>Espanyol (Mèxic)</item>
+        <item>Espanyol (Nicaragua)</item>
+        <item>Espanyol (Panamà)</item>
+        <item>Espanyol (Paraguai)</item>
+        <item>Espanyol (Perú)</item>
+        <item>Espanyol (Puerto Rico)</item>
+        <item>Espanyol (Espanya)</item>
+        <item>Espanyol (EUA)</item>
+        <item>Espanyol (Uruguai)</item>
+        <item>Espanyol (Veneçuela)</item>
+        <item>Suahili (Kenya)</item>
+        <item>Suahili (Tanzània)</item>
+        <item>Suahili (Uganda)</item>
+        <item>Suec (Finlàndia)</item>
+        <item>Suec (Suècia)</item>
+        <item>Tailandès (Tailàndia)</item>
+        <item>Tshivenda (Sud-àfrica)</item>
+        <item>Turc (Turquia)</item>
+        <item>Ucraïnès (Ucraïna)</item>
+        <item>Urdú (Pakistan)</item>
+        <item>Vietnamita (Vietnam)</item>
+        <item>Xitsonga (Sud-àfrica)</item>
+    </string-array>
+    <string-array name="prefEntries_ttsMode">
+        <item>Sempre</item>
+        <item>Només mans lliures</item>
+    </string-array>
+</resources>

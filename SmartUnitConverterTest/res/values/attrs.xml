@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="layout_column" format="integer" />
+    <attr name="columnCount" format="reference|integer" />
+    <attr name="maxColumnWidth" format="reference|dimension" />
+    <attr name="horizontalItemMargin" format="reference|dimension" />
+    <attr name="verticalItemMargin" format="reference|dimension" />
+    <attr name="layout_canDrag" format="boolean" />
+    <attr name="layout_canDismiss" format="boolean" />
+    <attr name="layout_appearFromAbove" format="boolean" />
+    <attr name="layout_noAnimation" format="boolean" />
+    <attr name="layout_noPadding" format="boolean" />
+    <attr name="layout_noCardAppearance" format="boolean" />
+    <attr name="layout_showAllDividers" format="boolean" />
+    <attr name="layout_appearAnimationType">
+        <enum name="deal" value="0" />
+        <enum name="slide_up" value="1" />
+        <enum name="slide_down" value="2" />
+        <enum name="fade" value="3" />
+        <enum name="none" value="4" />
+    </attr>
+    <attr name="layout_disappearAnimationType">
+        <enum name="deal" value="0" />
+        <enum name="slide_up" value="1" />
+        <enum name="slide_down" value="2" />
+        <enum name="fade" value="3" />
+        <enum name="none" value="4" />
+    </attr>
+    <attr name="enabledBackgroundColor" format="reference|color" />
+    <attr name="disabledBackgroundColor" format="reference|color" />
+    <attr name="primaryLevels" format="reference" />
+    <attr name="trialLevels" format="reference" />
+    <attr name="levelColors" format="reference|color" />
+    <attr name="levelBaseDrawable" format="reference" />
+    <attr name="target" format="reference" />
+    <attr name="targetEdges">
+        <flag name="top" value="0x00000001" />
+        <flag name="bottom" value="0x00000002" />
+        <flag name="left" value="0x00000004" />
+        <flag name="right" value="0x00000008" />
+    </attr>
+    <attr name="view1" format="reference" />
+    <attr name="view2" format="reference" />
+    <attr name="boundAxes">
+        <flag name="vertical" value="0x00000001" />
+        <flag name="horizontal" value="0x00000002" />
+    </attr>
+    <attr name="direction" format="string" />
+    <attr name="ratio" format="float" />
+    <attr name="crossfadeDuration" format="integer" />
+    <attr name="fadeImageIfLoadedFromCache" format="boolean" />
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item type="drawable" name="APKTOOL_DUMMY_00f5">false</item>
+    <drawable name="selection_highlight_color">@color/selection_highlight_color</drawable>
+    <item type="drawable" name="selection_highlight_light">#bb33b5e5</item>
+    <item type="drawable" name="selection_highlight_dark">#ff0099cc</item>
+    <drawable name="selection_dark_background">@color/black</drawable>
+    <item type="drawable" name="empty">#00000000</item>
+</resources>

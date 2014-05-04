@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="minutes_delay">
+        <item quantity="other">%d min. vėluoja</item>
+        <item quantity="zero">nevėluoja</item>
+        <item quantity="one">%d min. vėluoja</item>
+        <item quantity="two">%d min. vėluoja</item>
+        <item quantity="few">%d min. vėluoja</item>
+        <item quantity="many">%d min. vėluoja</item>
+    </plurals>
+    <plurals name="card_count">
+        <item quantity="other">Kortelių: %d</item>
+        <item quantity="zero">Kortelių nėra</item>
+        <item quantity="one">Kortelių: %d</item>
+        <item quantity="two">Kortelių: %d</item>
+        <item quantity="few">Kortelių: %d</item>
+        <item quantity="many">Kortelių: %d</item>
+    </plurals>
+</resources>

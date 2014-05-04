@@ -2,9 +2,13 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
-	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
-	<classpathentry kind="lib" path="/media/diskdata/dev/SmartUnitConverter/SmartUnitConverter/libs/guava-13.0.1.jar" sourcepath="/media/diskdata/dev-lib/guava-libraries/guava/src"/>
 	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.LIBRARIES"/>
-	<classpathentry kind="lib" path="/media/diskdata/dev/SmartUnitConverter/SmartUnitConverter/libs/android-support-v4.jar" sourcepath="/home/hiep/Dev/android-sdk-linux/extras/android/support/v4/src"/>
+	<classpathentry exported="true" kind="con" path="com.android.ide.eclipse.adt.DEPENDENCIES">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="D:/prg/Developper/adt-bundle-windows-x86_64-20140321/sdk/sources/android-19"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="D:/prg/Developper/adt-bundle-windows-x86_64-20140321/sdk/platforms/android-19/android.jar"/>
+	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry kind="output" path="bin/classes"/>
 </classpath>

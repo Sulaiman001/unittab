@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <bool name="enable_widgets">true</bool>
+    <bool name="enable_traffic_widget">true</bool>
+    <bool name="is_tablet">false</bool>
+    <bool name="debugging_enabled">false</bool>
+    <bool name="group_similar_suggestions">false</bool>
+    <bool name="show_zero_query_suggestions">true</bool>
+    <bool name="search_plate_and_footer_sticky_in_websearch">false</bool>
+    <bool name="dedupe_user_query">true</bool>
+    <bool name="suggest_look_ahead_enabled">true</bool>
+    <bool name="results_metadata_enabled">false</bool>
+    <bool name="show_zero_query_summons">false</bool>
+    <bool name="clickable_result_areas_enabled">true</bool>
+    <bool name="clickable_results_from_metadata">true</bool>
+    <bool name="deploy_the_google">false</bool>
+    <bool name="enable_debug_features">false</bool>
+    <bool name="enable_answers">true</bool>
+</resources>

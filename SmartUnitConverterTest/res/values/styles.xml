@@ -1,0 +1,598 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="FloorPicker">
+        <item name="android:textSize">18.0sp</item>
+        <item name="android:textColor">#ff777777</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_weight">1.0</item>
+    </style>
+    <style name="FloorPicker.Selected" parent="@style/FloorPicker">
+        <item name="android:textColor">#ff000000</item>
+    </style>
+    <style name="CardText">
+        <item name="android:textSize">@dimen/card_small_text</item>
+        <item name="android:textColor">@color/card_text</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:maxLines">2</item>
+    </style>
+    <style name="CardLightText" parent="@style/CardText">
+        <item name="android:textColor">@color/card_light_text</item>
+    </style>
+    <style name="CardTitle" parent="@style/CardText">
+        <item name="android:textSize">@dimen/card_large_text</item>
+        <item name="android:textColor">@color/card_title_text</item>
+    </style>
+    <style name="CardText.Multiline" parent="@style/CardText">
+        <item name="android:maxLines">@null</item>
+    </style>
+    <style name="CardTextBlock">
+        <item name="android:paddingLeft">@dimen/card_padding</item>
+        <item name="android:paddingTop">@dimen/text_block_top_padding</item>
+        <item name="android:paddingRight">@dimen/card_padding</item>
+        <item name="android:paddingBottom">@dimen/text_block_bottom_padding</item>
+    </style>
+    <style name="CardActionButton">
+        <item name="android:textSize">@dimen/card_action_text</item>
+        <item name="android:textColor">@color/card_link_text</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:gravity">left|center</item>
+        <item name="android:background">@drawable/card_action_button_background</item>
+        <item name="android:paddingLeft">16.0dip</item>
+        <item name="android:paddingRight">@dimen/card_padding</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:drawablePadding">4.0dip</item>
+    </style>
+    <style name="CardActionButtonWithIcon" parent="@style/CardActionButton">
+        <item name="android:paddingLeft">8.0dip</item>
+    </style>
+    <style name="CardActionButtonNoHairline" parent="@style/CardActionButton">
+        <item name="android:background">@drawable/card_action_button_background_no_hairline</item>
+    </style>
+    <style name="CardActionButtonNoHairlineWithIcon" parent="@style/CardActionButton">
+        <item name="android:background">@drawable/card_action_button_background_no_hairline</item>
+        <item name="android:paddingLeft">8.0dip</item>
+    </style>
+    <style name="CardMenuButton">
+        <item name="android:gravity">top|right|center</item>
+        <item name="android:background">@null</item>
+        <item name="android:paddingLeft">16.0dip</item>
+        <item name="android:paddingTop">16.0dip</item>
+        <item name="android:paddingRight">0.0dip</item>
+        <item name="android:paddingBottom">8.0dip</item>
+        <item name="android:src">@drawable/ic_menu_moreoverflow_card_dark</item>
+    </style>
+    <style name="CardGridText" parent="@style/CardText">
+        <item name="android:textSize">@dimen/card_grid_font_size</item>
+        <item name="android:textColor">@color/card_grid_text</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingLeft">0.0dip</item>
+        <item name="android:paddingRight">0.0dip</item>
+        <item name="android:paddingBottom">6.0dip</item>
+        <item name="android:layout_weight">1.0</item>
+    </style>
+    <style name="CardSpacer">
+        <item name="android:background">@color/card_border</item>
+        <item name="android:layout_width">1.0dip</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_weight">0.0</item>
+    </style>
+    <style name="CardDialogTitle">
+        <item name="android:textSize">25.0sp</item>
+        <item name="android:textStyle">italic</item>
+        <item name="android:textColor">#ffffffff</item>
+        <item name="android:background">@null</item>
+        <item name="android:shadowColor">@color/first_run_text_shadow</item>
+        <item name="android:shadowDx">1.0</item>
+        <item name="android:shadowDy">1.0</item>
+        <item name="android:shadowRadius">1.25</item>
+    </style>
+    <style name="CardDialogTheme" parent="@android:style/Theme.Dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowIsTranslucent">true</item>
+    </style>
+    <style name="FirstRunButton">
+        <item name="android:textSize">25.0sp</item>
+        <item name="android:textStyle">italic</item>
+        <item name="android:textColor">@drawable/first_run_button_color</item>
+        <item name="android:background">@drawable/first_run_button_background</item>
+        <item name="android:shadowColor">@color/first_run_text_shadow</item>
+        <item name="android:shadowDx">1.0</item>
+        <item name="android:shadowDy">1.0</item>
+        <item name="android:shadowRadius">1.25</item>
+    </style>
+    <style name="VoiceOfGoogle">
+        <item name="android:textSize">19.0sp</item>
+        <item name="android:textStyle">italic</item>
+        <item name="android:textColor">@drawable/first_run_button_color</item>
+        <item name="android:background">@drawable/first_run_button_background</item>
+        <item name="android:shadowColor">@color/place_confirm_text_shadow</item>
+        <item name="android:shadowDx">1.0</item>
+        <item name="android:shadowDy">1.0</item>
+        <item name="android:shadowRadius">1.25</item>
+    </style>
+    <style name="FirstRunButtonSmall" parent="@style/FirstRunButton">
+        <item name="android:textSize">16.0sp</item>
+    </style>
+    <style name="FirstRunText">
+        <item name="android:textSize">18.0sp</item>
+        <item name="android:textStyle">italic</item>
+        <item name="android:textColor">#ff727272</item>
+        <item name="android:background">@null</item>
+        <item name="android:shadowColor">@color/first_run_text_shadow</item>
+        <item name="android:shadowDx">1.0</item>
+        <item name="android:shadowDy">1.0</item>
+        <item name="android:shadowRadius">1.25</item>
+    </style>
+    <style name="FirstRunTitle" parent="@style/FirstRunText">
+        <item name="android:textSize">25.0sp</item>
+    </style>
+    <style name="EntryItemStyle">
+        <item name="android:background">@drawable/entry_item_state_selector</item>
+        <item name="android:paddingLeft">8.0dip</item>
+        <item name="android:paddingTop">12.0dip</item>
+        <item name="android:paddingRight">8.0dip</item>
+        <item name="android:paddingBottom">12.0dip</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">64.0dip</item>
+    </style>
+    <style name="ShortEntryItemStyle" parent="@style/EntryItemStyle">
+        <item name="android:minHeight">48.0dip</item>
+    </style>
+    <style name="EntryItemTitleText" parent="@android:style/TextAppearance.Medium">
+        <item name="android:textColor">#ff333333</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">1</item>
+    </style>
+    <style name="EntryItemSubText" parent="@android:style/TextAppearance.Small">
+        <item name="android:textColor">#ffaaaaaa</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:maxLines">1</item>
+    </style>
+    <style name="UnconfirmedEntryText" parent="@android:style/TextAppearance.Small">
+        <item name="android:textColor">#ffaaaaaa</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+    <style name="VelvetAnimations" parent="@android:style/Animation.Activity">
+        <item name="android:activityOpenEnterAnimation">@anim/fast_fade_in</item>
+        <item name="android:activityOpenExitAnimation">@anim/fast_fade_out</item>
+        <item name="android:activityCloseEnterAnimation">@anim/fast_fade_in</item>
+        <item name="android:activityCloseExitAnimation">@anim/fast_fade_out</item>
+        <item name="android:taskOpenEnterAnimation">@anim/fast_fade_in</item>
+        <item name="android:taskOpenExitAnimation">@anim/fast_fade_out</item>
+        <item name="android:taskCloseEnterAnimation">@anim/fast_fade_in</item>
+        <item name="android:taskCloseExitAnimation">@anim/fast_fade_out</item>
+        <item name="android:taskToFrontEnterAnimation">@anim/fast_fade_in</item>
+        <item name="android:taskToFrontExitAnimation">@anim/fast_fade_out</item>
+        <item name="android:taskToBackEnterAnimation">@anim/fast_fade_in</item>
+        <item name="android:taskToBackExitAnimation">@anim/fast_fade_out</item>
+    </style>
+    <style name="Suggestion">
+        <item name="android:focusable">true</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">@dimen/suggestion_view_height</item>
+    </style>
+    <style name="Suggestion.WebSearch" parent="@style/Suggestion">
+        <item name="android:focusable">false</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+    <style name="Suggestion.Summons" parent="@style/Suggestion">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">@dimen/suggestion_view_height</item>
+    </style>
+    <style name="Suggestion.Nav" parent="@style/Suggestion">
+        <item name="android:background">@drawable/bg_suggestion</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+    <style name="Suggestion.WebSearch.Placeholder" parent="@style/Suggestion.WebSearch">
+        <item name="android:focusable">false</item>
+        <item name="android:layout_height">fill_parent</item>
+    </style>
+    <style name="SuggestionDebugText">
+        <item name="android:textSize">8.0sp</item>
+        <item name="android:textColor">@color/primary_text_inverse</item>
+        <item name="android:background">@color/debug_suggestion_background</item>
+        <item name="android:focusable">false</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_alignParentRight">true</item>
+        <item name="android:layout_alignParentBottom">true</item>
+    </style>
+    <style name="SuggestionText1">
+        <item name="android:textAppearance">@style/SuggestionText1Appearance</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">@dimen/suggestions_padding</item>
+        <item name="android:paddingRight">@dimen/suggestions_padding</item>
+        <item name="android:duplicateParentState">true</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:singleLine">true</item>
+    </style>
+    <style name="SuggestionText1.Web" parent="@style/SuggestionText1">
+        <item name="android:textAppearance">@style/SuggestionText1Appearance.Web</item>
+        <item name="android:ellipsize">start</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">@dimen/suggestion_text_padding</item>
+        <item name="android:paddingRight">@dimen/suggestion_text_padding</item>
+        <item name="android:layout_width">0.0dip</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">@dimen/web_suggestion_view_height</item>
+        <item name="android:maxLines">2</item>
+        <item name="android:singleLine">false</item>
+        <item name="android:layout_weight">1.0</item>
+    </style>
+    <style name="SuggestionText1.Nav" parent="@style/SuggestionText1">
+        <item name="android:textAppearance">@style/SuggestionText1Appearance.Nav</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingLeft">@dimen/suggestion_text_padding</item>
+        <item name="android:paddingRight">@dimen/suggestion_text_padding</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">@dimen/web_suggestion_view_height</item>
+        <item name="android:singleLine">true</item>
+    </style>
+    <style name="SuggestionText1.Placeholder" parent="@style/SuggestionText1">
+        <item name="android:textAppearance">@style/SuggestionText1Appearance.Placeholder</item>
+    </style>
+    <style name="SuggestionText2">
+        <item name="android:textAppearance">@style/SuggestionText2Appearance</item>
+        <item name="android:gravity">top</item>
+        <item name="android:paddingLeft">@dimen/suggestions_padding</item>
+        <item name="android:paddingRight">@dimen/suggestions_padding</item>
+        <item name="android:duplicateParentState">true</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:singleLine">true</item>
+    </style>
+    <style name="SuggestionText2.Url" parent="@style/SuggestionText2">
+        <item name="android:textColor">@color/primary_text_suggest</item>
+    </style>
+    <style name="SuggestionIcon1">
+        <item name="android:duplicateParentState">true</item>
+        <item name="android:layout_width">@dimen/suggestion_icon_size</item>
+        <item name="android:layout_height">fill_parent</item>
+    </style>
+    <style name="SuggestionIcon2">
+        <item name="android:paddingTop">4.0dip</item>
+        <item name="android:paddingBottom">4.0dip</item>
+        <item name="android:duplicateParentState">true</item>
+        <item name="android:layout_width">@dimen/suggestion_icon_size</item>
+        <item name="android:layout_height">@dimen/suggestion_view_height</item>
+    </style>
+    <style name="SuggestionIcon2.Spinner" parent="@style/SuggestionIcon2">
+        <item name="android:padding">8.0dip</item>
+        <item name="android:layout_height">@dimen/suggestion_icon_size</item>
+    </style>
+    <style name="SuggestionIcon2.Frame" parent="@style/SuggestionIcon2">
+        <item name="android:layout_width">wrap_content</item>
+    </style>
+    <style name="SuggestionIcon2.Button" parent="@style/SuggestionIcon2">
+        <item name="android:focusable">true</item>
+        <item name="android:duplicateParentState">false</item>
+    </style>
+    <style name="SuggestionIcon2.Web" parent="@style/SuggestionIcon2">
+        <item name="android:layout_gravity">center</item>
+        <item name="android:focusable">true</item>
+        <item name="android:duplicateParentState">false</item>
+        <item name="android:layout_width">@dimen/web_suggestion_icon_size</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:scaleType">centerInside</item>
+    </style>
+    <style name="SuggestionText1Appearance">
+        <item name="android:textSize">16.0sp</item>
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/primary_text_suggest</item>
+    </style>
+    <style name="SuggestionText1Appearance.Placeholder" parent="@style/SuggestionText1Appearance">
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/secondary_text_suggest</item>
+    </style>
+    <style name="SuggestionText1Appearance.Query" parent="@style/SuggestionText1Appearance">
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/primary_text_suggest</item>
+    </style>
+    <style name="SuggestionText1Appearance.Suggested" parent="@style/SuggestionText1Appearance">
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/primary_text_suggest</item>
+    </style>
+    <style name="SuggestionText1Appearance.Web" parent="@style/SuggestionText1Appearance">
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/primary_text_suggest</item>
+    </style>
+    <style name="SuggestionText1Appearance.Nav" parent="@style/SuggestionText1Appearance">
+        <item name="android:textStyle">normal</item>
+        <item name="android:textColor">@color/primary_text_nav_suggest</item>
+    </style>
+    <style name="SuggestionText2Appearance" parent="@android:style/TextAppearance.Small">
+        <item name="android:textColor">@color/secondary_text_suggest</item>
+    </style>
+    <style name="GalleryTheme" parent="@android:style/Theme.Holo.Light.DarkActionBar">
+        <item name="android:windowBackground">@android:color/black</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:actionBarStyle">@style/GalleryActionBarStyle</item>
+    </style>
+    <style name="GalleryActionBarStyle" parent="@android:style/Widget.Holo.Light.ActionBar.Solid.Inverse">
+        <item name="android:background">@drawable/actionbar_translucent</item>
+        <item name="android:displayOptions">useLogo|showHome</item>
+        <item name="android:backgroundStacked">@null</item>
+    </style>
+    <style name="TravelModeSpinner" parent="@android:style/Widget.Holo.Light.Spinner">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">48.0dip</item>
+        <item name="android:divider">@color/light_gray</item>
+        <item name="android:dividerHeight">1.0dip</item>
+    </style>
+    <style name="ContactSubjectStyle">
+        <item name="android:textSize">16.0sp</item>
+        <item name="android:textColor">@color/gray</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingTop">4.0dip</item>
+        <item name="android:paddingBottom">4.0dip</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginLeft">@dimen/unit</item>
+        <item name="android:layout_marginRight">@dimen/unit</item>
+        <item name="android:minHeight">48.0dip</item>
+        <item name="android:text">@string/empty_text</item>
+        <item name="android:layout_alignParentLeft">true</item>
+        <item name="android:lineSpacingExtra">2.0sp</item>
+    </style>
+    <style name="ContactMessageStyle" parent="@style/ContactSubjectStyle">
+        <item name="android:minHeight">64.0dip</item>
+    </style>
+    <style name="ContactMessageImageStyle">
+        <item name="android:background">@color/translucent_black</item>
+        <item name="android:layout_width">@dimen/contact_avatar_width</item>
+        <item name="android:layout_height">@dimen/contact_avatar_height</item>
+        <item name="android:src">@drawable/ic_contact_ds</item>
+        <item name="android:scaleType">centerCrop</item>
+        <item name="android:layout_alignParentLeft">true</item>
+        <item name="android:layout_alignParentTop">true</item>
+    </style>
+    <style name="ContactMessageWrapperStyle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginLeft">@dimen/unit</item>
+        <item name="android:layout_marginTop">@dimen/unit</item>
+        <item name="android:layout_marginRight">8.0dip</item>
+    </style>
+    <style name="Theme.TheGoogle" parent="@android:style/Theme.Holo.Light">
+        <item name="android:windowBackground">@color/activity_background</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+    <style name="Theme.HandsFree" parent="@android:style/Theme.Holo.Light">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Dialog</item>
+        <item name="android:backgroundDimEnabled">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+    <style name="Theme.Velvet" parent="@android:style/Theme.Holo.Light">
+        <item name="android:windowBackground">@color/activity_background</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@style/VelvetAnimations</item>
+        <item name="android:windowSoftInputMode">stateUnchanged|adjustPan</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+    <style name="CorpusBar" parent="@android:style/Widget">
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingLeft">@dimen/corpus_bar_left_padding</item>
+        <item name="android:paddingTop">@dimen/corpus_bar_vertical_padding</item>
+        <item name="android:paddingBottom">@dimen/corpus_bar_vertical_padding</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">fill_parent</item>
+    </style>
+    <style name="CorpusSelector" parent="@android:style/Widget">
+        <item name="android:gravity">center</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">fill_parent</item>
+        <item name="android:layout_marginLeft">@dimen/corpus_selector_horizontal_margin</item>
+        <item name="android:layout_marginRight">@dimen/corpus_selector_horizontal_margin</item>
+    </style>
+    <style name="CorpusIcon" parent="@android:style/Widget">
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:duplicateParentState">true</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginRight">@dimen/corpus_selector_element_margin</item>
+    </style>
+    <style name="CorpusName" parent="@android:style/Widget.TextView">
+        <item name="android:textSize">@dimen/corpus_selector_text_size</item>
+        <item name="android:textColor">@color/corpus_selector_text</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:duplicateParentState">true</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+    <style name="CorpusInfo" parent="@android:style/Widget.TextView">
+        <item name="android:textSize">@dimen/corpus_selector_text_size</item>
+        <item name="android:textColor">@color/primary_text_inverse_disabled</item>
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginLeft">@dimen/corpus_selector_element_margin</item>
+    </style>
+    <style name="SearchPlate">
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+    <style name="SearchPlate.SearchBox" parent="@android:style/Widget.EditText">
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+    <style name="Theme.VoiceSearch" parent="@android:style/Theme.Holo.Light">
+        <item name="android:windowBackground">@color/translucent_black</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@style/RecognitionAnimation</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+    <style name="ActionBar" parent="@android:style/Widget.Holo.Light.ActionBar.Solid">
+        <item name="android:divider">@null</item>
+        <item name="android:displayOptions">useLogo|showHome|showTitle</item>
+    </style>
+    <style name="Theme.Recognition" parent="@android:style/Theme.Holo.Dialog">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowAnimationStyle">@style/RecognitionAnimation</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+    <style name="Theme.Slot" parent="@android:style/Theme.Holo.Light" />
+    <style name="RecognitionAnimation">
+        <item name="android:windowEnterAnimation">@anim/holo_window_in</item>
+        <item name="android:windowExitAnimation">@anim/holo_window_out</item>
+    </style>
+    <style name="Theme.Suggestion" parent="@android:style/Theme.NoTitleBar">
+        <item name="android:colorBackground">#ffffffff</item>
+        <item name="android:windowBackground">@color/white</item>
+    </style>
+    <style name="Theme.VoiceIme" parent="@android:style/Theme.Holo">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+    <style name="correctable_highlight" parent="@android:style/TextAppearance">
+        <item name="android:textSize">20.0sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/correctable_highlight_color</item>
+    </style>
+    <style name="contacts_list_main" parent="@android:style/TextAppearance">
+        <item name="android:textSize">12.0sp</item>
+        <item name="android:textColor">@color/editor_grayed_out_text</item>
+    </style>
+    <style name="contacts_list_highlight" parent="@android:style/TextAppearance">
+        <item name="android:textSize">20.0sp</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+    <style name="slot_title_main" parent="@android:style/TextAppearance">
+        <item name="android:textSize">20.0sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/black</item>
+    </style>
+    <style name="slot_title_invalid" parent="@android:style/TextAppearance">
+        <item name="android:textSize">20.0sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">#ffcc0000</item>
+    </style>
+    <style name="positioned_dialog">
+        <item name="android:layout_gravity">top|center</item>
+        <item name="android:layout_alignParentTop">true</item>
+        <item name="android:layout_centerHorizontal">true</item>
+    </style>
+    <style name="watch_video_button">
+        <item name="android:textColor">@color/black</item>
+    </style>
+    <style name="help_dialog" parent="@style/positioned_dialog">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+    <style name="help_dialog_content" />
+    <style name="disambig_dialog" parent="@style/positioned_dialog">
+        <item name="android:paddingTop">2.0dip</item>
+        <item name="android:paddingBottom">10.0dip</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+    <style name="disambig_dialog_content">
+        <item name="android:background">#ffffffff</item>
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">0.0dip</item>
+        <item name="android:layout_margin">16.0dip</item>
+        <item name="android:layout_weight">1.0</item>
+    </style>
+    <style name="sized_action_editor">
+        <item name="android:layout_width">fill_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+    <style name="square_button">
+        <item name="android:textColor">#ff000000</item>
+        <item name="android:background">@drawable/stateful_colored_background</item>
+    </style>
+    <style name="card_link_text">
+        <item name="android:textSize">@dimen/card_action_text</item>
+        <item name="android:textColor">@color/card_link_text</item>
+        <item name="android:background">@drawable/stateful_colored_background_light</item>
+        <item name="android:paddingTop">4.0dip</item>
+        <item name="android:paddingBottom">@dimen/card_minimum_padding</item>
+    </style>
+    <style name="answer_primary_text" parent="@android:style/TextAppearance">
+        <item name="android:textSize">25.0dip</item>
+        <item name="android:textColor">@color/dark_gray</item>
+    </style>
+    <style name="answer_sources_text" parent="@android:style/TextAppearance">
+        <item name="android:textSize">16.0dip</item>
+        <item name="android:textColor">@color/card_link_text</item>
+        <item name="android:gravity">left|center</item>
+        <item name="android:paddingLeft">8.0dip</item>
+        <item name="android:paddingRight">8.0dip</item>
+    </style>
+    <style name="snippet_domain_text" parent="@android:style/TextAppearance">
+        <item name="android:textSize">16.0dip</item>
+        <item name="android:textColor">@color/primary_text_nav_suggest</item>
+    </style>
+    <style name="snippet_source_text" parent="@android:style/TextAppearance">
+        <item name="android:textSize">12.0dip</item>
+        <item name="android:textColor">@color/dark_gray</item>
+    </style>
+    <style name="local_marker_text" parent="@android:style/TextAppearance">
+        <item name="android:textSize">44.0dip</item>
+        <item name="android:textColor">@color/local_results_red</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_gravity">center</item>
+        <item name="android:background">@drawable/stateful_colored_background_light</item>
+        <item name="android:paddingLeft">12.0dip</item>
+        <item name="android:paddingRight">12.0dip</item>
+        <item name="android:layout_width">52.0dip</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+    <style name="local_link_text" parent="@android:style/TextAppearance">
+        <item name="android:textSize">14.0dip</item>
+        <item name="android:textColor">@color/card_link_text</item>
+    </style>
+    <style name="local_primary_text" parent="@android:style/TextAppearance">
+        <item name="android:textSize">14.0dip</item>
+        <item name="android:textColor">@color/dark_gray</item>
+    </style>
+    <style name="local_secondary_text" parent="@android:style/TextAppearance">
+        <item name="android:textSize">14.0dip</item>
+        <item name="android:textColor">@color/medium_gray</item>
+    </style>
+    <style name="local_icon">
+        <item name="android:layout_gravity">center_vertical</item>
+        <item name="android:padding">8.0dip</item>
+    </style>
+    <style name="main_text">
+        <item name="android:textSize">20.0sp</item>
+        <item name="android:textColor">#ff777777</item>
+    </style>
+    <style name="Theme.Recording" parent="@android:style/Theme.NoTitleBar">
+        <item name="android:colorBackground">#ffef4444</item>
+        <item name="android:textSize">32.0sp</item>
+        <item name="android:textColor">#ffffffff</item>
+    </style>
+    <style name="text_recognized" parent="@android:style/TextAppearance.Large.Inverse">
+        <item name="android:textSize">24.0sp</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+    <style name="Theme.Voice" parent="@android:style/Theme.Holo.Light">
+        <item name="android:textSize">32.0dip</item>
+        <item name="android:textColor">@color/voice_text_color</item>
+        <item name="android:background">@color/voice_background_color</item>
+    </style>
+    <style name="Theme.VoiceInverse" parent="@android:style/Theme.Holo">
+        <item name="android:textSize">32.0dip</item>
+        <item name="android:textColor">@color/voice_background_color</item>
+        <item name="android:background">@color/voice_text_color</item>
+    </style>
+    <style name="Theme.VoiceInterstitial" parent="@android:style/Theme.Holo">
+        <item name="android:textSize">32.0dip</item>
+    </style>
+</resources>

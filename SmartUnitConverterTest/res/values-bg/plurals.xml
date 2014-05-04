@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="minutes_delay">
+        <item quantity="other">забавяне от %d минути</item>
+        <item quantity="zero">без забавяне</item>
+        <item quantity="one">забавяне от %d минута</item>
+        <item quantity="two">забавяне от %d минути</item>
+        <item quantity="few">забавяне от %d минути</item>
+        <item quantity="many">забавяне от %d минути</item>
+    </plurals>
+    <plurals name="card_count">
+        <item quantity="other">%d карти</item>
+        <item quantity="zero">Няма карти</item>
+        <item quantity="one">%d карта</item>
+        <item quantity="two">%d карти</item>
+        <item quantity="few">%d карти</item>
+        <item quantity="many">%d карти</item>
+    </plurals>
+</resources>

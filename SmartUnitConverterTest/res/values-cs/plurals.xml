@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="minutes_delay">
+        <item quantity="other">Zpoždění: %d min</item>
+        <item quantity="zero">žádné zpoždění</item>
+        <item quantity="one">Zpoždění: %d min</item>
+        <item quantity="two">Zpoždění: %d min</item>
+        <item quantity="few">Zpoždění: %d min</item>
+        <item quantity="many">Zpoždění: %d min</item>
+    </plurals>
+    <plurals name="card_count">
+        <item quantity="other">%d karet</item>
+        <item quantity="zero">Žádné karty</item>
+        <item quantity="one">%d karta</item>
+        <item quantity="two">%d karty</item>
+        <item quantity="few">%d karty</item>
+        <item quantity="many">%d karet</item>
+    </plurals>
+</resources>

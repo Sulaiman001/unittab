@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="minutes_delay">
+        <item quantity="other">Retard de %d minuts</item>
+        <item quantity="zero">sense retard</item>
+        <item quantity="one">"Retard d'%d minut"</item>
+        <item quantity="two">Retard de %d minuts</item>
+        <item quantity="few">Retard de %d minuts</item>
+        <item quantity="many">Retard de %d minuts</item>
+    </plurals>
+    <plurals name="card_count">
+        <item quantity="other">%d targetes</item>
+        <item quantity="zero">Cap targeta</item>
+        <item quantity="one">%d targeta</item>
+        <item quantity="two">%d targetes</item>
+        <item quantity="few">%d targetes</item>
+        <item quantity="many">%d targetes</item>
+    </plurals>
+</resources>

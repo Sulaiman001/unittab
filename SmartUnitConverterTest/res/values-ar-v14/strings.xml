@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="API_MY_LOCATION_ACCURACY">"موقعي 
+على مسافة {0} من الأمتار"</string>
+    <string name="API_OUTDATED_WARNING">يستخدم هذا التطبيق إصدارًا قديمًا من الخرائط. قد لا يعمل بشكل صحيح.</string>
+</resources>

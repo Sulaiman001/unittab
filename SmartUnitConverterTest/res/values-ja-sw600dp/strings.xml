@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="corpus_name_summons">タブレット</string>
+    <string name="search_sources">タブレット内検索</string>
+    <string name="search_phone_or_tablet">タブレットを検索</string>
+</resources>
